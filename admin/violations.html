@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODASURE - Violations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>.swal2-popup{background:#0f172a!important;color:#f1f5f9!important}.swal2-title{color:#f1f5f9!important}.swal2-html-container{color:#94a3b8!important}</style>
+</head>
+<body>
+    <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <h2>TODASURE</h2>
+                    <span>Admin Panel</span>
+                </div>
+            </div>
+            <nav>
+                <a href="dashboard.html"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
+                <a href="drivers.html"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
+                <a href="tricycles.html"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
+                <a href="toda.html"><i class="fa-solid fa-building icon"></i> TODA</a>
+                <a href="trips.html"><i class="fa-solid fa-route icon"></i> Trips</a>
+                <a href="fares.html"><i class="fa-solid fa-peso-sign icon"></i> Fare Rates</a>
+                <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
+                <a href="violations.html" class="active"><i class="fa-solid fa-gavel icon"></i> Violations</a>
+                <a href="users.html"><i class="fa-solid fa-users icon"></i> Passengers</a>
+                <a href="barangays.html"><i class="fa-solid fa-map-location-dot icon"></i> Barangays</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-header">
+                <span class="page-title">Violations</span>
+                <div class="header-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search..." id="globalSearch">
+                </div>
+                <div class="header-actions">
+                    <button class="header-icon-btn" id="notifBtn" title="Notifications">
+                        <i class="fa-solid fa-bell"></i>
+                    </button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn">
+                            <div class="profile-avatar" id="profileInitial">A</div>
+                            <div class="profile-info">
+                                <div class="profile-name" id="profileName">Admin</div>
+                                <div class="profile-role">Administrator</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </button>
+                        <div class="dropdown-menu" id="profileMenu">
+                            <a href="#"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <div class="divider"></div>
+                            <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-body">
+                <div class="card" style="padding:16px;">
+                    <div class="flex gap-2">
+                        <select id="filterStatus" class="form-control" style="max-width:150px;">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="appealed">Appealed</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                        <select id="filterType" class="form-control" style="max-width:200px;">
+                            <option value="">All Types</option>
+                            <option value="fare_overcharge">Fare Overcharge</option>
+                            <option value="fare_undercharge">Fare Undercharge</option>
+                            <option value="unauthorized_route">Unauthorized Route</option>
+                            <option value="speeding">Speeding</option>
+                            <option value="complaint_based">Complaint Based</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <button class="btn btn-outline" onclick="loadViolations()">Filter</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Driver</th>
+                                    
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Severity</th>
+                                    <th>Penalty</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="violationsTable">
+                                <tr><td colspan="10" class="text-center text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Update Modal -->
+    <div class="modal-overlay" id="violationModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Update Violation</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="violationForm">
+                <input type="hidden" id="violationId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="violationStatus" class="form-control">
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="appealed">Appealed</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Severity</label>
+                        <select id="violationSeverity" class="form-control">
+                            <option value="minor">Minor</option>
+                            <option value="moderate">Moderate</option>
+                            <option value="major">Major</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Penalty</label>
+                    <input type="text" id="violationPenalty" class="form-control" placeholder="e.g., 1-day suspension">
+                </div>
+                <div class="flex gap-2" style="justify-content:flex-end; margin-top:16px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../assets/js/guard.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('show');
+            this.classList.add('hide');
+        });
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+            document.getElementById('sidebarToggle').classList.remove('hide');
+});
+        // Close sidebar when nav link clicked (mobile)
+        document.querySelectorAll('.sidebar nav a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebarOverlay').classList.remove('show');
+            });
+        });
+
+        // Profile dropdown
+        document.getElementById('profileBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('profileMenu').classList.toggle('show');
+        });
+        document.addEventListener('click', function() {
+            document.getElementById('profileMenu').classList.remove('show');
+        });
+
+        // Load profile
+        (async function() {
+            try {
+                var s = await auth.session();
+                var n = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
+                document.getElementById('profileName').textContent = n || 'Admin';
+                document.getElementById('profileInitial').textContent = (s.first_name||'A')[0].toUpperCase();
+            } catch(e) {}
+        })();
+
+        // SweetAlert showAlert
+        window.showAlert = function(msg, type) {
+            Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000, timerProgressBar:true })
+                .fire({ icon: type==='error'?'error':'success', title: msg });
+        };
+
+        // Logout
+        async function handleLogout() {
+            var r = await Swal.fire({ title:'Logout?', text:'Are you sure?', icon:'question', showCancelButton:true, confirmButtonColor:'#00e6a0', cancelButtonColor:'#9ca3af', confirmButtonText:'Yes, logout' });
+            if (r.isConfirmed) { await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html'); }
+        }
+
+        async function loadViolations() {
+            const params = {};
+            const status = document.getElementById('filterStatus').value;
+            const type = document.getElementById('filterType').value;
+            if (status) params.status = status;
+            if (type) params.type = type;
+
+            try {
+                const list = await violations.list(params);
+                const tbody = document.getElementById('violationsTable');
+                if (list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No violations</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.map(v => `
+                    <tr>
+                        <td>#${v.id}</td>
+                        <td>${v.first_name} ${v.last_name}</td>
+                        <td>${v.license_number}</td>
+                        <td>${v.violation_type.replace(/_/g, ' ')}</td>
+                        <td>${v.description ? v.description.substring(0, 40) : '-'}</td>
+                        <td><span class="${badgeClass(v.severity)}">${v.severity}</span></td>
+                        <td>${v.penalty || '-'}</td>
+                        <td><span class="${badgeClass(v.status)}">${v.status}</span></td>
+                        <td>${formatDate(v.created_at)}</td>
+                        <td><button class="btn btn-outline btn-sm" onclick="editViolation(${v.id})">Update</button></td>
+                    </tr>
+                `).join('');
+            } catch (err) { showAlert(err.message, 'error'); }
+        }
+
+        async function editViolation(id) {
+            const v = await violations.get(id);
+            document.getElementById('violationId').value = v.id;
+            document.getElementById('violationStatus').value = v.status;
+            document.getElementById('violationSeverity').value = v.severity;
+            document.getElementById('violationPenalty').value = v.penalty || '';
+            document.getElementById('violationModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('violationModal').classList.remove('active');
+        }
+
+        document.getElementById('violationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('violationId').value;
+            try {
+                await violations.update(id, {
+                    status: document.getElementById('violationStatus').value,
+                    severity: document.getElementById('violationSeverity').value,
+                    penalty: document.getElementById('violationPenalty').value
+                });
+                showAlert('Violation updated');
+                closeModal();
+                loadViolations();
+            } catch (err) { showAlert(err.message, 'error'); }
+        });
+
+        loadViolations();
+    </script>
+</body>
+</html>

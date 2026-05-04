@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODASURE - Submit Complaint</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .complaint-container {
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+        .complaint-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .complaint-header h1 {
+            color: var(--primary);
+            font-size: 24px;
+        }
+        .complaint-header p {
+            color: var(--gray);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .tricycle-info {
+            background: var(--light);
+            padding: 16px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .tricycle-info h3 { color: var(--dark); }
+        .tricycle-info p { color: var(--gray); font-size: 13px; }
+        .success-page {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .success-page .checkmark {
+            font-size: 64px;
+            color: var(--secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="complaint-container">
+        <div class="complaint-header">
+            <h1>TODASURE</h1>
+            <p>Tricycle Complaint System</p>
+        </div>
+
+        <!-- Complaint Form -->
+        <div id="formSection" class="card">
+            <div id="tricycleInfo" class="tricycle-info hidden">
+                <h3 id="tricyclePlate"></h3>
+                <p id="tricycleDriver"></p>
+            </div>
+
+            <div id="alert" class="alert hidden"></div>
+
+            <form id="complaintForm">
+                <div class="form-group">
+                    <label>Tricycle ID *</label>
+                    <input type="number" id="tricycleId" class="form-control" placeholder="Enter tricycle ID from QR code" required>
+                </div>
+                <div class="form-group">
+                    <label>Complaint Type *</label>
+                    <select id="complaintType" class="form-control" required>
+                        <option value="">Select type</option>
+                        <option value="overcharging">Overcharging</option>
+                        <option value="rude_behavior">Rude Behavior</option>
+                        <option value="reckless_driving">Reckless Driving</option>
+                        <option value="refusal_of_service">Refusal of Service</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description *</label>
+                    <textarea id="description" class="form-control" placeholder="Describe your complaint in detail..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Your Name (optional)</label>
+                    <input type="text" id="passengerName" class="form-control" placeholder="Anonymous if left blank">
+                </div>
+                <div class="form-group">
+                    <label>Contact Number (optional)</label>
+                    <input type="text" id="passengerContact" class="form-control" placeholder="For follow-up purposes">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">
+                    Submit Complaint
+                </button>
+            </form>
+        </div>
+
+        <!-- Success Page -->
+        <div id="successSection" class="card success-page hidden">
+            <div class="checkmark">&#10003;</div>
+            <h2 style="margin-top:16px;">Complaint Submitted</h2>
+            <p class="text-muted mt-1">Your complaint has been received and will be reviewed by the TODA administrator.</p>
+            <p class="text-muted text-sm mt-2">Reference #: <strong id="refNumber"></strong></p>
+            <button class="btn btn-outline mt-2" onclick="resetForm()">Submit Another</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/api.js"></script>
+    <script>
+        // Auto-populate tricycle ID from URL param (from QR code)
+        const params = new URLSearchParams(window.location.search);
+        const qrTricycleId = params.get('tricycle_id');
+        if (qrTricycleId) {
+            document.getElementById('tricycleId').value = qrTricycleId;
+            loadTricycleInfo(qrTricycleId);
+        }
+
+        async function loadTricycleInfo(id) {
+            try {
+                const t = await tricycles.get(id);
+                document.getElementById('tricyclePlate').textContent = `Plate: ${t.plate_number} | Body: ${t.body_number}`;
+                document.getElementById('tricycleDriver').textContent = `Driver: ${t.first_name} ${t.last_name}`;
+                document.getElementById('tricycleInfo').classList.remove('hidden');
+            } catch (err) {
+                // Tricycle not found - that's ok, user can still type ID
+            }
+        }
+
+        document.getElementById('tricycleId').addEventListener('change', function() {
+            if (this.value) loadTricycleInfo(this.value);
+        });
+
+        document.getElementById('complaintForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const alertEl = document.getElementById('alert');
+            alertEl.classList.add('hidden');
+
+            try {
+                const result = await complaints.create({
+                    tricycle_id: document.getElementById('tricycleId').value,
+                    complaint_type: document.getElementById('complaintType').value,
+                    description: document.getElementById('description').value,
+                    passenger_name: document.getElementById('passengerName').value || null,
+                    passenger_contact: document.getElementById('passengerContact').value || null
+                });
+
+                document.getElementById('refNumber').textContent = result.id;
+                document.getElementById('formSection').classList.add('hidden');
+                document.getElementById('successSection').classList.remove('hidden');
+            } catch (err) {
+                alertEl.className = 'alert alert-error';
+                alertEl.textContent = err.message;
+            }
+        });
+
+        function resetForm() {
+            document.getElementById('complaintForm').reset();
+            document.getElementById('formSection').classList.remove('hidden');
+            document.getElementById('successSection').classList.add('hidden');
+            document.getElementById('tricycleInfo').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

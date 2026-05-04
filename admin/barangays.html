@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODASURE - Barangay Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>.swal2-popup{background:#0f172a!important;color:#f1f5f9!important}.swal2-title{color:#f1f5f9!important}.swal2-html-container{color:#94a3b8!important}</style>
+</head>
+<body>
+    <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <h2>TODASURE</h2>
+                    <span>Admin Panel</span>
+                </div>
+            </div>
+            <nav>
+                <a href="dashboard.html"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
+                <a href="drivers.html"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
+                <a href="tricycles.html"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
+                <a href="toda.html"><i class="fa-solid fa-building icon"></i> TODA</a>
+                <a href="trips.html"><i class="fa-solid fa-route icon"></i> Trips</a>
+                <a href="fares.html"><i class="fa-solid fa-peso-sign icon"></i> Fare Rates</a>
+                <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
+                <a href="violations.html"><i class="fa-solid fa-gavel icon"></i> Violations</a>
+                <a href="users.html"><i class="fa-solid fa-users icon"></i> Passengers</a>
+                <a href="barangays.html" class="active"><i class="fa-solid fa-map-location-dot icon"></i> Barangays</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-header">
+                <span class="page-title">Barangay Management</span>
+                <div class="header-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search..." id="globalSearch">
+                </div>
+                <div class="header-actions">
+                    <button class="header-icon-btn" id="notifBtn" title="Notifications">
+                        <i class="fa-solid fa-bell"></i>
+                    </button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn">
+                            <div class="profile-avatar" id="profileInitial">A</div>
+                            <div class="profile-info">
+                                <div class="profile-name" id="profileName">Admin</div>
+                                <div class="profile-role">Administrator</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </button>
+                        <div class="dropdown-menu" id="profileMenu">
+                            <a href="#"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <div class="divider"></div>
+                            <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-body">
+                <div class="card">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                        <h3><i class="fa-solid fa-map-location-dot" style="color:var(--accent);margin-right:8px;"></i>Barangay List</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="fa-solid fa-plus" style="margin-right:4px;"></i> Add Barangay</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Municipality</th>
+                                    <th>Province</th>
+                                    <th>TODAs</th>
+                                    <th>Drivers</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="barangayTable">
+                                <tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="barangayModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Barangay</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="barangayForm">
+                <input type="hidden" id="barangayId">
+                <div class="form-group">
+                    <label>Name *</label>
+                    <input type="text" id="barangayName" class="form-control" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Municipality *</label>
+                        <input type="text" id="municipality" class="form-control" value="Nasugbu" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Province *</label>
+                        <input type="text" id="province" class="form-control" value="Batangas" required>
+                    </div>
+                </div>
+                <div class="flex gap-2" style="justify-content:flex-end; margin-top:16px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../assets/js/guard.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('show');
+            this.classList.add('hide');
+        });
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+            document.getElementById('sidebarToggle').classList.remove('hide');
+        });
+        // Close sidebar when nav link clicked (mobile)
+        document.querySelectorAll('.sidebar nav a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebarOverlay').classList.remove('show');
+            });
+        });
+
+        // Profile dropdown
+        document.getElementById('profileBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('profileMenu').classList.toggle('show');
+        });
+        document.addEventListener('click', function() {
+            document.getElementById('profileMenu').classList.remove('show');
+        });
+
+        // Load profile
+        (async function() {
+            try {
+                var s = await auth.session();
+                var n = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
+                document.getElementById('profileName').textContent = n || 'Admin';
+                document.getElementById('profileInitial').textContent = (s.first_name||'A')[0].toUpperCase();
+            } catch(e) {}
+        })();
+
+        // SweetAlert showAlert
+        window.showAlert = function(msg, type) {
+            Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000, timerProgressBar:true })
+                .fire({ icon: type==='error'?'error':'success', title: msg });
+        };
+
+        // Logout
+        async function handleLogout() {
+            var r = await Swal.fire({ title:'Logout?', text:'Are you sure?', icon:'question', showCancelButton:true, confirmButtonColor:'#00e6a0', cancelButtonColor:'#9ca3af', confirmButtonText:'Yes, logout' });
+            if (r.isConfirmed) { await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html'); }
+        }
+
+        // Counts for TODAs and Drivers per barangay
+        let todaCounts = {};
+        let driverCounts = {};
+
+        async function loadCounts() {
+            try {
+                const todaList = await apiRequest('toda/index.php');
+                todaCounts = {};
+                driverCounts = {};
+                todaList.forEach(t => {
+                    const bid = t.barangay_id;
+                    todaCounts[bid] = (todaCounts[bid] || 0) + 1;
+                });
+
+                const driverList = await apiRequest('drivers/index.php');
+                driverList.forEach(d => {
+                    const toda = todaList.find(t => t.id == d.toda_id);
+                    if (toda) {
+                        const bid = toda.barangay_id;
+                        driverCounts[bid] = (driverCounts[bid] || 0) + 1;
+                    }
+                });
+            } catch (err) {
+                console.error('Failed to load counts:', err);
+            }
+        }
+
+        async function loadBarangays() {
+            try {
+                await loadCounts();
+                const list = await apiRequest('barangays/index.php');
+                const tbody = document.getElementById('barangayTable');
+                if (list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No barangays found</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.map(b => `
+                    <tr>
+                        <td>#${b.id}</td>
+                        <td>${b.name}</td>
+                        <td>${b.municipality || 'Nasugbu'}</td>
+                        <td>${b.province || 'Batangas'}</td>
+                        <td>${todaCounts[b.id] || 0}</td>
+                        <td>${driverCounts[b.id] || 0}</td>
+                        <td><button class="btn btn-outline btn-sm" onclick="editBarangay(${b.id})">Edit</button></td>
+                    </tr>
+                `).join('');
+            } catch (err) { showAlert(err.message, 'error'); }
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add Barangay';
+            document.getElementById('barangayForm').reset();
+            document.getElementById('barangayId').value = '';
+            document.getElementById('municipality').value = 'Nasugbu';
+            document.getElementById('province').value = 'Batangas';
+            document.getElementById('barangayModal').classList.add('active');
+        }
+
+        async function editBarangay(id) {
+            try {
+                const list = await apiRequest('barangays/index.php');
+                const b = list.find(x => x.id == id);
+                if (!b) { showAlert('Barangay not found', 'error'); return; }
+                document.getElementById('modalTitle').textContent = 'Edit Barangay';
+                document.getElementById('barangayId').value = b.id;
+                document.getElementById('barangayName').value = b.name;
+                document.getElementById('municipality').value = b.municipality || 'Nasugbu';
+                document.getElementById('province').value = b.province || 'Batangas';
+                document.getElementById('barangayModal').classList.add('active');
+            } catch (err) { showAlert(err.message, 'error'); }
+        }
+
+        function closeModal() { document.getElementById('barangayModal').classList.remove('active'); }
+
+        document.getElementById('barangayForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('barangayId').value;
+            const data = {
+                name: document.getElementById('barangayName').value,
+                municipality: document.getElementById('municipality').value,
+                province: document.getElementById('province').value
+            };
+            try {
+                if (id) {
+                    await apiRequest('barangays/index.php?id=' + id, 'PUT', data);
+                    showAlert('Barangay updated');
+                } else {
+                    await apiRequest('barangays/index.php', 'POST', data);
+                    showAlert('Barangay created');
+                }
+                closeModal();
+                loadBarangays();
+            } catch (err) { showAlert(err.message, 'error'); }
+        });
+
+        loadBarangays();
+    </script>
+</body>
+</html>

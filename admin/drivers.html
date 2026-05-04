@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODASURE - Driver Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>.swal2-popup{background:#0f172a!important;color:#f1f5f9!important}.swal2-title{color:#f1f5f9!important}.swal2-html-container{color:#94a3b8!important}</style>
+</head>
+<body>
+    <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <h2>TODASURE</h2>
+                    <span>Admin Panel</span>
+                </div>
+            </div>
+            <nav>
+                <a href="dashboard.html"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
+                <a href="drivers.html" class="active"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
+                <a href="tricycles.html"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
+                <a href="toda.html"><i class="fa-solid fa-building icon"></i> TODA</a>
+                <a href="trips.html"><i class="fa-solid fa-route icon"></i> Trips</a>
+                <a href="fares.html"><i class="fa-solid fa-peso-sign icon"></i> Fare Rates</a>
+                <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
+                <a href="violations.html"><i class="fa-solid fa-gavel icon"></i> Violations</a>
+                <a href="users.html"><i class="fa-solid fa-users icon"></i> Passengers</a>
+                <a href="barangays.html"><i class="fa-solid fa-map-location-dot icon"></i> Barangays</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-header">
+                <span class="page-title">Driver Management</span>
+                <div class="header-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search..." id="globalSearch">
+                </div>
+                <div class="header-actions">
+                    <button class="header-icon-btn" id="notifBtn" title="Notifications">
+                        <i class="fa-solid fa-bell"></i>
+                    </button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn">
+                            <div class="profile-avatar" id="profileInitial">A</div>
+                            <div class="profile-info">
+                                <div class="profile-name" id="profileName">Admin</div>
+                                <div class="profile-role">Administrator</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </button>
+                        <div class="dropdown-menu" id="profileMenu">
+                            <a href="#"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <div class="divider"></div>
+                            <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-body">
+                <!-- Filters -->
+                <div class="card" style="padding:16px;">
+                    <div class="flex gap-2">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by name or license..." style="max-width:300px;">
+                        <select id="filterToda" class="form-control" style="max-width:200px;">
+                            <option value="">All TODAs</option>
+                        </select>
+                        <select id="filterStatus" class="form-control" style="max-width:150px;">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="suspended">Suspended</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                        <button class="btn btn-outline" onclick="loadDrivers()">Filter</button>
+                    </div>
+                </div>
+
+                <!-- Drivers Table -->
+                <div class="card">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                        <h3><i class="fa-solid fa-id-card" style="color:var(--accent);margin-right:8px;"></i>Drivers</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="fa-solid fa-plus" style="margin-right:4px;"></i> Add Driver</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    
+                                    <th>TODA</th>
+                                    <th>Barangay</th>
+                                    <th>Contact</th>
+                                    <th>Tricycles</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="driversTable">
+                                <tr><td colspan="9" class="text-center text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="driverModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle"><i class="fa-solid fa-id-card" style="color:var(--accent)"></i> Add Driver</h2>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="driverForm">
+                <input type="hidden" id="driverId">
+                <div class="form-row">
+                    <div class="form-group"><label>First Name *</label><input type="text" id="firstName" class="form-control" placeholder="Enter first name" required></div>
+                    <div class="form-group"><label>Last Name *</label><input type="text" id="lastName" class="form-control" placeholder="Enter last name" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Middle Name</label><input type="text" id="middleName" class="form-control" placeholder="Optional"></div>
+                    
+                </div>
+                <div class="form-group"><label>TODA</label><select id="todaId" class="form-control"><option value="">Unassigned</option></select></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Contact Number</label><input type="text" id="contactNumber" class="form-control" placeholder="09xxxxxxxxx"></div>
+                    <div class="form-group"><label>Address</label><input type="text" id="address" class="form-control" placeholder="Home address"></div>
+                </div>
+                <div id="accountFields">
+                    <div class="form-row">
+                        <div class="form-group"><label>Email *</label><input type="email" id="driverEmail" class="form-control" placeholder="driver@email.com" required></div>
+                        <div class="form-group"><label>Password *</label><input type="password" id="driverPassword" class="form-control" placeholder="Login password" required></div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:8px">
+                    <button type="button" class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center"><i class="fa-solid fa-check"></i> Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../assets/js/guard.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('show');
+            this.classList.add('hide');
+        });
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+            document.getElementById('sidebarToggle').classList.remove('hide');
+});
+        // Close sidebar when nav link clicked (mobile)
+        document.querySelectorAll('.sidebar nav a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebarOverlay').classList.remove('show');
+            });
+        });
+
+        // Profile dropdown
+        document.getElementById('profileBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('profileMenu').classList.toggle('show');
+        });
+        document.addEventListener('click', function() {
+            document.getElementById('profileMenu').classList.remove('show');
+        });
+
+        // Load profile
+        (async function() {
+            try {
+                var s = await auth.session();
+                var n = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
+                document.getElementById('profileName').textContent = n || 'Admin';
+                document.getElementById('profileInitial').textContent = (s.first_name||'A')[0].toUpperCase();
+            } catch(e) {}
+        })();
+
+        // SweetAlert showAlert
+        window.showAlert = function(msg, type) {
+            Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000, timerProgressBar:true })
+                .fire({ icon: type==='error'?'error':'success', title: msg });
+        };
+
+        // Logout
+        async function handleLogout() {
+            var r = await Swal.fire({ title:'Logout?', text:'Are you sure?', icon:'question', showCancelButton:true, confirmButtonColor:'#00e6a0', cancelButtonColor:'#9ca3af', confirmButtonText:'Yes, logout' });
+            if (r.isConfirmed) { await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html'); }
+        }
+
+        let todaList = [];
+
+        async function loadTodas() {
+            todaList = await todas.list();
+            const selects = [document.getElementById('todaId'), document.getElementById('filterToda')];
+            selects.forEach(sel => {
+                const firstOption = sel.options[0];
+                sel.innerHTML = '';
+                sel.appendChild(firstOption);
+                todaList.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.name;
+                    sel.appendChild(opt);
+                });
+            });
+        }
+
+        async function loadDrivers() {
+            const params = {};
+            const search = document.getElementById('searchInput').value;
+            const toda = document.getElementById('filterToda').value;
+            const status = document.getElementById('filterStatus').value;
+            if (search) params.search = search;
+            if (toda) params.toda_id = toda;
+            if (status) params.status = status;
+
+            try {
+                const [list, allTricycles] = await Promise.all([
+                    drivers.list(params),
+                    tricycles.list()
+                ]);
+
+                // Count tricycles per driver
+                const tricycleCount = {};
+                allTricycles.forEach(t => {
+                    tricycleCount[t.driver_id] = (tricycleCount[t.driver_id] || 0) + 1;
+                });
+
+                const tbody = document.getElementById('driversTable');
+                if (list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No drivers found</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.map(d => `
+                    <tr>
+                        <td>#${d.id}</td>
+                        <td>${d.first_name} ${d.last_name}</td>
+                        <td>${d.toda_name || 'Unassigned'}</td>
+                        <td>${d.barangay_name}</td>
+                        <td>${d.contact_number || '-'}</td>
+                        <td>${tricycleCount[d.id] || 0}</td>
+                        <td><span class="${badgeClass(d.status)}">${d.status}</span></td>
+                        <td>
+                            <button class="btn btn-outline btn-sm" onclick="editDriver(${d.id})">Edit</button>
+                            ${d.status === 'active' ?
+                                `<button class="btn btn-danger btn-sm" onclick="deactivateDriver(${d.id})">Deactivate</button>` :
+                                `<button class="btn btn-success btn-sm" onclick="activateDriver(${d.id})">Activate</button>`
+                            }
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                showAlert(err.message, 'error');
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-id-card" style="color:var(--accent)"></i> Add Driver';
+            document.getElementById('driverForm').reset();
+            document.getElementById('driverId').value = '';
+            document.getElementById('accountFields').style.display = 'block';
+            document.getElementById('driverEmail').required = true;
+            document.getElementById('driverPassword').required = true;
+            document.getElementById('driverModal').classList.add('active');
+        }
+
+        async function editDriver(id) {
+            try {
+                const d = await drivers.get(id);
+                document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-id-card" style="color:var(--accent)"></i> Edit Driver';
+                document.getElementById('driverId').value = d.id;
+                document.getElementById('firstName').value = d.first_name;
+                document.getElementById('lastName').value = d.last_name;
+                document.getElementById('middleName').value = d.middle_name || '';
+                document.getElementById('todaId').value = d.toda_id;
+                document.getElementById('contactNumber').value = d.contact_number || '';
+                document.getElementById('address').value = d.address || '';
+                document.getElementById('accountFields').style.display = 'none';
+                document.getElementById('driverEmail').required = false;
+                document.getElementById('driverPassword').required = false;
+                document.getElementById('driverModal').classList.add('active');
+            } catch (err) {
+                showAlert(err.message, 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('driverModal').classList.remove('active');
+        }
+
+        document.getElementById('driverForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('driverId').value;
+            const data = {
+                first_name: document.getElementById('firstName').value,
+                last_name: document.getElementById('lastName').value,
+                middle_name: document.getElementById('middleName').value,
+                toda_id: document.getElementById('todaId').value,
+                contact_number: document.getElementById('contactNumber').value,
+                address: document.getElementById('address').value
+            };
+
+            try {
+                if (id) {
+                    await drivers.update(id, data);
+                    showAlert('Driver updated successfully');
+                } else {
+                    data.email = document.getElementById('driverEmail').value;
+                    data.username = data.email.split('@')[0];
+                    data.password = document.getElementById('driverPassword').value;
+                    await drivers.create(data);
+                    showAlert('Driver registered successfully');
+                }
+                closeModal();
+                loadDrivers();
+            } catch (err) {
+                showAlert(err.message, 'error');
+            }
+        });
+
+        async function deactivateDriver(id) {
+            const r = await Swal.fire({ title: 'Deactivate Driver?', text: 'This driver will be set to inactive.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#00e6a0', cancelButtonColor: '#9ca3af', confirmButtonText: 'Yes, deactivate' });
+            if (!r.isConfirmed) return;
+            try {
+                await drivers.delete(id);
+                showAlert('Driver deactivated');
+                loadDrivers();
+            } catch (err) { showAlert(err.message, 'error'); }
+        }
+
+        async function activateDriver(id) {
+            try {
+                await drivers.update(id, { status: 'active' });
+                showAlert('Driver activated');
+                loadDrivers();
+            } catch (err) { showAlert(err.message, 'error'); }
+        }
+
+        loadTodas();
+        loadDrivers();
+    </script>
+</body>
+</html>

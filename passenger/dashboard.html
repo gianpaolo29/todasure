@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TODASURE - Book a Ride</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#000;color:#1e293b;height:100vh;height:100dvh;overflow:hidden;position:relative}
+
+        /* ── Full-screen Map ── */
+        #map{position:absolute;inset:0;z-index:0}
+
+        /* ── Top Bar (floating over map) ── */
+        .top-bar{position:absolute;top:0;left:0;right:0;z-index:35;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+        .top-bar > *{pointer-events:auto}
+        .top-btn{width:40px;height:40px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#1e293b}
+        .top-btn:active{transform:scale(.95)}
+        .top-brand{font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4);letter-spacing:.5px}
+        .top-right{display:flex;gap:8px}
+        .notif-badge{position:absolute;top:8px;right:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid #fff}
+
+        /* ── Bottom Sheet ── */
+        .sheet{position:absolute;bottom:0;left:0;right:0;z-index:30;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.1);transition:transform .35s cubic-bezier(.4,0,.2,1);max-height:85vh;overflow-y:auto}
+        .sheet-handle{width:36px;height:4px;background:#d1d5db;border-radius:4px;margin:10px auto 0}
+        .sheet-body{padding:16px 20px 24px}
+
+        /* ── Where-to Card ── */
+        .where-to{padding:6px 0 0}
+        .where-to h2{font-size:20px;font-weight:800;color:#0f172a;margin-bottom:14px}
+        .search-box{display:flex;align-items:center;gap:10px;padding:14px 16px;background:#f1f5f9;border-radius:12px;cursor:pointer;transition:background .2s}
+        .search-box:hover{background:#e2e8f0}
+        .search-box i{color:#10b981;font-size:16px}
+        .search-box span{flex:1;font-size:14px;color:#64748b}
+        .search-box .arrow{color:#94a3b8;font-size:12px}
+
+        /* ── Search Overlay ── */
+        .search-overlay{position:fixed;inset:0;z-index:50;background:#fff;display:none;flex-direction:column}
+        .search-overlay.show{display:flex}
+        .search-header{display:flex;align-items:stretch;gap:12px;padding:16px;border-bottom:1px solid #f1f5f9}
+        .search-back{width:40px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#64748b;cursor:pointer;flex-shrink:0;border:none;background:none}
+        .search-inputs{flex:1;display:flex;flex-direction:column;gap:8px}
+        .search-row{display:flex;align-items:center;gap:10px}
+        .search-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+        .search-dot.green{background:#10b981}
+        .search-dot.red{background:#ef4444}
+        .search-line{width:2px;height:16px;background:#d1d5db;margin-left:4px}
+        .search-input{flex:1;border:none;background:#f8fafc;padding:10px 14px;border-radius:8px;font-size:14px;font-family:inherit;color:#0f172a;outline:none}
+        .search-input:focus{background:#f1f5f9;box-shadow:0 0 0 2px rgba(16,185,129,.2)}
+        .search-input::placeholder{color:#94a3b8}
+        .search-results{flex:1;overflow-y:auto;padding:8px 0}
+        .search-item{display:flex;align-items:center;gap:14px;padding:14px 20px;cursor:pointer;transition:background .15s}
+        .search-item:hover,.search-item:active{background:#f8fafc}
+        .search-item-icon{width:36px;height:36px;border-radius:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;flex-shrink:0}
+        .search-item-text{flex:1;min-width:0}
+        .search-item-name{font-size:14px;font-weight:500;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .search-item-addr{font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+        /* ── Route Preview Card ── */
+        .route-card{padding:6px 0 0}
+        .route-locations{display:flex;gap:12px;align-items:stretch;margin-bottom:16px}
+        .route-dots{display:flex;flex-direction:column;align-items:center;padding:4px 0}
+        .route-dots .dot{width:10px;height:10px;border-radius:50%}
+        .route-dots .line{width:2px;flex:1;background:#e2e8f0;margin:4px 0}
+        .route-addrs{flex:1;display:flex;flex-direction:column;gap:6px}
+        .route-addr{font-size:13px;color:#64748b;line-height:1.3}
+        .route-addr strong{color:#0f172a;font-weight:600}
+        .route-stats{display:flex;gap:12px;margin-bottom:18px}
+        .route-stat{flex:1;background:#f8fafc;border-radius:12px;padding:14px;text-align:center}
+        .route-stat .val{font-size:22px;font-weight:800;color:#0f172a}
+        .route-stat .lbl{font-size:11px;color:#94a3b8;margin-top:2px}
+        .route-stat.green .val{color:#10b981}
+        .btn-book-ride{width:100%;padding:16px;background:#10b981;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+        .btn-book-ride:hover{background:#059669;box-shadow:0 4px 16px rgba(16,185,129,.3)}
+        .btn-book-ride:active{transform:scale(.98)}
+        .btn-book-ride:disabled{opacity:.5;cursor:not-allowed}
+        .btn-edit{font-size:13px;color:#10b981;font-weight:600;cursor:pointer;background:none;border:none;font-family:inherit;padding:4px 0;margin-bottom:12px}
+
+        /* ── Waiting Card ── */
+        .waiting-anim{text-align:center;padding:20px 0}
+        .waiting-anim .pulse-ring{width:60px;height:60px;border-radius:50%;background:rgba(16,185,129,.1);display:inline-flex;align-items:center;justify-content:center;animation:waitPulse 2s ease-in-out infinite}
+        .waiting-anim .pulse-ring i{font-size:24px;color:#10b981}
+        @keyframes waitPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.3)}50%{box-shadow:0 0 0 20px rgba(16,185,129,0)}}
+        .waiting-text{font-size:16px;font-weight:600;color:#0f172a;margin-top:14px}
+        .waiting-sub{font-size:13px;color:#94a3b8;margin-top:4px}
+
+        /* ── Driver Card ── */
+        .driver-info{display:flex;align-items:center;gap:14px;padding:16px;background:#f8fafc;border-radius:14px;margin-bottom:14px}
+        .driver-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;flex-shrink:0}
+        .driver-details{flex:1;min-width:0}
+        .driver-details .name{font-size:15px;font-weight:700;color:#0f172a}
+        .driver-details .plate{font-size:13px;color:#64748b;margin-top:2px}
+        .driver-details .plate span{background:#e2e8f0;padding:2px 8px;border-radius:4px;font-weight:600;color:#0f172a;font-size:12px;margin-left:4px}
+        .driver-actions{display:flex;gap:8px}
+        .driver-actions button{width:40px;height:40px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:#64748b}
+        .driver-actions button:hover{background:#f1f5f9;color:#10b981}
+
+        /* ── Live Trip ── */
+        .trip-live{display:flex;gap:10px;margin-bottom:16px}
+        .trip-live-stat{flex:1;background:#f8fafc;border-radius:12px;padding:12px;text-align:center}
+        .trip-live-stat .v{font-size:20px;font-weight:800;color:#0f172a}
+        .trip-live-stat .l{font-size:10px;color:#94a3b8;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+        .trip-live-stat.accent .v{color:#10b981}
+
+        /* ── Complete ── */
+        .complete-fare{text-align:center;padding:24px 0 16px}
+        .complete-fare .amount{font-size:42px;font-weight:800;color:#0f172a}
+        .complete-fare .label{font-size:13px;color:#94a3b8;margin-top:4px}
+        .complete-stats{display:flex;gap:10px;margin-bottom:18px}
+        .complete-stat{flex:1;text-align:center;padding:12px;background:#f8fafc;border-radius:12px}
+        .complete-stat .v{font-size:16px;font-weight:700;color:#0f172a}
+        .complete-stat .l{font-size:11px;color:#94a3b8;margin-top:2px}
+        .btn-outline-green{width:100%;padding:14px;background:none;border:2px solid #10b981;color:#10b981;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px}
+        .btn-outline-green:hover{background:rgba(16,185,129,.05)}
+        .btn-cancel-ride{width:100%;padding:12px;background:none;border:none;color:#ef4444;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px}
+
+        /* ── Menu Drawer ── */
+        .menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:60;display:none}
+        .menu-overlay.show{display:block}
+        .menu-drawer{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:80vw;background:#fff;z-index:70;transform:translateX(-100%);transition:transform .3s ease;display:flex;flex-direction:column}
+        .menu-drawer.show{transform:translateX(0)}
+        .menu-profile{padding:28px 20px 20px;background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+        .menu-avatar{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin-bottom:12px}
+        .menu-name{font-size:16px;font-weight:700}
+        .menu-email{font-size:12px;opacity:.8;margin-top:2px}
+        .menu-items{flex:1;padding:8px 0;overflow-y:auto}
+        .menu-item{display:flex;align-items:center;gap:14px;padding:14px 20px;font-size:14px;color:#374151;cursor:pointer;transition:background .15s;border:none;background:none;width:100%;font-family:inherit;text-align:left}
+        .menu-item:hover{background:#f8fafc}
+        .menu-item i{width:20px;text-align:center;color:#9ca3af;font-size:16px}
+        .menu-item.danger{color:#ef4444}
+        .menu-item.danger i{color:#ef4444}
+        .menu-sep{height:1px;background:#f1f5f9;margin:4px 0}
+
+        /* ── Notification Dropdown ── */
+        .notif-dropdown{position:absolute;top:52px;right:0;width:300px;max-width:85vw;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.15);display:none;z-index:40;overflow:hidden}
+        .notif-dropdown.show{display:block;animation:fadeSlideDown .2s ease}
+        @keyframes fadeSlideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+        .notif-header{padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:700;color:#0f172a;display:flex;justify-content:space-between;align-items:center}
+        .notif-list{max-height:280px;overflow-y:auto}
+        .notif-item{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid #f8fafc;cursor:default}
+        .notif-item:last-child{border-bottom:none}
+        .notif-icon-box{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+        .notif-icon-box.green{background:#d1fae5;color:#059669}
+        .notif-icon-box.blue{background:#dbeafe;color:#3b82f6}
+        .notif-icon-box.red{background:#fee2e2;color:#ef4444}
+        .notif-text{flex:1;min-width:0}
+        .notif-text p{font-size:13px;color:#374151;line-height:1.3}
+        .notif-text small{font-size:11px;color:#9ca3af}
+        .notif-empty{padding:30px 16px;text-align:center;color:#9ca3af;font-size:13px}
+
+        /* ── History Overlay ── */
+        .history-overlay{position:fixed;inset:0;z-index:50;background:#fff;display:none;flex-direction:column}
+        .history-overlay.show{display:flex}
+        .history-header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #f1f5f9}
+        .history-header h3{flex:1;font-size:16px;font-weight:700;color:#0f172a}
+        .history-list{flex:1;overflow-y:auto;padding:8px 0}
+        .history-item{padding:14px 20px;border-bottom:1px solid #f8fafc}
+        .history-item-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+        .history-item-top .fare{font-size:15px;font-weight:700;color:#0f172a}
+        .history-item-top .date{font-size:11px;color:#9ca3af}
+        .history-item-route{display:flex;gap:8px;align-items:center;font-size:13px;color:#64748b}
+        .history-item-route .hdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+        .history-item-route .harrow{color:#d1d5db}
+        .history-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+        .history-badge.completed{background:#d1fae5;color:#059669}
+        .history-badge.cancelled{background:#fee2e2;color:#ef4444}
+        .history-empty{padding:60px 20px;text-align:center;color:#9ca3af}
+
+        /* ── Profile Overlay ── */
+        .profile-overlay{position:fixed;inset:0;z-index:50;background:#fff;display:none;flex-direction:column}
+        .profile-overlay.show{display:flex}
+        .profile-head{text-align:center;padding:40px 20px 20px;background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+        .profile-head .p-avatar{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.2);display:inline-flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin-bottom:12px}
+        .profile-head .p-name{font-size:18px;font-weight:700}
+        .profile-head .p-email{font-size:13px;opacity:.8;margin-top:4px}
+        .profile-info-list{padding:20px}
+        .profile-info-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+        .profile-info-row:last-child{border-bottom:none}
+        .profile-info-row i{width:20px;text-align:center;color:#9ca3af;font-size:16px}
+        .profile-info-row .pi-label{font-size:12px;color:#9ca3af}
+        .profile-info-row .pi-value{font-size:14px;color:#0f172a;font-weight:500}
+
+        .hidden{display:none!important}
+
+        /* ── My Location FAB: positioned via JS above sheet ── */
+
+        /* ══════════════════════════════════════
+           DESKTOP LAYOUT (768px+)
+           ══════════════════════════════════════ */
+        @media(min-width:768px){
+            /* Bottom sheet: fixed width, centered at bottom */
+            .sheet{
+                width:420px;
+                left:50%;
+                transform:translateX(-50%);
+                border-radius:20px 20px 0 0;
+                box-shadow:0 -8px 40px rgba(0,0,0,.12);
+            }
+
+            /* Top bar: add padding */
+            .top-bar{padding:16px 24px}
+            .top-btn{width:44px;height:44px;font-size:17px;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+            .top-brand{font-size:17px}
+
+            /* Search overlay: centered card, not full screen */
+            .search-overlay{
+                background:rgba(0,0,0,.3);
+                backdrop-filter:blur(4px);
+                align-items:center;
+                justify-content:center;
+            }
+            .search-overlay > *{
+                max-width:480px;
+                width:100%;
+            }
+            .search-overlay{
+                flex-direction:column;
+            }
+            .search-overlay .search-header{
+                background:#fff;
+                border-radius:16px 16px 0 0;
+                max-width:480px;
+                width:100%;
+                margin:0 auto;
+            }
+            .search-overlay .search-results{
+                background:#fff;
+                border-radius:0 0 16px 16px;
+                max-width:480px;
+                width:100%;
+                margin:0 auto;
+                max-height:400px;
+            }
+            .search-overlay #useMyLocRow{
+                max-width:480px;
+                width:100%;
+                margin:0 auto;
+                background:#fff;
+            }
+
+            /* Menu drawer: wider */
+            .menu-drawer{width:340px}
+
+            /* Notification dropdown: bigger */
+            .notif-dropdown{width:360px}
+
+            /* History/Profile overlays: centered card */
+            .history-overlay,.profile-overlay{
+                background:rgba(0,0,0,.3);
+                backdrop-filter:blur(4px);
+                align-items:center;
+                justify-content:center;
+            }
+            .history-overlay > *,.profile-overlay > *{
+                max-width:480px;
+                width:100%;
+            }
+            .history-overlay .history-header,.profile-overlay .history-header{
+                background:#fff;
+                border-radius:16px 16px 0 0;
+            }
+            .history-overlay .history-list{
+                background:#fff;
+                border-radius:0 0 16px 16px;
+                max-height:500px;
+            }
+            .profile-overlay .profile-head{
+                border-radius:16px 16px 0 0;
+            }
+            .profile-overlay .profile-info-list{
+                background:#fff;
+                border-radius:0 0 16px 16px;
+            }
+
+            #myLocFab{
+                bottom:200px;
+                right:20px;
+            }
+        }
+
+        /* ══════════════════════════════════════
+           LARGE DESKTOP (1024px+)
+           ══════════════════════════════════════ */
+        @media(min-width:1024px){
+            /* Sheet on the left side like a sidebar card */
+            .sheet{
+                left:24px;
+                transform:none;
+                bottom:24px;
+                border-radius:20px;
+                max-height:calc(100vh - 100px);
+            }
+
+            /* Top bar wider padding */
+            .top-bar{padding:20px 32px}
+
+            #myLocFab{right:32px;bottom:120px}
+        }
+    </style>
+</head>
+<body>
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Menu Drawer -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <div class="menu-drawer" id="menuDrawer">
+        <div class="menu-profile">
+            <div class="menu-avatar" id="menuInitial">P</div>
+            <div class="menu-name" id="menuName">Passenger</div>
+            <div class="menu-email" id="menuEmail">passenger@todasure.com</div>
+        </div>
+        <div class="menu-items">
+            <button class="menu-item" onclick="openProfile()"><i class="fa-solid fa-user"></i> My Profile</button>
+            <button class="menu-item" onclick="openHistory()"><i class="fa-solid fa-clock-rotate-left"></i> Trip History</button>
+            <button class="menu-item" onclick="openComplaint()"><i class="fa-solid fa-flag"></i> File a Complaint</button>
+            <div class="menu-sep"></div>
+            <button class="menu-item danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </div>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <button class="top-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
+        <span class="top-brand">TODASURE</span>
+        <div class="top-right">
+            <div style="position:relative">
+                <button class="top-btn" id="notifBtn">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="notif-badge hidden" id="notifDot"></span>
+                </button>
+                <!-- Notification Dropdown -->
+                <div class="notif-dropdown" id="notifDropdown">
+                    <div class="notif-header">
+                        <span>Notifications</span>
+                        <span style="font-size:11px;color:#9ca3af;font-weight:400" id="notifCount">0</span>
+                    </div>
+                    <div class="notif-list" id="notifList">
+                        <div class="notif-empty"><i class="fa-solid fa-bell-slash" style="font-size:20px;display:block;margin-bottom:8px;opacity:.3"></i>No notifications yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Overlay -->
+    <div class="history-overlay" id="historyOverlay">
+        <div class="history-header">
+            <button class="search-back" onclick="closeHistory()"><i class="fa-solid fa-arrow-left"></i></button>
+            <h3>Trip History</h3>
+        </div>
+        <div class="history-list" id="historyList">
+            <div class="history-empty"><i class="fa-solid fa-route" style="font-size:28px;display:block;margin-bottom:12px;opacity:.2"></i>No trips yet</div>
+        </div>
+    </div>
+
+    <!-- Profile Overlay -->
+    <div class="profile-overlay" id="profileOverlay">
+        <div class="history-header">
+            <button class="search-back" onclick="closeProfile()"><i class="fa-solid fa-arrow-left"></i></button>
+            <h3>My Profile</h3>
+            <button id="profEditBtn" onclick="toggleProfileEdit()" style="background:none;border:none;color:#10b981;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-left:auto;padding:8px">
+                <i class="fa-solid fa-pen" style="margin-right:4px"></i> Edit
+            </button>
+        </div>
+        <div class="profile-head">
+            <div class="p-avatar" id="profInitial">P</div>
+            <div class="p-name" id="profName">Passenger</div>
+            <div class="p-email" id="profEmail">passenger@todasure.com</div>
+        </div>
+        <!-- View Mode -->
+        <div class="profile-info-list" id="profViewMode">
+            <div class="profile-info-row"><i class="fa-solid fa-user"></i><div><div class="pi-label">First Name</div><div class="pi-value" id="profFirstName">--</div></div></div>
+            <div class="profile-info-row"><i class="fa-solid fa-user"></i><div><div class="pi-label">Last Name</div><div class="pi-value" id="profLastName">--</div></div></div>
+            <div class="profile-info-row"><i class="fa-solid fa-envelope"></i><div><div class="pi-label">Email</div><div class="pi-value" id="profEmailVal">--</div></div></div>
+            <div class="profile-info-row"><i class="fa-solid fa-phone"></i><div><div class="pi-label">Phone</div><div class="pi-value" id="profPhone">--</div></div></div>
+            <div class="profile-info-row"><i class="fa-solid fa-shield-halved"></i><div><div class="pi-label">Account Type</div><div class="pi-value">Passenger</div></div></div>
+        </div>
+        <!-- Edit Mode -->
+        <div class="profile-info-list hidden" id="profEditMode" style="padding:20px">
+            <div style="margin-bottom:14px">
+                <label style="font-size:12px;color:#9ca3af;display:block;margin-bottom:4px">First Name</label>
+                <input type="text" id="editFirstName" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;outline:none" placeholder="First Name">
+            </div>
+            <div style="margin-bottom:14px">
+                <label style="font-size:12px;color:#9ca3af;display:block;margin-bottom:4px">Last Name</label>
+                <input type="text" id="editLastName" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;outline:none" placeholder="Last Name">
+            </div>
+            <div style="margin-bottom:14px">
+                <label style="font-size:12px;color:#9ca3af;display:block;margin-bottom:4px">Email</label>
+                <input type="email" id="editEmail" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;outline:none;background:#f8fafc" readonly>
+            </div>
+            <div style="margin-bottom:20px">
+                <label style="font-size:12px;color:#9ca3af;display:block;margin-bottom:4px">Phone</label>
+                <input type="tel" id="editPhone" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;outline:none" placeholder="09xxxxxxxxx">
+            </div>
+            <button onclick="saveProfile()" style="width:100%;padding:14px;background:#10b981;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">
+                <i class="fa-solid fa-check" style="margin-right:6px"></i> Save Changes
+            </button>
+            <button onclick="cancelProfileEdit()" style="width:100%;padding:12px;background:none;border:1.5px solid #e5e7eb;color:#64748b;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Sheet -->
+    <div class="sheet" id="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-body">
+
+            <!-- State 1: Where to? -->
+            <div id="stateSearch">
+                <div class="where-to">
+                    <h2>Where to?</h2>
+                    <div class="search-box" id="openSearch">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Search destination...</span>
+                        <i class="fa-solid fa-chevron-right arrow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- State 2: Route Preview -->
+            <div id="stateRoute" class="hidden">
+                <div class="route-card">
+                    <button class="btn-edit" onclick="editDestination()"><i class="fa-solid fa-pen" style="margin-right:4px"></i> Change destination</button>
+                    <div class="route-locations">
+                        <div class="route-dots">
+                            <div class="dot" style="background:#10b981"></div>
+                            <div class="line"></div>
+                            <div class="dot" style="background:#ef4444"></div>
+                        </div>
+                        <div class="route-addrs">
+                            <div class="route-addr"><strong>Pickup</strong><br><span id="routePickup">Current Location</span></div>
+                            <div class="route-addr"><strong>Drop-off</strong><br><span id="routeDropoff">--</span></div>
+                        </div>
+                    </div>
+                    <div class="route-stats">
+                        <div class="route-stat"><div class="val" id="routeDist">--</div><div class="lbl">km</div></div>
+                        <div class="route-stat"><div class="val" id="routeEta">--</div><div class="lbl">min</div></div>
+                        <div class="route-stat green"><div class="val" id="routeFare">--</div><div class="lbl">est. fare</div></div>
+                    </div>
+                    <button class="btn-book-ride" id="btnBook"><i class="fa-solid fa-motorcycle"></i> Book Ride</button>
+                </div>
+            </div>
+
+            <!-- State 3: Waiting -->
+            <div id="stateWaiting" class="hidden">
+                <div class="waiting-anim">
+                    <div class="pulse-ring"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <div class="waiting-text">Finding your driver...</div>
+                    <div class="waiting-sub">This usually takes less than a minute</div>
+                </div>
+                <button class="btn-cancel-ride" onclick="cancelBooking()">Cancel booking</button>
+            </div>
+
+            <!-- State 4: Driver accepted -->
+            <div id="stateAccepted" class="hidden">
+                <div style="font-size:14px;font-weight:600;color:#10b981;margin-bottom:12px"><i class="fa-solid fa-check-circle" style="margin-right:4px"></i> Driver is on the way</div>
+                <div class="driver-info">
+                    <div class="driver-avatar" id="driverInitial">J</div>
+                    <div class="driver-details">
+                        <div class="name" id="driverName">--</div>
+                        <div class="plate"><i class="fa-solid fa-motorcycle"></i><span id="driverPlate">--</span></div>
+                    </div>
+                    <div class="driver-actions">
+                        <button title="Call" id="callDriver"><i class="fa-solid fa-phone"></i></button>
+                    </div>
+                </div>
+                <button class="btn-cancel-ride" onclick="cancelBooking()">Cancel ride</button>
+            </div>
+
+            <!-- State 5: Trip in progress -->
+            <div id="stateTrip" class="hidden">
+                <div style="font-size:14px;font-weight:600;color:#3b82f6;margin-bottom:12px"><i class="fa-solid fa-road" style="margin-right:4px"></i> Trip in progress</div>
+                <div class="trip-live">
+                    <div class="trip-live-stat"><div class="v" id="liveDist">0.00</div><div class="l">km</div></div>
+                    <div class="trip-live-stat accent"><div class="v" id="liveFare">₱0</div><div class="l">fare</div></div>
+                    <div class="trip-live-stat"><div class="v" id="liveTime">00:00</div><div class="l">time</div></div>
+                </div>
+                <div class="driver-info">
+                    <div class="driver-avatar" id="tripDriverInitial">J</div>
+                    <div class="driver-details">
+                        <div class="name" id="tripDriverName">--</div>
+                        <div class="plate"><i class="fa-solid fa-motorcycle"></i><span id="tripPlate">--</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- State 6: Completed -->
+            <div id="stateComplete" class="hidden">
+                <div class="complete-fare">
+                    <div class="amount" id="finalFare">₱0.00</div>
+                    <div class="label">Total Fare</div>
+                </div>
+                <div class="complete-stats">
+                    <div class="complete-stat"><div class="v" id="finalDist">--</div><div class="l">km</div></div>
+                    <div class="complete-stat"><div class="v" id="finalTime">--</div><div class="l">duration</div></div>
+                </div>
+                <button class="btn-book-ride" onclick="resetBooking()"><i class="fa-solid fa-plus"></i> Book another ride</button>
+                <button class="btn-outline-green" onclick="openComplaint()"><i class="fa-solid fa-flag"></i> Report an issue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-header">
+            <button class="search-back" onclick="closeSearch()"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="search-inputs">
+                <div class="search-row">
+                    <div class="search-dot green"></div>
+                    <input class="search-input" id="searchPickup" placeholder="Search pickup location..." data-type="pickup">
+                </div>
+                <div style="display:flex;align-items:center"><div class="search-line"></div></div>
+                <div class="search-row">
+                    <div class="search-dot red"></div>
+                    <input class="search-input" id="searchDropoff" placeholder="Where to?" data-type="dropoff">
+                </div>
+            </div>
+        </div>
+        <!-- Use my location button -->
+        <div id="useMyLocRow" class="search-item" style="border-bottom:1px solid #f1f5f9">
+            <div class="search-item-icon" style="background:#d1fae5;color:#059669"><i class="fa-solid fa-crosshairs"></i></div>
+            <div class="search-item-text">
+                <div class="search-item-name" style="color:#059669;font-weight:600">Use my current location</div>
+                <div class="search-item-addr" id="myLocPreview">Detecting...</div>
+            </div>
+        </div>
+        <div class="search-results" id="searchResults">
+            <div style="padding:40px 20px;text-align:center;color:#94a3b8;font-size:13px">
+                <i class="fa-solid fa-magnifying-glass" style="font-size:24px;display:block;margin-bottom:8px;opacity:.3"></i>
+                Search for a place in Nasugbu
+            </div>
+        </div>
+    </div>
+
+    <!-- My Location FAB on map -->
+    <button id="myLocFab" class="top-btn" style="position:absolute;right:16px;z-index:35;color:#3b82f6">
+        <i class="fa-solid fa-location-crosshairs"></i>
+    </button>
+
+    <script src="../assets/js/guard.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        const GMAP_KEY = 'AIzaSyAVF_yekJbPdCQIoaWxzT4dHBIkjazhq6A';
+        const NASUGBU = { lat: 14.0637, lng: 120.6283 };
+        const BOUNDS = { south: 13.95, north: 14.12, west: 120.52, east: 120.72 };
+
+        let gmap, pickupMarker, dropoffMarker, driverMarker;
+        let directionsService, directionsRenderer, geocoder, placesService;
+
+        // Notifications (must be declared early - used by booking flow)
+        let notifs = [];
+        function addNotification(icon, color, text) {
+            notifs.unshift({ icon, color, text, time: new Date() });
+            if (notifs.length > 20) notifs.pop();
+            renderNotifs();
+            var dot = document.getElementById('notifDot');
+            if (dot) dot.classList.remove('hidden');
+        }
+        function renderNotifs() {
+            var countEl = document.getElementById('notifCount');
+            var listEl = document.getElementById('notifList');
+            if (countEl) countEl.textContent = notifs.length;
+            if (!listEl) return;
+            if (notifs.length === 0) {
+                listEl.innerHTML = '<div class="notif-empty"><i class="fa-solid fa-bell-slash" style="font-size:20px;display:block;margin-bottom:8px;opacity:.3"></i>No notifications yet</div>';
+                return;
+            }
+            listEl.innerHTML = notifs.map(function(n) {
+                var ago = Math.floor((Date.now() - n.time.getTime()) / 60000);
+                var timeStr = ago < 1 ? 'Just now' : ago < 60 ? ago + 'm ago' : Math.floor(ago/60) + 'h ago';
+                return '<div class="notif-item"><div class="notif-icon-box '+n.color+'"><i class="fa-solid fa-'+n.icon+'"></i></div><div class="notif-text"><p>'+n.text+'</p><small>'+timeStr+'</small></div></div>';
+            }).join('');
+        }
+        let pickupPos = null, dropoffPos = null, pickupAddr = '', dropoffAddr = '';
+        let activeBooking = null, pollInterval = null, tripTimer = null, tripStart = null;
+        let lastRouteDist = 0, lastRouteEta = 0, lastRouteFare = 0;
+
+        function isInNasugbu(lat, lng) {
+            return lat >= BOUNDS.south && lat <= BOUNDS.north && lng >= BOUNDS.west && lng <= BOUNDS.east;
+        }
+
+        function initMap() {
+            gmap = new google.maps.Map(document.getElementById('map'), {
+                center: NASUGBU, zoom: 14,
+                disableDefaultUI: true, zoomControl: false,
+                clickableIcons: false,
+                restriction: { latLngBounds: { north: 14.14, south: 13.93, east: 120.74, west: 120.50 }, strictBounds: true },
+                mapTypeId: 'roadmap'
+            });
+
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: gmap, suppressMarkers: true,
+                polylineOptions: { strokeColor: '#10b981', strokeWeight: 5, strokeOpacity: .85 }
+            });
+            geocoder = new google.maps.Geocoder();
+            placesService = new google.maps.places.AutocompleteService();
+
+            // Tap map to set dropoff
+            gmap.addListener('click', async e => {
+                if (activeBooking) return;
+                const lat = e.latLng.lat(), lng = e.latLng.lng();
+                if (!isInNasugbu(lat, lng)) return;
+                dropoffPos = { lat, lng };
+                setMarker('dropoff', lat, lng);
+                dropoffAddr = await reverseGeocode(lat, lng);
+                showRoutePreview();
+            });
+
+            // GPS
+            if (navigator.geolocation) {
+                let geocoded = false;
+                navigator.geolocation.watchPosition(async pos => {
+                    pickupPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    setMarker('pickup', pickupPos.lat, pickupPos.lng);
+                    if (!geocoded) {
+                        geocoded = true;
+                        gmap.setCenter(pickupPos);
+                        pickupAddr = await reverseGeocode(pickupPos.lat, pickupPos.lng);
+                        document.getElementById('searchPickup').value = pickupAddr;
+                        document.getElementById('myLocPreview').textContent = pickupAddr;
+                    }
+                }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 });
+            }
+
+
+            checkExistingBooking();
+        }
+
+        // ── Markers ──
+        function setMarker(type, lat, lng) {
+            if (type === 'pickup') {
+                if (pickupMarker) pickupMarker.setPosition({lat,lng});
+                else pickupMarker = new google.maps.Marker({ position:{lat,lng}, map:gmap,
+                    icon: {
+                        url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                        scaledSize: new google.maps.Size(36, 36),
+                        anchor: new google.maps.Point(18, 18)
+                    },
+                    title: 'Pickup Location'
+                });
+            } else {
+                if (dropoffMarker) dropoffMarker.setPosition({lat,lng});
+                else dropoffMarker = new google.maps.Marker({ position:{lat,lng}, map:gmap,
+                    icon: {
+                        url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                        scaledSize: new google.maps.Size(36, 36)
+                    },
+                    title: 'Drop-off Location'
+                });
+            }
+        }
+
+        // ── Route ──
+        function showRoutePreview() {
+            if (!pickupPos || !dropoffPos) return;
+            directionsService.route({
+                origin: pickupPos, destination: dropoffPos, travelMode: google.maps.TravelMode.DRIVING
+            }, (result, status) => {
+                if (status !== 'OK') return;
+                directionsRenderer.setDirections(result);
+                const leg = result.routes[0].legs[0];
+                lastRouteDist = (leg.distance.value / 1000);
+                lastRouteEta = Math.ceil(leg.duration.value / 60);
+                lastRouteFare = lastRouteDist * 5 + 15;
+
+                document.getElementById('routePickup').textContent = pickupAddr || 'Current Location';
+                document.getElementById('routeDropoff').textContent = dropoffAddr;
+                document.getElementById('routeDist').textContent = lastRouteDist.toFixed(1);
+                document.getElementById('routeEta').textContent = lastRouteEta;
+                document.getElementById('routeFare').textContent = '₱' + lastRouteFare.toFixed(0);
+
+                showState('stateRoute');
+                closeSearch();
+            });
+        }
+
+        // ── Geocode ──
+        let geoCache = {};
+        function reverseGeocode(lat, lng) {
+            const k = lat.toFixed(4)+','+lng.toFixed(4);
+            if (geoCache[k]) return Promise.resolve(geoCache[k]);
+            return new Promise(res => {
+                geocoder.geocode({location:{lat,lng}}, (r,s) => {
+                    if (s==='OK'&&r[0]) {
+                        let a = r[0].formatted_address.replace(/, Philippines$/i,'').replace(/, Calabarzon$/i,'').replace(/\s*\d{4}\s*/,' ').trim().replace(/, $/,'');
+                        geoCache[k]=a; res(a);
+                    } else res('Nasugbu, Batangas');
+                });
+            });
+        }
+
+        // ── Search ──
+        // ── Search System (both pickup & dropoff) ──
+        let activeSearchField = 'dropoff'; // which field is being searched
+
+        document.getElementById('openSearch').addEventListener('click', () => {
+            document.getElementById('searchOverlay').classList.add('show');
+            document.getElementById('searchPickup').value = pickupAddr;
+            document.getElementById('searchDropoff').value = '';
+            activeSearchField = 'dropoff';
+            setTimeout(() => document.getElementById('searchDropoff').focus(), 100);
+        });
+
+        function closeSearch() { document.getElementById('searchOverlay').classList.remove('show'); }
+
+        // Track which input is focused
+        document.getElementById('searchPickup').addEventListener('focus', () => { activeSearchField = 'pickup'; });
+        document.getElementById('searchDropoff').addEventListener('focus', () => { activeSearchField = 'dropoff'; });
+
+        // Shared search function for both inputs
+        let searchTimer = null;
+        function handleSearchInput(e) {
+            clearTimeout(searchTimer);
+            const q = e.target.value.trim();
+            if (q.length < 2) {
+                document.getElementById('searchResults').innerHTML = '<div style="padding:40px 20px;text-align:center;color:#94a3b8;font-size:13px">Search for a place in Nasugbu</div>';
+                return;
+            }
+            searchTimer = setTimeout(() => {
+                placesService.getPlacePredictions({
+                    input: q + ' Nasugbu',
+                    locationRestriction: { north:BOUNDS.north, south:BOUNDS.south, east:BOUNDS.east, west:BOUNDS.west },
+                    componentRestrictions: { country: 'ph' }
+                }, (preds, status) => {
+                    if (status !== google.maps.places.PlacesServiceStatus.OK || !preds) {
+                        document.getElementById('searchResults').innerHTML = '<div style="padding:30px 20px;text-align:center;color:#94a3b8;font-size:13px">No results in Nasugbu area</div>';
+                        return;
+                    }
+                    const filtered = preds.filter(p => { const d=p.description.toLowerCase(); return d.includes('nasugbu')||d.includes('batangas'); });
+                    if (!filtered.length) {
+                        document.getElementById('searchResults').innerHTML = '<div style="padding:30px 20px;text-align:center;color:#94a3b8;font-size:13px">No results in Nasugbu area</div>';
+                        return;
+                    }
+                    document.getElementById('searchResults').innerHTML = filtered.map(p =>
+                        `<div class="search-item" data-placeid="${p.place_id}">
+                            <div class="search-item-icon"><i class="fa-solid fa-location-dot"></i></div>
+                            <div class="search-item-text">
+                                <div class="search-item-name">${p.structured_formatting.main_text}</div>
+                                <div class="search-item-addr">${p.structured_formatting.secondary_text||''}</div>
+                            </div>
+                        </div>`
+                    ).join('');
+                });
+            }, 350);
+        }
+
+        document.getElementById('searchPickup').addEventListener('input', handleSearchInput);
+        document.getElementById('searchDropoff').addEventListener('input', handleSearchInput);
+
+        // Handle result selection (works for both pickup and dropoff)
+        document.getElementById('searchResults').addEventListener('click', function(e) {
+            const item = e.target.closest('.search-item');
+            if (!item || !item.dataset.placeid) return;
+            geocoder.geocode({ placeId: item.dataset.placeid }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const loc = results[0].geometry.location;
+                    const lat = loc.lat(), lng = loc.lng();
+                    if (!isInNasugbu(lat, lng)) {
+                        Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2500}).fire({icon:'warning',title:'Location must be within Nasugbu'});
+                        return;
+                    }
+                    const name = item.querySelector('.search-item-name').textContent;
+
+                    if (activeSearchField === 'pickup') {
+                        pickupPos = { lat, lng };
+                        pickupAddr = name;
+                        setMarker('pickup', lat, lng);
+                        gmap.setCenter({ lat, lng });
+                        document.getElementById('searchPickup').value = name;
+                        // Move focus to dropoff
+                        activeSearchField = 'dropoff';
+                        document.getElementById('searchDropoff').focus();
+                        document.getElementById('searchResults').innerHTML = '<div style="padding:40px 20px;text-align:center;color:#94a3b8;font-size:13px">Now search your destination</div>';
+                    } else {
+                        dropoffPos = { lat, lng };
+                        dropoffAddr = name;
+                        setMarker('dropoff', lat, lng);
+                        showRoutePreview();
+                    }
+                }
+            });
+        });
+
+        // Use my current location button
+        document.getElementById('useMyLocRow').addEventListener('click', () => {
+            if (!pickupPos) {
+                Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'warning',title:'GPS not available yet'});
+                return;
+            }
+            if (activeSearchField === 'pickup') {
+                setMarker('pickup', pickupPos.lat, pickupPos.lng);
+                gmap.setCenter(pickupPos);
+                document.getElementById('searchPickup').value = pickupAddr || 'Current Location';
+                activeSearchField = 'dropoff';
+                document.getElementById('searchDropoff').focus();
+            } else {
+                // Rare case: using current location as dropoff
+                dropoffPos = { lat: pickupPos.lat, lng: pickupPos.lng };
+                dropoffAddr = pickupAddr || 'Current Location';
+                setMarker('dropoff', dropoffPos.lat, dropoffPos.lng);
+                showRoutePreview();
+            }
+        });
+
+        // Position FAB above sheet
+        function positionFab() {
+            var sheet = document.getElementById('sheet');
+            var fab = document.getElementById('myLocFab');
+            if (sheet && fab) {
+                var sheetH = sheet.offsetHeight;
+                fab.style.bottom = (sheetH + 12) + 'px';
+            }
+        }
+        positionFab();
+        window.addEventListener('resize', positionFab);
+        new MutationObserver(positionFab).observe(document.getElementById('sheet'), { childList:true, subtree:true, attributes:true });
+
+        // My location FAB on map
+        document.getElementById('myLocFab').addEventListener('click', () => {
+            if (pickupPos) {
+                setMarker('pickup', pickupPos.lat, pickupPos.lng);
+                gmap.panTo(pickupPos);
+                gmap.setZoom(16);
+            } else {
+                // Try to get location now
+                navigator.geolocation.getCurrentPosition(async pos => {
+                    pickupPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    setMarker('pickup', pickupPos.lat, pickupPos.lng);
+                    gmap.panTo(pickupPos);
+                    gmap.setZoom(16);
+                    pickupAddr = await reverseGeocode(pickupPos.lat, pickupPos.lng);
+                    document.getElementById('searchPickup').value = pickupAddr;
+                    document.getElementById('myLocPreview').textContent = pickupAddr;
+                }, () => {
+                    Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2500}).fire({icon:'warning',title:'Cannot detect location. Please enable GPS.'});
+                }, { enableHighAccuracy: true, timeout: 10000 });
+            }
+        });
+
+        function editDestination() {
+            directionsRenderer.setDirections({ routes: [] });
+            if (dropoffMarker) { dropoffMarker.setMap(null); dropoffMarker = null; }
+            dropoffPos = null; dropoffAddr = '';
+            showState('stateSearch');
+            document.getElementById('searchOverlay').classList.add('show');
+            document.getElementById('searchDropoff').value = '';
+            document.getElementById('searchDropoff').focus();
+        }
+
+        // ── Booking ──
+        document.getElementById('btnBook').addEventListener('click', async function() {
+            if (!pickupPos || !dropoffPos) return;
+            this.disabled = true;
+            this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Booking...';
+            try {
+                const result = await bookings.create({
+                    pickup_address: pickupAddr || 'Current Location',
+                    pickup_lat: pickupPos.lat, pickup_lng: pickupPos.lng,
+                    dropoff_address: dropoffAddr || 'Destination',
+                    dropoff_lat: dropoffPos.lat, dropoff_lng: dropoffPos.lng
+                });
+                activeBooking = { id: result.booking_id, status: 'pending' };
+                showState('stateWaiting');
+                addNotification('motorcycle','blue','Booking sent! Looking for nearby drivers...');
+                startPolling();
+            } catch(err) {
+                if (err.message && err.message.includes('active booking')) {
+                    const r = await Swal.fire({
+                        icon:'warning', title:'Active Booking Found',
+                        text:'You have an existing booking. Cancel it to book a new ride?',
+                        showCancelButton:true, confirmButtonColor:'#ef4444', cancelButtonColor:'#9ca3af',
+                        confirmButtonText:'Cancel old booking', cancelButtonText:'View it'
+                    });
+                    if (r.isConfirmed) {
+                        try {
+                            const old = await bookings.mine();
+                            if (old && old.id) { await bookings.update(old.id, {status:'cancelled'}); }
+                            Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'success',title:'Old booking cancelled. Try again.'});
+                        } catch(e){}
+                    } else {
+                        checkExistingBooking();
+                    }
+                } else {
+                    Swal.fire({icon:'error',title:'Booking Failed',text:err.message,confirmButtonColor:'#10b981'});
+                }
+                this.disabled = false;
+                this.innerHTML = '<i class="fa-solid fa-motorcycle"></i> Book Ride';
+            }
+        });
+
+        async function cancelBooking() {
+            if (!activeBooking) return;
+            const r = await Swal.fire({title:'Cancel ride?',icon:'warning',showCancelButton:true,confirmButtonColor:'#ef4444',confirmButtonText:'Yes, cancel'});
+            if (!r.isConfirmed) return;
+            try { await bookings.update(activeBooking.id,{status:'cancelled'}); resetBooking(); } catch(e){}
+        }
+
+        // ── Polling ──
+        function startPolling() { if(pollInterval)clearInterval(pollInterval); pollInterval = setInterval(checkStatus,3000); }
+
+        async function checkStatus() {
+            if (!activeBooking) return;
+            try {
+                const b = await bookings.mine();
+                if (!b||b.active===false||!b.id){resetBooking();return;}
+
+                if (b.status==='accepted'&&document.getElementById('stateAccepted').classList.contains('hidden')) {
+                    const name = (b.driver_first||'')+' '+(b.driver_last||'');
+                    document.getElementById('driverName').textContent = name;
+                    document.getElementById('driverInitial').textContent = (b.driver_first||'D')[0];
+                    document.getElementById('driverPlate').textContent = b.plate_number||'N/A';
+                    document.getElementById('callDriver').onclick = () => { if(b.driver_phone) window.open('tel:'+b.driver_phone); };
+                    showState('stateAccepted');
+                    addNotification('check-circle','green',`${name} accepted your ride. Plate: ${b.plate_number||'N/A'}`);
+                    Swal.fire({icon:'success',title:'Driver Found!',html:`<b>${name}</b> is on the way`,confirmButtonColor:'#10b981'});
+                }
+
+                if (b.status==='in_progress') {
+                    const name = (b.driver_first||'')+' '+(b.driver_last||'');
+                    document.getElementById('tripDriverName').textContent = name;
+                    document.getElementById('tripDriverInitial').textContent = (b.driver_first||'D')[0];
+                    document.getElementById('tripPlate').textContent = b.plate_number||'N/A';
+                    showState('stateTrip');
+                    if(!tripStart){tripStart=Date.now();tripTimer=setInterval(()=>{document.getElementById('liveTime').textContent=fmtTime(Math.floor((Date.now()-tripStart)/1000))},1000);}
+                    if(b.trip_id){try{const t=await trips.get(b.trip_id);document.getElementById('liveDist').textContent=parseFloat(t.distance_km||0).toFixed(2);document.getElementById('liveFare').textContent='₱'+parseFloat(t.computed_fare||0).toFixed(0);if(t.current_lat&&t.current_lng){const p={lat:parseFloat(t.current_lat),lng:parseFloat(t.current_lng)};if(!driverMarker)driverMarker=new google.maps.Marker({position:p,map:gmap,icon:{path:google.maps.SymbolPath.CIRCLE,scale:8,fillColor:'#3b82f6',fillOpacity:1,strokeColor:'#fff',strokeWeight:3}});else driverMarker.setPosition(p);gmap.panTo(p);}}catch(e){}}
+                }
+
+                if (b.status==='completed') {
+                    clearInterval(pollInterval);clearInterval(tripTimer);
+                    if(b.trip_id){try{const t=await trips.get(b.trip_id);document.getElementById('finalFare').textContent='₱'+parseFloat(t.actual_fare||t.computed_fare||0).toFixed(2);document.getElementById('finalDist').textContent=parseFloat(t.distance_km||0).toFixed(1);}catch(e){}}
+                    document.getElementById('finalTime').textContent=fmtTime(tripStart?Math.floor((Date.now()-tripStart)/1000):0);
+                    showState('stateComplete');
+                    addNotification('flag-checkered','green','Trip completed! Thank you for riding with TODASURE.');
+                    Swal.fire({icon:'success',title:'Trip Complete!',text:'Thank you for riding with TODASURE.',confirmButtonColor:'#10b981'});
+                }
+
+                if (b.status==='cancelled'){addNotification('circle-xmark','red','Your booking was cancelled.');resetBooking();}
+            } catch(e){}
+        }
+
+        function fmtTime(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+
+        function showState(id) {
+            ['stateSearch','stateRoute','stateWaiting','stateAccepted','stateTrip','stateComplete'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id));
+        }
+
+        function resetBooking() {
+            activeBooking=null;clearInterval(pollInterval);clearInterval(tripTimer);tripStart=null;
+            if(dropoffMarker){dropoffMarker.setMap(null);dropoffMarker=null;}
+            if(driverMarker){driverMarker.setMap(null);driverMarker=null;}
+            directionsRenderer.setDirections({routes:[]});
+            dropoffPos=null;dropoffAddr='';
+            document.getElementById('notifDot').classList.add('hidden');
+            document.getElementById('btnBook').disabled=false;
+            document.getElementById('btnBook').innerHTML='<i class="fa-solid fa-motorcycle"></i> Book Ride';
+            showState('stateSearch');
+        }
+
+        async function checkExistingBooking() {
+            try {
+                const b = await bookings.mine();
+                if(b&&b.id){
+                    activeBooking={id:b.id,status:b.status};
+
+                    if(b.pickup_lat){pickupPos={lat:parseFloat(b.pickup_lat),lng:parseFloat(b.pickup_lng)};setMarker('pickup',pickupPos.lat,pickupPos.lng);pickupAddr=b.pickup_address||'';}
+                    if(b.dropoff_lat){dropoffPos={lat:parseFloat(b.dropoff_lat),lng:parseFloat(b.dropoff_lng)};setMarker('dropoff',dropoffPos.lat,dropoffPos.lng);dropoffAddr=b.dropoff_address||'';}
+
+                    if(b.status==='pending'){
+                        showState('stateWaiting');
+                    } else if(b.status==='accepted'){
+                        document.getElementById('driverName').textContent=(b.driver_first||'')+' '+(b.driver_last||'');
+                        document.getElementById('driverInitial').textContent=(b.driver_first||'D')[0];
+                        document.getElementById('driverPlate').textContent=b.plate_number||'N/A';
+                        showState('stateAccepted');
+                    } else if(b.status==='in_progress'){
+                        document.getElementById('tripDriverName').textContent=(b.driver_first||'')+' '+(b.driver_last||'');
+                        document.getElementById('tripDriverInitial').textContent=(b.driver_first||'D')[0];
+                        document.getElementById('tripPlate').textContent=b.plate_number||'N/A';
+                        tripStart=b.started_at?new Date(b.started_at).getTime():Date.now();
+                        tripTimer=setInterval(()=>{document.getElementById('liveTime').textContent=fmtTime(Math.floor((Date.now()-tripStart)/1000))},1000);
+                        showState('stateTrip');
+                    }
+                    startPolling();
+                }
+            } catch(e){}
+        }
+
+        // ── Auth & Profile ──
+        const user = JSON.parse(localStorage.getItem('user')||'null');
+        if(!user) window.location.replace('/TodaShare/login.html');
+        else {
+            const fullName = ((user.first_name||'') + ' ' + (user.last_name||'')).trim() || 'Passenger';
+            const initl = (user.first_name||'P')[0].toUpperCase();
+            document.getElementById('menuName').textContent = fullName;
+            document.getElementById('menuEmail').textContent = user.email || '';
+            document.getElementById('menuInitial').textContent = initl;
+            document.getElementById('profName').textContent = fullName;
+            document.getElementById('profEmail').textContent = user.email || '';
+            document.getElementById('profInitial').textContent = initl;
+            document.getElementById('profFirstName').textContent = user.first_name || '--';
+            document.getElementById('profLastName').textContent = user.last_name || '--';
+            document.getElementById('profEmailVal').textContent = user.email || '--';
+            document.getElementById('profPhone').textContent = user.phone || '--';
+        }
+
+        // ── Menu Drawer ──
+        document.getElementById('menuBtn').addEventListener('click', () => {
+            document.getElementById('menuDrawer').classList.add('show');
+            document.getElementById('menuOverlay').classList.add('show');
+        });
+        document.getElementById('menuOverlay').addEventListener('click', closeMenu);
+        function closeMenu() {
+            document.getElementById('menuDrawer').classList.remove('show');
+            document.getElementById('menuOverlay').classList.remove('show');
+        }
+
+        // ── Notification Dropdown ──
+        document.getElementById('notifBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('notifDropdown').classList.toggle('show');
+        });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.notif-dropdown') && !e.target.closest('#notifBtn'))
+                document.getElementById('notifDropdown').classList.remove('show');
+        });
+        function openNotifs() {
+            document.getElementById('notifDropdown').classList.add('show');
+        }
+
+        // ── Trip History ──
+        function openHistory() {
+            closeMenu();
+            document.getElementById('historyOverlay').classList.add('show');
+            loadHistory();
+        }
+        function closeHistory() { document.getElementById('historyOverlay').classList.remove('show'); }
+
+        async function loadHistory() {
+            try {
+                const list = await bookings.list({ limit: 30 });
+                const container = document.getElementById('historyList');
+                if (!list || list.length === 0) {
+                    container.innerHTML = '<div class="history-empty"><i class="fa-solid fa-route" style="font-size:28px;display:block;margin-bottom:12px;opacity:.2"></i>No trips yet</div>';
+                    return;
+                }
+                container.innerHTML = list.map(b => {
+                    const fare = parseFloat(b.estimated_fare || 0);
+                    const dist = parseFloat(b.estimated_distance || 0);
+                    const date = new Date(b.created_at).toLocaleDateString('en-PH', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                    const badgeCls = b.status === 'completed' ? 'completed' : b.status === 'cancelled' ? 'cancelled' : 'completed';
+                    return `<div class="history-item">
+                        <div class="history-item-top">
+                            <span class="fare">₱${fare.toFixed(2)}</span>
+                            <span class="date">${date}</span>
+                        </div>
+                        <div class="history-item-route">
+                            <span class="hdot" style="background:#10b981"></span>
+                            <span>${b.pickup_address || '--'}</span>
+                            <i class="fa-solid fa-arrow-right harrow"></i>
+                            <span class="hdot" style="background:#ef4444"></span>
+                            <span>${b.dropoff_address || '--'}</span>
+                        </div>
+                        <div style="margin-top:6px;display:flex;gap:8px;align-items:center">
+                            <span class="history-badge ${badgeCls}">${b.status}</span>
+                            <span style="font-size:11px;color:#9ca3af">${dist.toFixed(1)} km</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch(e) {
+                document.getElementById('historyList').innerHTML = '<div class="history-empty">Failed to load history</div>';
+            }
+        }
+
+        // ── Profile ──
+        let profileEditing = false;
+
+        function openProfile() {
+            closeMenu();
+            profileEditing = false;
+            document.getElementById('profViewMode').classList.remove('hidden');
+            document.getElementById('profEditMode').classList.add('hidden');
+            document.getElementById('profEditBtn').innerHTML = '<i class="fa-solid fa-pen" style="margin-right:4px"></i> Edit';
+            // Populate view values
+            document.getElementById('profFirstName').textContent = user.first_name || '--';
+            document.getElementById('profLastName').textContent = user.last_name || '--';
+            document.getElementById('profEmailVal').textContent = user.email || '--';
+            document.getElementById('profPhone').textContent = user.phone || '--';
+            document.getElementById('profileOverlay').classList.add('show');
+        }
+
+        function closeProfile() {
+            document.getElementById('profileOverlay').classList.remove('show');
+            profileEditing = false;
+        }
+
+        function toggleProfileEdit() {
+            if (!profileEditing) {
+                // Switch to edit mode
+                profileEditing = true;
+                document.getElementById('profViewMode').classList.add('hidden');
+                document.getElementById('profEditMode').classList.remove('hidden');
+                document.getElementById('profEditBtn').classList.add('hidden');
+                // Fill inputs
+                document.getElementById('editFirstName').value = user.first_name || '';
+                document.getElementById('editLastName').value = user.last_name || '';
+                document.getElementById('editEmail').value = user.email || '';
+                document.getElementById('editPhone').value = user.phone || '';
+            }
+        }
+
+        function cancelProfileEdit() {
+            profileEditing = false;
+            document.getElementById('profViewMode').classList.remove('hidden');
+            document.getElementById('profEditMode').classList.add('hidden');
+            document.getElementById('profEditBtn').classList.remove('hidden');
+        }
+
+        async function saveProfile() {
+            const firstName = document.getElementById('editFirstName').value.trim();
+            const lastName = document.getElementById('editLastName').value.trim();
+            const phone = document.getElementById('editPhone').value.trim();
+
+            if (!firstName) {
+                Swal.fire({ icon:'warning', title:'Required', text:'First name is required.', confirmButtonColor:'#10b981' });
+                return;
+            }
+
+            try {
+                const res = await fetch('/TodaShare/api/auth/update-profile.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ first_name: firstName, last_name: lastName, phone: phone })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    // Update localStorage
+                    user.first_name = firstName;
+                    user.last_name = lastName;
+                    user.phone = phone;
+                    localStorage.setItem('user', JSON.stringify(user));
+
+                    // Update all UI
+                    const fullName = (firstName + ' ' + lastName).trim();
+                    document.getElementById('profFirstName').textContent = firstName;
+                    document.getElementById('profLastName').textContent = lastName || '--';
+                    document.getElementById('profPhone').textContent = phone || '--';
+                    document.getElementById('profName').textContent = fullName;
+                    document.getElementById('menuName').textContent = fullName;
+                    document.getElementById('profInitial').textContent = firstName[0].toUpperCase();
+                    document.getElementById('menuInitial').textContent = firstName[0].toUpperCase();
+
+                    cancelProfileEdit();
+                    Swal.fire({ icon:'success', title:'Profile Updated', text:'Your profile has been saved.', confirmButtonColor:'#10b981' });
+                } else {
+                    Swal.fire({ icon:'error', title:'Error', text: data.error || 'Failed to update profile.', confirmButtonColor:'#10b981' });
+                }
+            } catch(err) {
+                Swal.fire({ icon:'error', title:'Error', text:'Something went wrong.', confirmButtonColor:'#10b981' });
+            }
+        }
+
+        // ── Complaint Modal ──
+        async function openComplaint() {
+            closeMenu();
+            const { value: formData } = await Swal.fire({
+                title: 'File a Complaint',
+                html: `
+                    <div style="text-align:left;font-size:13px;">
+                        <label style="display:block;margin-bottom:4px;font-weight:600;color:#374151;">Complaint Type</label>
+                        <select id="swal-type" class="swal2-select" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;margin-bottom:12px;font-family:inherit;">
+                            <option value="overcharging">Overcharging</option>
+                            <option value="rude_behavior">Rude Behavior</option>
+                            <option value="reckless_driving">Reckless Driving</option>
+                            <option value="refusal_of_service">Refusal of Service</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <label style="display:block;margin-bottom:4px;font-weight:600;color:#374151;">Tricycle ID / Plate Number</label>
+                        <input id="swal-tricycle" class="swal2-input" placeholder="e.g. ABC-1234" style="width:100%;margin:0 0 12px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;">
+                        <label style="display:block;margin-bottom:4px;font-weight:600;color:#374151;">Description</label>
+                        <textarea id="swal-desc" class="swal2-textarea" placeholder="Describe the incident..." rows="3" style="width:100%;margin:0;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Submit Complaint',
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#9ca3af',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const type = document.getElementById('swal-type').value;
+                    const tricycle = document.getElementById('swal-tricycle').value.trim();
+                    const desc = document.getElementById('swal-desc').value.trim();
+                    if (!desc) { Swal.showValidationMessage('Please describe the incident'); return false; }
+                    return { type, tricycle, desc };
+                }
+            });
+
+            if (formData) {
+                try {
+                    // Try to find tricycle by plate number
+                    let tricycleId = null;
+                    if (formData.tricycle) {
+                        try {
+                            const tList = await tricycles.list();
+                            const found = tList.find(t => t.plate_number && t.plate_number.toLowerCase().includes(formData.tricycle.toLowerCase()));
+                            if (found) tricycleId = found.id;
+                        } catch(e) {}
+                    }
+
+                    if (tricycleId) {
+                        await complaints.create({
+                            tricycle_id: tricycleId,
+                            complaint_type: formData.type,
+                            description: formData.desc,
+                            passenger_name: user ? (user.first_name + ' ' + (user.last_name||'')).trim() : 'Anonymous',
+                            passenger_contact: user ? user.phone || '' : ''
+                        });
+                        addNotification('flag', 'green', 'Complaint submitted successfully.');
+                        Swal.fire({ icon:'success', title:'Complaint Submitted', text:'Thank you. The admin will review your complaint.', confirmButtonColor:'#10b981' });
+                    } else {
+                        Swal.fire({ icon:'warning', title:'Submitted', text:'Complaint noted. Please provide a valid plate number for faster resolution.', confirmButtonColor:'#10b981' });
+                    }
+                } catch(err) {
+                    Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to submit complaint.', confirmButtonColor:'#10b981' });
+                }
+            }
+        }
+
+        // ── Logout ──
+        async function handleLogout(){
+            closeMenu();
+            const r=await Swal.fire({title:'Logout?',icon:'question',showCancelButton:true,confirmButtonColor:'#ef4444',confirmButtonText:'Yes'});
+            if(r.isConfirmed){try{await fetch('/TodaShare/api/auth/logout.php',{method:'POST'})}catch(e){}localStorage.removeItem('user');window.location.replace('/TodaShare/login.html');}
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAVF_yekJbPdCQIoaWxzT4dHBIkjazhq6A&libraries=places&callback=initMap" async defer></script>
+</body>
+</html>

@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODASURE - IoT-Based Solar-Powered Fare System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #f1f5f9;
+            background: #050816;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ── Animated Background ── */
+        .bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-canvas .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.35;
+            animation: orbFloat 12s ease-in-out infinite alternate;
+        }
+
+        .bg-canvas .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #00e6a0, transparent 70%);
+            top: -10%;
+            left: -8%;
+            animation-delay: 0s;
+        }
+
+        .bg-canvas .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #0ea5e9, transparent 70%);
+            bottom: -12%;
+            right: -6%;
+            animation-delay: -4s;
+            animation-duration: 14s;
+        }
+
+        .bg-canvas .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #8b5cf6, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -8s;
+            animation-duration: 16s;
+            opacity: 0.18;
+        }
+
+        @keyframes orbFloat {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(30px, -20px) scale(1.08); }
+            100% { transform: translate(-20px, 30px) scale(0.95); }
+        }
+
+        /* Noise texture overlay */
+        .bg-canvas::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Stars / particles */
+        .stars {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0%   { opacity: 0.15; }
+            100% { opacity: 0.7; }
+        }
+
+        /* ── Main Content ── */
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 640px;
+            text-align: center;
+        }
+
+        /* ── Logo ── */
+        .logo-wrapper {
+            margin-bottom: 32px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo-glow {
+            position: absolute;
+            inset: -20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 230, 160, 0.18), transparent 70%);
+            animation: pulseGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50%      { transform: scale(1.15); opacity: 1; }
+        }
+
+        .logo-ring {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            padding: 3px;
+            background: conic-gradient(from 0deg, #00e6a0, #0ea5e9, #8b5cf6, #00e6a0);
+            animation: ringRotate 6s linear infinite;
+        }
+
+        @keyframes ringRotate {
+            to { transform: rotate(360deg); }
+        }
+
+        .logo-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #0c1024;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #00e6a0;
+        }
+
+        .logo-inner img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: contain;
+        }
+
+        /* ── Title ── */
+        .hero-title {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-size: 52px;
+            font-weight: 700;
+            letter-spacing: 6px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: heroIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes heroIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .subtitle {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            background: linear-gradient(90deg, #00e6a0, #0ea5e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: heroIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+        }
+
+        .tagline {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 48px;
+            animation: heroIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+        }
+
+        /* ── Feature Cards ── */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .feature-card {
+            position: relative;
+            background: rgba(12, 16, 36, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 28px 18px 24px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+            animation: cardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .feature-card:nth-child(1) { animation-delay: 0.3s; }
+        .feature-card:nth-child(2) { animation-delay: 0.4s; }
+        .feature-card:nth-child(3) { animation-delay: 0.5s; }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(160deg, rgba(0, 230, 160, 0.25), transparent 50%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 230, 160, 0.08), 0 0 0 1px rgba(0, 230, 160, 0.12);
+            border-color: rgba(0, 230, 160, 0.15);
+        }
+
+        /* Glow dot on hover */
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 230, 160, 0.2), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .feature-card:hover::after {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0, 230, 160, 0.12), rgba(14, 165, 233, 0.08));
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            font-size: 19px;
+            color: #00e6a0;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            background: linear-gradient(135deg, rgba(0, 230, 160, 0.2), rgba(14, 165, 233, 0.15));
+            transform: scale(1.08);
+        }
+
+        .feature-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #e2e8f0;
+        }
+
+        .feature-card p {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* ── Buttons ── */
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-width: 380px;
+            margin: 0 auto 52px;
+            animation: heroIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both;
+        }
+
+        .btn {
+            position: relative;
+            display: block;
+            padding: 15px 24px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #00e6a0, #00c48a);
+            color: #050816;
+            box-shadow: 0 4px 24px rgba(0, 230, 160, 0.2), inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 60%);
+            pointer-events: none;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 230, 160, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-register {
+            background: rgba(0, 230, 160, 0.06);
+            border: 1.5px solid rgba(0, 230, 160, 0.35);
+            color: #00e6a0;
+            backdrop-filter: blur(8px);
+        }
+
+        .btn-register:hover {
+            background: rgba(0, 230, 160, 0.12);
+            border-color: rgba(0, 230, 160, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 230, 160, 0.1);
+        }
+
+        .btn-register:active {
+            transform: translateY(0);
+        }
+
+        /* ── Divider ── */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 52px;
+            max-width: 380px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: heroIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(100, 116, 139, 0.3), transparent);
+        }
+
+        .divider span {
+            font-size: 11px;
+            color: #475569;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            animation: heroIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+        }
+
+        .footer .motto {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            letter-spacing: 2px;
+        }
+
+        .footer .powered {
+            font-size: 11px;
+            color: #475569;
+            letter-spacing: 1px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 560px) {
+            .hero-title {
+                font-size: 36px;
+                letter-spacing: 4px;
+            }
+
+            .subtitle {
+                font-size: 11px;
+                letter-spacing: 2px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                max-width: 340px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .feature-card {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                text-align: left;
+                padding: 18px 20px;
+            }
+
+            .feature-icon {
+                margin-bottom: 0;
+                flex-shrink: 0;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .hero-title {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-canvas">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="stars" id="stars"></div>
+
+    <!-- Page -->
+    <div class="page">
+        <div class="container">
+            <!-- Logo -->
+            <div class="logo-wrapper">
+                <div class="logo-glow"></div>
+                <div class="logo-ring">
+                    <div class="logo-inner">
+                        <!-- Replace with: <img src="assets/img/logo.png" alt="TODASURE"> -->
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Text -->
+            <h1 class="hero-title">TODASURE</h1>
+            <p class="subtitle">IoT-Based &bull; Solar-Powered Fare System</p>
+            <p class="tagline">Revolutionizing tricycle transportation in Nasugbu, Batangas</p>
+
+            <!-- Features -->
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-bolt"></i></div>
+                    <div>
+                        <h3>IoT Enabled</h3>
+                        <p>Real-time fare tracking</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-sun"></i></div>
+                    <div>
+                        <h3>Solar Powered</h3>
+                        <p>Eco-friendly operation</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div>
+                        <h3>Secure &amp; Fair</h3>
+                        <p>Transparent pricing</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="buttons">
+                <a href="login.html" class="btn btn-login">Login</a>
+                <a href="signup.html" class="btn btn-register">Register</a>
+            </div>
+
+            <!-- Divider -->
+            <div class="divider">
+                <span>Respect &bull; Dignity &bull; Unity</span>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <p class="motto">TODASURE</p>
+                <p class="powered">Powered by ACTODAN</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Generate twinkling stars
+        const starsContainer = document.getElementById('stars');
+        const starCount = 60;
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.width = (Math.random() * 2 + 1) + 'px';
+            star.style.height = star.style.width;
+            star.style.animationDelay = (Math.random() * 4) + 's';
+            star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            starsContainer.appendChild(star);
+        }
+    </script>
+</body>
+</html>

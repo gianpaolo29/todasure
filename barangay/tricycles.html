@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODASURE - Tricycle Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .swal2-popup{background:#0f172a!important;color:#f1f5f9!important}
+        .swal2-title{color:#f1f5f9!important}
+        .swal2-html-container{color:#94a3b8!important}
+    </style>
+</head>
+<body>
+    <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <h2>TODASURE</h2>
+                    <span id="brgyLabel">Barangay</span>
+                </div>
+            </div>
+            <nav>
+                <a href="dashboard.html"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
+                <a href="drivers.html"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
+                <a href="tricycles.html" class="active"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
+                <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
+                <a href="violations.html"><i class="fa-solid fa-gavel icon"></i> Violations</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-header">
+                <span class="page-title" id="pageTitle">Tricycle Management</span>
+                <div class="header-actions">
+                    <button class="header-icon-btn" id="notifBtn"><i class="fa-solid fa-bell"></i></button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn">
+                            <div class="profile-avatar" id="profileInitial">B</div>
+                            <div class="profile-info">
+                                <div class="profile-name" id="profileName">Barangay</div>
+                                <div class="profile-role">Barangay Official</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </button>
+                        <div class="dropdown-menu" id="profileMenu">
+                            <a href="#"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <div class="divider"></div>
+                            <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-body">
+                <div class="card">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                        <h3><i class="fa-solid fa-motorcycle" style="color:var(--accent);margin-right:6px"></i> Tricycles</h3>
+                        <button class="btn btn-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Tricycle</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr><th>Plate</th><th>Body #</th><th>Driver</th><th>Color</th><th>Model</th><th>Status</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="tricyclesTable">
+                                <tr><td colspan="7" class="text-center text-muted" style="padding:30px">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Tricycle Modal -->
+    <div class="modal-overlay" id="tricycleModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle"><i class="fa-solid fa-motorcycle" style="color:var(--accent)"></i> Add Tricycle</h2>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="tricycleForm" onsubmit="handleTricycleSubmit(event)">
+                <input type="hidden" id="editId">
+                <div class="form-group"><label>Driver</label><select id="driverSelect" class="form-control"><option value="">Unassigned</option></select></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Plate Number *</label><input type="text" id="plateNumber" class="form-control" placeholder="e.g. ABC-1234" required></div>
+                    <div class="form-group"><label>Body Number *</label><input type="text" id="bodyNumber" class="form-control" placeholder="e.g. 001" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Color</label><input type="text" id="color" class="form-control" placeholder="e.g. Blue"></div>
+                    <div class="form-group"><label>Model</label><input type="text" id="model" class="form-control" placeholder="e.g. Honda TMX"></div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:8px">
+                    <button type="button" class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center"><i class="fa-solid fa-check"></i> Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../assets/js/guard.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        // ── Common UI ──
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('show');
+            this.classList.add('hide');
+        });
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+            document.getElementById('sidebarToggle').classList.remove('hide');
+        });
+        document.getElementById('profileBtn').addEventListener('click', function(e) { e.stopPropagation(); document.getElementById('profileMenu').classList.toggle('show'); });
+        document.addEventListener('click', function() { document.getElementById('profileMenu').classList.remove('show'); });
+
+        (async function() {
+            try {
+                var s = await auth.session();
+                if (s.role !== 'barangay' && s.role !== 'admin') { window.location.replace('/TodaShare/login.html'); return; }
+                var n = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
+                document.getElementById('profileName').textContent = n || 'Barangay';
+                document.getElementById('profileInitial').textContent = (s.first_name||'B')[0].toUpperCase();
+            } catch(e) { window.location.replace('/TodaShare/login.html'); }
+        })();
+
+        window.showAlert = function(msg, type) {
+            Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000, timerProgressBar:true })
+                .fire({ icon: type==='error'?'error':'success', title: msg });
+        };
+
+        async function handleLogout() {
+            var r = await Swal.fire({ title:'Logout?', icon:'question', showCancelButton:true, confirmButtonColor:'#00e6a0', confirmButtonText:'Yes' });
+            if (r.isConfirmed) { await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html'); }
+        }
+
+        document.getElementById('notifBtn').addEventListener('click', function() {
+            Swal.fire({ title:'Notifications', html:'<p>Tricycle management page</p>', icon:'info', confirmButtonColor:'#00e6a0' });
+        });
+
+        // ── Data ──
+        var statsData = null;
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add Tricycle';
+            document.getElementById('tricycleForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('tricycleModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('tricycleModal').classList.remove('active');
+        }
+
+        async function openEditModal(id) {
+            try {
+                var t = await tricycles.get(id);
+                document.getElementById('modalTitle').textContent = 'Edit Tricycle';
+                document.getElementById('editId').value = id;
+                document.getElementById('driverSelect').value = t.driver_id || '';
+                document.getElementById('plateNumber').value = t.plate_number || '';
+                document.getElementById('bodyNumber').value = t.body_number || '';
+                document.getElementById('color').value = t.color || '';
+                document.getElementById('model').value = t.model || '';
+                document.getElementById('tricycleModal').classList.add('active');
+            } catch(err) { showAlert(err.message, 'error'); }
+        }
+
+        async function handleTricycleSubmit(e) {
+            e.preventDefault();
+            var id = document.getElementById('editId').value;
+            var data = {
+                driver_id: document.getElementById('driverSelect').value,
+                plate_number: document.getElementById('plateNumber').value,
+                body_number: document.getElementById('bodyNumber').value,
+                color: document.getElementById('color').value,
+                model: document.getElementById('model').value
+            };
+            try {
+                if (id) { await tricycles.update(id, data); showAlert('Tricycle updated successfully'); }
+                else { await tricycles.create(data); showAlert('Tricycle added successfully'); }
+                closeModal();
+                loadPage();
+            } catch(err) { showAlert(err.message, 'error'); }
+        }
+
+        function populateDrivers(driversList) {
+            var sel = document.getElementById('driverSelect');
+            sel.innerHTML = '<option value="">Select Driver</option>';
+            (driversList||[]).forEach(function(d) {
+                sel.innerHTML += '<option value="' + d.id + '">' + (d.first_name||'') + ' ' + (d.last_name||'') + '</option>';
+            });
+        }
+
+        function renderTricycles(list) {
+            var tb = document.getElementById('tricyclesTable');
+            if (!list || !list.length) {
+                tb.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:30px">No tricycles found</td></tr>';
+                return;
+            }
+            tb.innerHTML = list.map(function(t) {
+                var statusBadge = '<span class="badge badge-' + (t.status||'active') + '">' + (t.status||'active') + '</span>';
+                return '<tr>' +
+                    '<td>' + (t.plate_number||'-') + '</td>' +
+                    '<td>' + (t.body_number||'-') + '</td>' +
+                    '<td>' + ((t.first_name||'') + ' ' + (t.last_name||'')).trim() + '</td>' +
+                    '<td>' + (t.color||'-') + '</td>' +
+                    '<td>' + (t.model||'-') + '</td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td>' +
+                        '<button onclick="openEditModal(' + t.id + ')" class="btn btn-sm" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>' +
+                    '</td></tr>';
+            }).join('');
+        }
+
+        async function loadPage() {
+            try {
+                statsData = await apiRequest('dashboard/barangay-stats.php');
+                document.getElementById('brgyLabel').textContent = 'Brgy. ' + statsData.barangay_name;
+                populateDrivers(statsData.drivers);
+                renderTricycles(statsData.tricycles);
+            } catch(err) { showAlert(err.message, 'error'); }
+        }
+
+        // ── Init ──
+        loadPage();
+    </script>
+</body>
+</html>

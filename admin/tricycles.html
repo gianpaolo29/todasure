@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODASURE - Tricycle Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>.swal2-popup{background:#0f172a!important;color:#f1f5f9!important}.swal2-title{color:#f1f5f9!important}.swal2-html-container{color:#94a3b8!important}</style>
+</head>
+<body>
+    <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <h2>TODASURE</h2>
+                    <span>Admin Panel</span>
+                </div>
+            </div>
+            <nav>
+                <a href="dashboard.html"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
+                <a href="drivers.html"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
+                <a href="tricycles.html" class="active"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
+                <a href="toda.html"><i class="fa-solid fa-building icon"></i> TODA</a>
+                <a href="trips.html"><i class="fa-solid fa-route icon"></i> Trips</a>
+                <a href="fares.html"><i class="fa-solid fa-peso-sign icon"></i> Fare Rates</a>
+                <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
+                <a href="violations.html"><i class="fa-solid fa-gavel icon"></i> Violations</a>
+                <a href="users.html"><i class="fa-solid fa-users icon"></i> Passengers</a>
+                <a href="barangays.html"><i class="fa-solid fa-map-location-dot icon"></i> Barangays</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-header">
+                <span class="page-title">Tricycle Management</span>
+                <div class="header-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search..." id="globalSearch">
+                </div>
+                <div class="header-actions">
+                    <button class="header-icon-btn" id="notifBtn" title="Notifications">
+                        <i class="fa-solid fa-bell"></i>
+                    </button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn">
+                            <div class="profile-avatar" id="profileInitial">A</div>
+                            <div class="profile-info">
+                                <div class="profile-name" id="profileName">Admin</div>
+                                <div class="profile-role">Administrator</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </button>
+                        <div class="dropdown-menu" id="profileMenu">
+                            <a href="#"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <div class="divider"></div>
+                            <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-body">
+                <!-- Filters -->
+                <div class="card" style="padding:16px;">
+                    <div class="flex gap-2">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by plate or body number..." style="max-width:300px;">
+                        <select id="filterStatus" class="form-control" style="max-width:150px;">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                        <button class="btn btn-outline" onclick="loadTricycles()">Filter</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                        <h3><i class="fa-solid fa-motorcycle" style="color:var(--accent);margin-right:8px;"></i>Tricycles</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="fa-solid fa-plus" style="margin-right:4px;"></i> Add Tricycle</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Plate Number</th>
+                                    <th>Body Number</th>
+                                    <th>Driver</th>
+                                    <th>Color</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tricyclesTable">
+                                <tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="tricycleModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Tricycle</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="tricycleForm">
+                <input type="hidden" id="tricycleId">
+                <div class="form-group">
+                    <label>Driver</label>
+                    <select id="driverId" class="form-control">
+                        <option value="">Unassigned</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Plate Number *</label>
+                        <input type="text" id="plateNumber" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Body Number *</label>
+                        <input type="text" id="bodyNumber" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Color</label>
+                        <input type="text" id="color" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Model</label>
+                        <input type="text" id="model" class="form-control">
+                    </div>
+                </div>
+                <div class="flex gap-2" style="justify-content:flex-end; margin-top:16px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../assets/js/guard.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('show');
+            this.classList.add('hide');
+        });
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+            document.getElementById('sidebarToggle').classList.remove('hide');
+});
+        // Close sidebar when nav link clicked (mobile)
+        document.querySelectorAll('.sidebar nav a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebarOverlay').classList.remove('show');
+            });
+        });
+
+        // Profile dropdown
+        document.getElementById('profileBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('profileMenu').classList.toggle('show');
+        });
+        document.addEventListener('click', function() {
+            document.getElementById('profileMenu').classList.remove('show');
+        });
+
+        // Load profile
+        (async function() {
+            try {
+                var s = await auth.session();
+                var n = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
+                document.getElementById('profileName').textContent = n || 'Admin';
+                document.getElementById('profileInitial').textContent = (s.first_name||'A')[0].toUpperCase();
+            } catch(e) {}
+        })();
+
+        // SweetAlert showAlert
+        window.showAlert = function(msg, type) {
+            Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000, timerProgressBar:true })
+                .fire({ icon: type==='error'?'error':'success', title: msg });
+        };
+
+        // Logout
+        async function handleLogout() {
+            var r = await Swal.fire({ title:'Logout?', text:'Are you sure?', icon:'question', showCancelButton:true, confirmButtonColor:'#00e6a0', cancelButtonColor:'#9ca3af', confirmButtonText:'Yes, logout' });
+            if (r.isConfirmed) { await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html'); }
+        }
+
+        async function loadDriverList() {
+            const list = await drivers.list();
+            const sel = document.getElementById('driverId');
+            list.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = `${d.first_name} ${d.last_name} (${d.license_number})`;
+                sel.appendChild(opt);
+            });
+        }
+
+        async function loadTricycles() {
+            try {
+                const params = {};
+                const search = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
+                const status = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : '';
+                if (search) params.search = search;
+                if (status) params.status = status;
+
+                let list = await tricycles.list(params);
+
+                // Client-side search fallback if API doesn't support search param
+                if (search && list.length > 0) {
+                    const q = search.toLowerCase();
+                    list = list.filter(t =>
+                        (t.plate_number && t.plate_number.toLowerCase().includes(q)) ||
+                        (t.body_number && t.body_number.toLowerCase().includes(q)) ||
+                        ((t.first_name + ' ' + t.last_name).toLowerCase().includes(q))
+                    );
+                }
+                if (status && list.length > 0) {
+                    list = list.filter(t => t.status === status);
+                }
+
+                const tbody = document.getElementById('tricyclesTable');
+                if (list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No tricycles found</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.map(t => `
+                    <tr>
+                        <td>#${t.id}</td>
+                        <td>${t.plate_number}</td>
+                        <td>${t.body_number}</td>
+                        <td>${t.first_name ? t.first_name + ' ' + t.last_name : '<span class="text-muted">Unassigned</span>'}</td>
+                        <td>${t.color || '-'}</td>
+                        <td>${t.model || '-'}</td>
+                        <td><span class="${badgeClass(t.status)}">${t.status}</span></td>
+                        <td>
+                            <button class="btn btn-outline btn-sm" onclick="editTricycle(${t.id})">Edit</button>
+                            ${t.status === 'active' ?
+                                `<button class="btn btn-danger btn-sm" onclick="deactivateTricycle(${t.id})">Deactivate</button>` :
+                                t.status === 'inactive' ?
+                                `<button class="btn btn-success btn-sm" onclick="activateTricycle(${t.id})">Activate</button>` : ''
+                            }
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) { showAlert(err.message, 'error'); }
+        }
+
+        async function deactivateTricycle(id) {
+            const r = await Swal.fire({ title: 'Deactivate Tricycle?', text: 'This tricycle will be set to inactive.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#00e6a0', cancelButtonColor: '#9ca3af', confirmButtonText: 'Yes, deactivate' });
+            if (!r.isConfirmed) return;
+            try {
+                await tricycles.update(id, { status: 'inactive' });
+                showAlert('Tricycle deactivated');
+                loadTricycles();
+            } catch (err) { showAlert(err.message, 'error'); }
+        }
+
+        async function activateTricycle(id) {
+            try {
+                await tricycles.update(id, { status: 'active' });
+                showAlert('Tricycle activated');
+                loadTricycles();
+            } catch (err) { showAlert(err.message, 'error'); }
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add Tricycle';
+            document.getElementById('tricycleForm').reset();
+            document.getElementById('tricycleId').value = '';
+            document.getElementById('tricycleModal').classList.add('active');
+        }
+
+        async function editTricycle(id) {
+            const t = await tricycles.get(id);
+            document.getElementById('modalTitle').textContent = 'Edit Tricycle';
+            document.getElementById('tricycleId').value = t.id;
+            document.getElementById('driverId').value = t.driver_id;
+            document.getElementById('plateNumber').value = t.plate_number;
+            document.getElementById('bodyNumber').value = t.body_number;
+            document.getElementById('color').value = t.color || '';
+            document.getElementById('model').value = t.model || '';
+            document.getElementById('tricycleModal').classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('tricycleModal').classList.remove('active'); }
+
+        document.getElementById('tricycleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('tricycleId').value;
+            const driverVal = document.getElementById('driverId').value;
+            const data = {
+                driver_id: driverVal || null,
+                plate_number: document.getElementById('plateNumber').value,
+                body_number: document.getElementById('bodyNumber').value,
+                color: document.getElementById('color').value,
+                model: document.getElementById('model').value
+            };
+            try {
+                if (id) { await tricycles.update(id, data); showAlert('Tricycle updated'); }
+                else { await tricycles.create(data); showAlert('Tricycle registered'); }
+                closeModal();
+                loadTricycles();
+            } catch (err) { showAlert(err.message, 'error'); }
+        });
+
+        loadDriverList();
+        loadTricycles();
+    </script>
+</body>
+</html>

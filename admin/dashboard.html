@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODASURE - Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        #liveMap { height: 380px; border-radius: 0 0 16px 16px; z-index: 1; }
+        .live-dot {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 12px; color: var(--accent); font-weight: 600;
+        }
+        .live-dot::before {
+            content: ''; width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent); animation: pulseDot 1.5s ease-in-out infinite;
+        }
+        @keyframes pulseDot {
+            0%,100% { box-shadow: 0 0 0 0 rgba(0,230,160,0.5); }
+            50% { box-shadow: 0 0 0 6px rgba(0,230,160,0); }
+        }
+        .analytics-grid {
+            display: grid; grid-template-columns: repeat(3,1fr);
+            gap: 14px; padding: 22px;
+        }
+        .analytics-card {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px; text-align: center;
+        }
+        .analytics-card h4 {
+            font-size: 11px; color: var(--text-muted); margin-bottom: 6px;
+            text-transform: uppercase; letter-spacing: .5px; font-weight: 600;
+        }
+        .analytics-card .big-number { font-size: 26px; font-weight: 800; color: var(--text); }
+        .chart-bars {
+            display: flex; align-items: flex-end; gap: 6px;
+            height: 90px; padding: 0 22px 28px;
+        }
+        .chart-bar {
+            flex: 1; background: linear-gradient(180deg, var(--accent), rgba(0,230,160,0.4));
+            border-radius: 6px 6px 0 0; min-height: 4px; position: relative;
+            transition: all .5s ease;
+        }
+        .chart-bar:hover { opacity: .8; }
+        .chart-bar .chart-label {
+            position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+            font-size: 9px; color: var(--text-muted); white-space: nowrap;
+        }
+        .chart-bar .chart-value {
+            position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+            font-size: 9px; color: var(--accent); font-weight: 600; white-space: nowrap; display: none;
+        }
+        .chart-bar:hover .chart-value { display: block; }
+        .filter-btn {
+            padding: 5px 14px; border: 1px solid var(--border); border-radius: 8px;
+            background: transparent; font-size: 12px; cursor: pointer; font-family: inherit;
+            font-weight: 500; color: var(--text-muted); transition: all .2s;
+        }
+        .filter-btn.active { background: var(--accent); color: #050816; border-color: var(--accent); }
+        @media (max-width: 768px) {
+            .analytics-grid { grid-template-columns: 1fr; }
+            #liveMap { height: 250px; }
+        }
+    </style>
+<style>.swal2-popup{background:#0f172a!important;color:#f1f5f9!important}.swal2-title{color:#f1f5f9!important}.swal2-html-container{color:#94a3b8!important}</style>
+</head>
+<body>
+    <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <h2>TODASURE</h2>
+                    <span>Admin Panel</span>
+                </div>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="active"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
+                <a href="drivers.html"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
+                <a href="tricycles.html"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
+                <a href="toda.html"><i class="fa-solid fa-building icon"></i> TODA</a>
+                <a href="trips.html"><i class="fa-solid fa-route icon"></i> Trips</a>
+                <a href="fares.html"><i class="fa-solid fa-peso-sign icon"></i> Fare Rates</a>
+                <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
+                <a href="violations.html"><i class="fa-solid fa-gavel icon"></i> Violations</a>
+                <a href="users.html"><i class="fa-solid fa-users icon"></i> Passengers</a>
+                <a href="barangays.html"><i class="fa-solid fa-map-location-dot icon"></i> Barangays</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-header">
+                <span class="page-title">Dashboard</span>
+                <div class="header-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search..." id="globalSearch">
+                </div>
+                <div class="header-actions">
+                    <button class="header-icon-btn" id="notifBtn" title="Notifications">
+                        <i class="fa-solid fa-bell"></i>
+                    </button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn">
+                            <div class="profile-avatar" id="profileInitial">A</div>
+                            <div class="profile-info">
+                                <div class="profile-name" id="profileName">Admin</div>
+                                <div class="profile-role">Administrator</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </button>
+                        <div class="dropdown-menu" id="profileMenu">
+                            <a href="#"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <div class="divider"></div>
+                            <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-body">
+                <!-- Date -->
+                <p class="text-muted text-sm" id="currentDate" style="margin-bottom:20px;"></p>
+
+                <!-- Stats -->
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="fa-solid fa-id-card"></i></div>
+                        <div class="stat-info"><h3 id="statDrivers">0</h3><p>Active Drivers</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fa-solid fa-motorcycle"></i></div>
+                        <div class="stat-info"><h3 id="statTricycles">0</h3><p>Active Tricycles</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fa-solid fa-route"></i></div>
+                        <div class="stat-info"><h3 id="statTripsToday">0</h3><p>Trips Today</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fa-solid fa-peso-sign"></i></div>
+                        <div class="stat-info"><h3 id="statRevenue">&#8369;0.00</h3><p>Revenue Today</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon cyan"><i class="fa-solid fa-satellite-dish"></i></div>
+                        <div class="stat-info"><h3 id="statActiveTrips">0</h3><p>Active Trips</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pink"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="stat-info"><h3 id="statComplaints">0</h3><p>Pending Complaints</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red"><i class="fa-solid fa-gavel"></i></div>
+                        <div class="stat-info"><h3 id="statViolations">0</h3><p>Pending Violations</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon teal"><i class="fa-solid fa-building"></i></div>
+                        <div class="stat-info"><h3 id="statTodas">0</h3><p>Active TODAs</p></div>
+                    </div>
+                </div>
+
+                <!-- Live Map -->
+                <div class="card">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                        <h3><i class="fa-solid fa-map-location-dot" style="color:#10b981;margin-right:8px;"></i>Live Trip Monitoring</h3>
+                        <span class="live-dot" id="activeCount">0 active trips</span>
+                    </div>
+                    <div id="liveMap"></div>
+                </div>
+
+                <!-- Analytics -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-chart-line" style="color:var(--purple);margin-right:8px;"></i>Revenue Analytics</h3>
+                        <div class="filter-bar">
+                            <button class="filter-btn active" data-period="monthly">Monthly</button>
+                            <button class="filter-btn" data-period="weekly">Weekly</button>
+                            <button class="filter-btn" data-period="daily">Daily</button>
+                        </div>
+                    </div>
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h4>Total Revenue</h4>
+                            <div class="big-number" id="totalRevenue">&#8369;0.00</div>
+                        </div>
+                        <div class="analytics-card">
+                            <h4>Total Trips</h4>
+                            <div class="big-number" id="totalTrips">0</div>
+                        </div>
+                        <div class="analytics-card">
+                            <h4>Avg Fare / Trip</h4>
+                            <div class="big-number" id="avgFare">&#8369;0.00</div>
+                        </div>
+                    </div>
+                    <div class="chart-bars" id="revenueChart"></div>
+                </div>
+
+                <!-- Recent Trips -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-clock-rotate-left" style="color:#06b6d4;margin-right:8px;"></i>Recent Trips</h3>
+                        <a href="trips.html" class="btn btn-outline btn-sm">View All <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i></a>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr><th>ID</th><th>Driver</th><th>Plate</th><th>Origin</th><th>Distance</th><th>Fare</th><th>Status</th><th>Date</th></tr>
+                            </thead>
+                            <tbody id="recentTripsTable">
+                                <tr><td colspan="8" class="text-center text-muted" style="padding:40px;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../assets/js/guard.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('show');
+            this.classList.add('hide');
+        });
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+            document.getElementById('sidebarToggle').classList.remove('hide');
+});
+        // Close sidebar when nav link clicked (mobile)
+        document.querySelectorAll('.sidebar nav a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebarOverlay').classList.remove('show');
+            });
+        });
+
+        // Profile dropdown
+        document.getElementById('profileBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('profileMenu').classList.toggle('show');
+        });
+        document.addEventListener('click', function() {
+            document.getElementById('profileMenu').classList.remove('show');
+        });
+
+        // Load profile
+        (async function() {
+            try {
+                var s = await auth.session();
+                var n = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
+                document.getElementById('profileName').textContent = n || 'Admin';
+                document.getElementById('profileInitial').textContent = (s.first_name||'A')[0].toUpperCase();
+            } catch(e) {}
+        })();
+
+        // SweetAlert showAlert
+        window.showAlert = function(msg, type) {
+            Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000, timerProgressBar:true })
+                .fire({ icon: type==='error'?'error':'success', title: msg });
+        };
+
+        // Logout
+        async function handleLogout() {
+            var r = await Swal.fire({ title:'Logout?', text:'Are you sure?', icon:'question', showCancelButton:true, confirmButtonColor:'#00e6a0', cancelButtonColor:'#9ca3af', confirmButtonText:'Yes, logout' });
+            if (r.isConfirmed) { await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html'); }
+        }
+
+        // Date
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-PH', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        // Leaflet Map
+        const map = L.map('liveMap').setView([14.0637, 120.6283], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap', maxZoom: 19
+        }).addTo(map);
+
+        let activeMarkers = [];
+
+        async function loadActiveTrips() {
+            try {
+                const trips = await apiRequest('../api/trips/gps.php?action=active');
+                document.getElementById('activeCount').textContent = trips.length + ' active trip' + (trips.length !== 1 ? 's' : '');
+                activeMarkers.forEach(m => map.removeLayer(m));
+                activeMarkers = [];
+                trips.forEach(trip => {
+                    if (trip.current_lat && trip.current_lng) {
+                        const marker = L.circleMarker(
+                            [parseFloat(trip.current_lat), parseFloat(trip.current_lng)],
+                            { radius: 8, fillColor: '#10b981', fillOpacity: 1, color: '#fff', weight: 3 }
+                        ).addTo(map);
+                        marker.bindPopup(`<strong>${trip.first_name} ${trip.last_name}</strong><br>Plate: ${trip.plate_number}<br>Distance: ${trip.distance_km} km<br>Fare: ₱${parseFloat(trip.computed_fare).toFixed(2)}<br>Passengers: ${trip.passenger_count}`);
+                        activeMarkers.push(marker);
+                    }
+                });
+                if (activeMarkers.length > 0) map.fitBounds(L.featureGroup(activeMarkers).getBounds().pad(0.3));
+            } catch (err) { console.error('Map error:', err); }
+        }
+
+        // Dashboard Stats
+        async function loadDashboard() {
+            try {
+                const stats = await dashboard.adminStats();
+                document.getElementById('statDrivers').textContent = stats.total_drivers;
+                document.getElementById('statTricycles').textContent = stats.total_tricycles;
+                document.getElementById('statTodas').textContent = stats.total_todas;
+                document.getElementById('statTripsToday').textContent = stats.trips_today;
+                document.getElementById('statRevenue').textContent = formatCurrency(stats.revenue_today);
+                document.getElementById('statActiveTrips').textContent = stats.active_trips;
+                document.getElementById('statComplaints').textContent = stats.pending_complaints;
+                document.getElementById('statViolations').textContent = stats.pending_violations;
+
+                if (parseInt(stats.pending_complaints) > 0 || parseInt(stats.pending_violations) > 0) {
+                    var dot = document.getElementById('notifDot');
+                    if (dot) dot.style.display = 'block';
+                }
+
+                if (stats.monthly_revenue && stats.monthly_revenue.length > 0) renderChart(stats.monthly_revenue);
+
+                const tbody = document.getElementById('recentTripsTable');
+                if (stats.recent_trips.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:40px;">No trips yet</td></tr>';
+                } else {
+                    tbody.innerHTML = stats.recent_trips.map(trip => `
+                        <tr>
+                            <td><strong>#${trip.id}</strong></td>
+                            <td>${trip.first_name} ${trip.last_name}</td>
+                            <td>${trip.plate_number}</td>
+                            <td>${trip.origin || '-'}</td>
+                            <td>${trip.distance_km ? trip.distance_km + ' km' : '-'}</td>
+                            <td style="${trip.actual_fare && trip.computed_fare && trip.actual_fare > trip.computed_fare * 1.2 ? 'color:#ef4444;font-weight:600;' : ''}">${trip.actual_fare ? formatCurrency(trip.actual_fare) : formatCurrency(trip.computed_fare)}</td>
+                            <td><span class="${badgeClass(trip.status)}">${trip.status}</span></td>
+                            <td style="white-space:nowrap;">${formatDate(trip.started_at)}</td>
+                        </tr>`).join('');
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Error', text: err.message, confirmButtonColor: '#00e6a0' });
+            }
+        }
+
+        // Chart
+        function renderChart(data) {
+            const chart = document.getElementById('revenueChart');
+            const maxRev = Math.max(...data.map(d => parseFloat(d.revenue) || 1));
+            let totalRev = 0, totalTrips = 0;
+            data.forEach(d => { totalRev += parseFloat(d.revenue); totalTrips += parseInt(d.trip_count); });
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRev);
+            document.getElementById('totalTrips').textContent = totalTrips;
+            document.getElementById('avgFare').textContent = totalTrips > 0 ? formatCurrency(totalRev / totalTrips) : '₱0.00';
+            chart.innerHTML = data.map(d => {
+                const h = Math.max((parseFloat(d.revenue) / maxRev) * 100, 4);
+                const label = d.month || d.week || d.day || '';
+                return `<div class="chart-bar" style="height:${h}%"><span class="chart-value">₱${parseFloat(d.revenue).toLocaleString()}</span><span class="chart-label">${label.length > 7 ? label.substring(5) : label}</span></div>`;
+            }).join('');
+        }
+
+        // Filters
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                loadDashboard();
+            });
+        });
+
+        // Init
+        loadDashboard();
+        loadActiveTrips();
+        setInterval(loadActiveTrips, 10000);
+    </script>
+</body>
+</html>

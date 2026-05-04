@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODASURE - Driver Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .swal2-popup{background:#0f172a!important;color:#f1f5f9!important}
+        .swal2-title{color:#f1f5f9!important}
+        .swal2-html-container{color:#94a3b8!important}
+    </style>
+</head>
+<body>
+    <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <h2>TODASURE</h2>
+                    <span id="brgyLabel">Barangay</span>
+                </div>
+            </div>
+            <nav>
+                <a href="dashboard.html"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
+                <a href="drivers.html" class="active"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
+                <a href="tricycles.html"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
+                <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
+                <a href="violations.html"><i class="fa-solid fa-gavel icon"></i> Violations</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-header">
+                <span class="page-title" id="pageTitle">Driver Management</span>
+                <div class="header-actions">
+                    <button class="header-icon-btn" id="notifBtn"><i class="fa-solid fa-bell"></i></button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn">
+                            <div class="profile-avatar" id="profileInitial">B</div>
+                            <div class="profile-info">
+                                <div class="profile-name" id="profileName">Barangay</div>
+                                <div class="profile-role">Barangay Official</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </button>
+                        <div class="dropdown-menu" id="profileMenu">
+                            <a href="#"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <div class="divider"></div>
+                            <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-body">
+                <div class="card">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                        <h3><i class="fa-solid fa-id-card" style="color:var(--accent);margin-right:6px"></i> Drivers</h3>
+                        <button class="btn btn-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Driver</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr><th>Name</th><th>TODA</th><th>Contact</th><th>Status</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="driversTable">
+                                <tr><td colspan="6" class="text-center text-muted" style="padding:30px">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Driver Modal -->
+    <div class="modal-overlay" id="driverModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle"><i class="fa-solid fa-id-card" style="color:var(--accent)"></i> Add Driver</h2>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="driverForm" onsubmit="handleDriverSubmit(event)">
+                <input type="hidden" id="editId">
+                <div class="form-row">
+                    <div class="form-group"><label>First Name *</label><input type="text" id="firstName" class="form-control" placeholder="Enter first name" required></div>
+                    <div class="form-group"><label>Last Name *</label><input type="text" id="lastName" class="form-control" placeholder="Enter last name" required></div>
+                </div>
+                
+                <div class="form-group"><label>TODA *</label><select id="todaSelect" class="form-control" required><option value="">Select TODA</option></select></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Contact Number</label><input type="text" id="contact" class="form-control" placeholder="09xxxxxxxxx"></div>
+                    <div class="form-group"><label>Address</label><input type="text" id="address" class="form-control" placeholder="Home address"></div>
+                </div>
+                <div id="credentialsSection">
+                    <div class="form-row">
+                        <div class="form-group"><label>Email *</label><input type="email" id="driverEmail" class="form-control" placeholder="driver@email.com" required></div>
+                        <div class="form-group"><label>Password *</label><input type="password" id="password" class="form-control" placeholder="Login password" required></div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:8px">
+                    <button type="button" class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center"><i class="fa-solid fa-check"></i> Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../assets/js/guard.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        // ── Common UI ──
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('show');
+            this.classList.add('hide');
+        });
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+            document.getElementById('sidebarToggle').classList.remove('hide');
+        });
+        document.getElementById('profileBtn').addEventListener('click', function(e) { e.stopPropagation(); document.getElementById('profileMenu').classList.toggle('show'); });
+        document.addEventListener('click', function() { document.getElementById('profileMenu').classList.remove('show'); });
+
+        (async function() {
+            try {
+                var s = await auth.session();
+                if (s.role !== 'barangay' && s.role !== 'admin') { window.location.replace('/TodaShare/login.html'); return; }
+                var n = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
+                document.getElementById('profileName').textContent = n || 'Barangay';
+                document.getElementById('profileInitial').textContent = (s.first_name||'B')[0].toUpperCase();
+            } catch(e) { window.location.replace('/TodaShare/login.html'); }
+        })();
+
+        window.showAlert = function(msg, type) {
+            Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000, timerProgressBar:true })
+                .fire({ icon: type==='error'?'error':'success', title: msg });
+        };
+
+        async function handleLogout() {
+            var r = await Swal.fire({ title:'Logout?', icon:'question', showCancelButton:true, confirmButtonColor:'#00e6a0', confirmButtonText:'Yes' });
+            if (r.isConfirmed) { await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html'); }
+        }
+
+        document.getElementById('notifBtn').addEventListener('click', function() {
+            Swal.fire({ title:'Notifications', html:'<p>Driver management page</p>', icon:'info', confirmButtonColor:'#00e6a0' });
+        });
+
+        // ── Data ──
+        var statsData = null;
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add Driver';
+            document.getElementById('driverForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('credentialsSection').style.display = 'block';
+            document.getElementById('driverModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('driverModal').classList.remove('active');
+        }
+
+        async function openEditModal(id) {
+            try {
+                var d = await drivers.get(id);
+                document.getElementById('modalTitle').textContent = 'Edit Driver';
+                document.getElementById('editId').value = id;
+                document.getElementById('firstName').value = d.first_name || '';
+                document.getElementById('lastName').value = d.last_name || '';
+                document.getElementById('todaSelect').value = d.toda_id || '';
+                document.getElementById('contact').value = d.contact_number || '';
+                document.getElementById('address').value = d.address || '';
+                document.getElementById('credentialsSection').style.display = 'none';
+                document.getElementById('driverModal').classList.add('active');
+            } catch(err) { showAlert(err.message, 'error'); }
+        }
+
+        async function handleDriverSubmit(e) {
+            e.preventDefault();
+            var id = document.getElementById('editId').value;
+            var data = {
+                first_name: document.getElementById('firstName').value,
+                last_name: document.getElementById('lastName').value,
+                toda_id: document.getElementById('todaSelect').value,
+                contact_number: document.getElementById('contact').value,
+                address: document.getElementById('address').value
+            };
+            if (!id) {
+                data.email = document.getElementById('driverEmail').value;
+                data.username = data.email.split('@')[0];
+                data.password = document.getElementById('password').value;
+            }
+            try {
+                if (id) { await drivers.update(id, data); showAlert('Driver updated successfully'); }
+                else { await drivers.create(data); showAlert('Driver added successfully'); }
+                closeModal();
+                loadPage();
+            } catch(err) { showAlert(err.message, 'error'); }
+        }
+
+        async function toggleDriverStatus(id, currentStatus) {
+            var action = currentStatus === 'active' ? 'Suspend' : 'Activate';
+            var r = await Swal.fire({
+                title: action + ' Driver?',
+                text: 'Are you sure you want to ' + action.toLowerCase() + ' this driver?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: currentStatus === 'active' ? '#ef4444' : '#00e6a0',
+                confirmButtonText: 'Yes, ' + action
+            });
+            if (r.isConfirmed) {
+                try {
+                    var newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+                    await drivers.update(id, { status: newStatus });
+                    showAlert('Driver ' + action.toLowerCase() + 'd successfully');
+                    loadPage();
+                } catch(err) { showAlert(err.message, 'error'); }
+            }
+        }
+
+        function renderDrivers(list) {
+            var tb = document.getElementById('driversTable');
+            if (!list || !list.length) {
+                tb.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:30px">No drivers found</td></tr>';
+                return;
+            }
+            tb.innerHTML = list.map(function(d) {
+                var statusBadge = '<span class="badge badge-' + (d.status||'active') + '">' + (d.status||'active') + '</span>';
+                var toggleLabel = (d.status === 'active') ? 'Suspend' : 'Activate';
+                var toggleColor = (d.status === 'active') ? 'color:var(--danger)' : 'color:var(--accent)';
+                return '<tr>' +
+                    '<td>' + (d.first_name||'') + ' ' + (d.last_name||'') + '</td>' +
+                    '<td>' + (d.toda_name||'-') + '</td>' +
+                    '<td>' + (d.contact_number||'-') + '</td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td>' +
+                        '<button onclick="openEditModal(' + d.id + ')" class="btn btn-sm" style="margin-right:4px" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>' +
+                        '<button onclick="toggleDriverStatus(' + d.id + ',\'' + (d.status||'active') + '\')" class="btn btn-sm" style="' + toggleColor + '" title="' + toggleLabel + '"><i class="fa-solid fa-' + (d.status === 'active' ? 'ban' : 'check') + '"></i></button>' +
+                    '</td></tr>';
+            }).join('');
+        }
+
+        function populateTodas(todasList) {
+            var sel = document.getElementById('todaSelect');
+            sel.innerHTML = '<option value="">Select TODA</option>';
+            (todasList||[]).forEach(function(t) {
+                sel.innerHTML += '<option value="' + t.id + '">' + (t.name||t.toda_name||'TODA '+t.id) + '</option>';
+            });
+        }
+
+        async function loadPage() {
+            try {
+                statsData = await apiRequest('dashboard/barangay-stats.php');
+                document.getElementById('brgyLabel').textContent = 'Brgy. ' + statsData.barangay_name;
+                populateTodas(statsData.todas);
+                renderDrivers(statsData.drivers);
+            } catch(err) { showAlert(err.message, 'error'); }
+        }
+
+        // ── Init ──
+        loadPage();
+    </script>
+</body>
+</html>

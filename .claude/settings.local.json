@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "mcp__plugin_figma_figma__get_metadata",
+      "mcp__plugin_figma_figma__get_screenshot",
+      "Bash(curl -s -o /tmp/homepage.png \"https://www.figma.com/api/mcp/asset/1bfb4b5f-9b0a-4698-bd3d-dd5a87710079\")",
+      "Bash(curl -s -o /tmp/register.png \"https://www.figma.com/api/mcp/asset/c523f385-a00d-400e-9d1d-bf8b4a8dcec0\")",
+      "Bash(curl -s -o /tmp/login_driver.png \"https://www.figma.com/api/mcp/asset/80ed04c4-492b-46e1-9401-6fe021ff56da\")",
+      "Bash(curl -s -o /tmp/login_admin.png \"https://www.figma.com/api/mcp/asset/2f9a540a-e8c3-4440-bc3b-af5b5123d9fb\")"
+    ]
+  }
+}
+

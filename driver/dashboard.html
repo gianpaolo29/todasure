@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TODASURE - Driver</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#000;color:#1e293b;height:100vh;height:100dvh;overflow:hidden;position:relative}
+
+        #map{position:absolute;inset:0;z-index:0}
+
+        /* ── Top Bar (desktop) ── */
+        .top-bar{position:absolute;top:0;left:0;right:0;z-index:40;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+        .top-bar>*{pointer-events:auto}
+        .top-btn{width:40px;height:40px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#1e293b;transition:all .2s}
+        .top-btn:active{transform:scale(.95)}
+        .top-brand{font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4)}
+        .top-right{display:flex;gap:8px;align-items:center}
+
+        /* ── Online/Offline Toggle ── */
+        .status-toggle{display:flex;align-items:center;gap:10px;background:#fff;border-radius:50px;padding:6px 16px 6px 6px;box-shadow:0 2px 12px rgba(0,0,0,.12);cursor:pointer;border:none;font-family:inherit}
+        .status-dot{width:12px;height:12px;border-radius:50%;transition:background .3s}
+        .status-dot.online{background:#10b981}
+        .status-dot.offline{background:#9ca3af}
+        .status-label{font-size:13px;font-weight:600;color:#374151}
+
+        /* ── Bottom Sheet ── */
+        .sheet{position:absolute;bottom:0;left:0;right:0;z-index:30;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.1);max-height:70vh;overflow-y:auto;transition:transform .3s ease}
+        .sheet-handle{width:36px;height:4px;background:#d1d5db;border-radius:4px;margin:10px auto 0}
+        .sheet-body{padding:16px 20px 100px}
+
+        /* ── Bottom Nav (mobile) ── */
+        .bottom-nav{position:absolute;bottom:0;left:0;right:0;z-index:50;background:#fff;border-top:1px solid #f1f5f9;display:flex;padding:8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+        .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;border:none;background:none;font-family:inherit;color:#9ca3af;font-size:10px;font-weight:600;transition:color .2s}
+        .nav-item.active{color:#10b981}
+        .nav-item i{font-size:18px}
+
+        /* ── Desktop Top Nav ── */
+        .desktop-nav{display:none}
+
+        /* ── Incoming Ride Card ── */
+        .ride-card{background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 4px 16px rgba(0,0,0,.08);animation:slideUp .4s ease}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .ride-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+        .ride-card-header h3{font-size:16px;font-weight:700;color:#0f172a}
+        .ride-card-header .badge{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600}
+        .ride-route{display:flex;gap:12px;margin-bottom:16px}
+        .ride-dots{display:flex;flex-direction:column;align-items:center;padding:4px 0}
+        .ride-dots .dot{width:10px;height:10px;border-radius:50%}
+        .ride-dots .line{width:2px;flex:1;background:#e2e8f0;margin:4px 0}
+        .ride-addrs{flex:1}
+        .ride-addr{font-size:13px;color:#64748b;padding:2px 0}
+        .ride-addr strong{color:#0f172a}
+        .ride-stats{display:flex;gap:10px;margin-bottom:16px}
+        .ride-stat{flex:1;text-align:center;background:#f8fafc;border-radius:10px;padding:10px}
+        .ride-stat .v{font-size:18px;font-weight:800;color:#0f172a}
+        .ride-stat .l{font-size:10px;color:#9ca3af;margin-top:2px;text-transform:uppercase}
+        .ride-stat.green .v{color:#10b981}
+        .ride-btns{display:flex;gap:10px}
+        .ride-btns button{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .2s}
+        .btn-accept{background:#10b981;color:#fff}
+        .btn-accept:hover{background:#059669}
+        .btn-decline{background:#f1f5f9;color:#64748b}
+        .btn-decline:hover{background:#e2e8f0}
+        .btn-action{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .2s}
+        .btn-start{background:#10b981;color:#fff}
+        .btn-start:hover{background:#059669}
+        .btn-end{background:#ef4444;color:#fff;animation:pulse 2s ease-in-out infinite}
+        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 10px rgba(239,68,68,0)}}
+
+        /* ── Driver Info ── */
+        .driver-info-card{background:#f8fafc;border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:12px}
+        .driver-info-card .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0}
+        .driver-info-card .info{flex:1}
+        .driver-info-card .name{font-size:14px;font-weight:600;color:#0f172a}
+        .driver-info-card .sub{font-size:12px;color:#9ca3af}
+
+        /* ── Live Trip Stats ── */
+        .live-stats{display:flex;gap:8px;margin-bottom:16px}
+        .live-stat{flex:1;text-align:center;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px}
+        .live-stat .v{font-size:22px;font-weight:800;color:#059669}
+        .live-stat .l{font-size:10px;color:#6b7280;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+
+        /* ── Earnings Tab ── */
+        .earnings-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+        .earn-card{background:#f8fafc;border-radius:12px;padding:14px;text-align:center}
+        .earn-card .amount{font-size:20px;font-weight:800;color:#0f172a}
+        .earn-card .label{font-size:11px;color:#9ca3af;margin-top:2px}
+        .earn-card .trips{font-size:11px;color:#6b7280;margin-top:4px}
+
+        /* ── Profile Tab ── */
+        .profile-header{text-align:center;padding:24px 0 16px}
+        .profile-header .p-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;margin-bottom:10px}
+        .profile-header .p-name{font-size:18px;font-weight:700;color:#0f172a}
+        .profile-header .p-sub{font-size:13px;color:#9ca3af}
+        .profile-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+        .profile-row:last-child{border-bottom:none}
+        .profile-row i{width:20px;text-align:center;color:#9ca3af;font-size:15px}
+        .profile-row .pr-label{font-size:11px;color:#9ca3af}
+        .profile-row .pr-value{font-size:14px;color:#0f172a;font-weight:500}
+
+        /* ── Recent Trips ── */
+        .trip-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9}
+        .trip-item:last-child{border-bottom:none}
+        .trip-item .trip-route{font-size:13px;color:#374151}
+        .trip-item .trip-meta{font-size:11px;color:#9ca3af}
+        .trip-item .trip-fare{font-size:14px;font-weight:700;color:#059669}
+
+        .hidden{display:none!important}
+
+        /* ── Desktop ── */
+        @media(min-width:768px){
+            .bottom-nav{display:none}
+            .desktop-nav{display:flex;gap:4px;background:#fff;border-radius:50px;padding:4px;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+            .desktop-nav button{padding:8px 16px;border-radius:50px;border:none;background:none;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
+            .desktop-nav button.active{background:#10b981;color:#fff}
+            .desktop-nav button:hover:not(.active){background:#f1f5f9}
+            .sheet{width:400px;left:24px;transform:none;border-radius:20px;bottom:24px;max-height:calc(100vh - 100px)}
+            .sheet-body{padding:16px 20px 20px}
+        }
+
+        @media(min-width:1024px){
+            .sheet{width:420px}
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div style="display:flex;align-items:center;gap:10px">
+            <span class="top-brand">TODASURE</span>
+            <button class="status-toggle" id="statusToggle">
+                <span class="status-dot online" id="statusDot"></span>
+                <span class="status-label" id="statusLabel">Online</span>
+            </button>
+        </div>
+        <div class="top-right">
+            <!-- Desktop nav -->
+            <div class="desktop-nav" id="desktopNav">
+                <button class="active" onclick="switchTab('home')"><i class="fa-solid fa-house" style="margin-right:4px"></i> Home</button>
+                <button onclick="switchTab('earnings')"><i class="fa-solid fa-peso-sign" style="margin-right:4px"></i> Earnings</button>
+                <button onclick="switchTab('profile')"><i class="fa-solid fa-user" style="margin-right:4px"></i> Profile</button>
+            </div>
+            <button class="top-btn" id="myLocBtn"><i class="fa-solid fa-location-crosshairs"></i></button>
+        </div>
+    </div>
+
+    <!-- Bottom Sheet -->
+    <div class="sheet" id="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-body">
+
+            <!-- Home Tab -->
+            <div id="tabHome">
+                <!-- Idle state (no active booking) -->
+                <div id="stateIdle">
+                    <h3 style="font-size:16px;font-weight:700;margin-bottom:4px;color:#0f172a">Ready to ride?</h3>
+                    <p style="font-size:13px;color:#9ca3af;margin-bottom:16px">Go online to start receiving bookings</p>
+                    <div id="violationAlert" class="hidden" style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#dc2626">
+                        <i class="fa-solid fa-triangle-exclamation" style="margin-right:4px"></i> <span id="violationText"></span>
+                    </div>
+                </div>
+
+                <!-- Incoming booking -->
+                <div id="stateIncoming" class="hidden">
+                    <div class="ride-card">
+                        <div class="ride-card-header">
+                            <h3><i class="fa-solid fa-bell" style="color:#f59e0b;margin-right:6px"></i> New Ride Request</h3>
+                            <span class="badge" style="background:#fef3c7;color:#b45309" id="bookingTime">Just now</span>
+                        </div>
+                        <div class="ride-route">
+                            <div class="ride-dots">
+                                <div class="dot" style="background:#10b981"></div>
+                                <div class="line"></div>
+                                <div class="dot" style="background:#ef4444"></div>
+                            </div>
+                            <div class="ride-addrs">
+                                <div class="ride-addr"><strong>Pickup</strong><br><span id="bookingFrom">--</span></div>
+                                <div class="ride-addr" style="margin-top:8px"><strong>Drop-off</strong><br><span id="bookingTo">--</span></div>
+                            </div>
+                        </div>
+                        <div class="ride-stats">
+                            <div class="ride-stat"><div class="v" id="bookingDist">--</div><div class="l">km</div></div>
+                            <div class="ride-stat green"><div class="v" id="bookingFare">--</div><div class="l">fare</div></div>
+                        </div>
+                        <div class="ride-btns">
+                            <button class="btn-decline" onclick="declineBooking()"><i class="fa-solid fa-xmark"></i> Decline</button>
+                            <button class="btn-accept" onclick="acceptBooking()"><i class="fa-solid fa-check"></i> Accept</button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="pendingBookingId">
+                </div>
+
+                <!-- Accepted - navigating to pickup -->
+                <div id="stateAccepted" class="hidden">
+                    <div class="ride-card">
+                        <div class="ride-card-header">
+                            <h3><i class="fa-solid fa-route" style="color:#10b981;margin-right:6px"></i> Navigate to Pickup</h3>
+                            <span class="badge" style="background:#d1fae5;color:#059669">Accepted</span>
+                        </div>
+                        <div class="driver-info-card">
+                            <div class="avatar" id="passengerInitial">P</div>
+                            <div class="info">
+                                <div class="name" id="passengerName">Passenger</div>
+                                <div class="sub" id="passengerPhone">--</div>
+                            </div>
+                            <button class="top-btn" style="width:36px;height:36px;font-size:14px;color:#10b981" id="callPassenger"><i class="fa-solid fa-phone"></i></button>
+                        </div>
+                        <div class="ride-route">
+                            <div class="ride-dots"><div class="dot" style="background:#10b981"></div><div class="line"></div><div class="dot" style="background:#ef4444"></div></div>
+                            <div class="ride-addrs">
+                                <div class="ride-addr"><span id="acceptedPickup">--</span></div>
+                                <div class="ride-addr" style="margin-top:8px"><span id="acceptedDropoff">--</span></div>
+                            </div>
+                        </div>
+                        <button class="btn-action btn-start" onclick="startTrip()"><i class="fa-solid fa-play" style="margin-right:6px"></i> Arrived - Start Trip</button>
+                    </div>
+                </div>
+
+                <!-- Trip in progress -->
+                <div id="stateTrip" class="hidden">
+                    <div class="live-stats">
+                        <div class="live-stat"><div class="v" id="liveDist">0.00</div><div class="l">km</div></div>
+                        <div class="live-stat"><div class="v" id="liveFare">₱0</div><div class="l">fare</div></div>
+                        <div class="live-stat"><div class="v" id="liveTime">00:00</div><div class="l">time</div></div>
+                    </div>
+                    <div class="driver-info-card">
+                        <div class="avatar" id="tripPassengerInitial">P</div>
+                        <div class="info">
+                            <div class="name" id="tripPassengerName">Passenger</div>
+                            <div class="sub" id="tripRoute">--</div>
+                        </div>
+                    </div>
+                    <button class="btn-action btn-end" onclick="endTrip()"><i class="fa-solid fa-flag-checkered" style="margin-right:6px"></i> End Trip</button>
+                </div>
+
+                <!-- Trip complete -->
+                <div id="stateComplete" class="hidden">
+                    <div style="text-align:center;padding:16px 0">
+                        <div style="width:56px;height:56px;border-radius:50%;background:#d1fae5;display:inline-flex;align-items:center;justify-content:center;font-size:24px;color:#059669;margin-bottom:12px"><i class="fa-solid fa-check"></i></div>
+                        <h3 style="font-size:18px;font-weight:700;color:#0f172a">Trip Completed!</h3>
+                        <div style="font-size:32px;font-weight:800;color:#059669;margin:8px 0" id="completeFare">₱0.00</div>
+                        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px">
+                            <div style="text-align:center"><div style="font-size:16px;font-weight:700;color:#0f172a" id="completeDist">--</div><div style="font-size:10px;color:#9ca3af">km</div></div>
+                            <div style="width:1px;background:#e2e8f0"></div>
+                            <div style="text-align:center"><div style="font-size:16px;font-weight:700;color:#0f172a" id="completeTime">--</div><div style="font-size:10px;color:#9ca3af">duration</div></div>
+                        </div>
+                        <button class="btn-action btn-start" onclick="resetToIdle()">Done</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Earnings Tab -->
+            <div id="tabEarnings" class="hidden">
+                <h3 style="font-size:16px;font-weight:700;margin-bottom:14px;color:#0f172a">Earnings</h3>
+                <div class="earnings-grid">
+                    <div class="earn-card"><div class="amount" id="earnToday">₱0</div><div class="label">Today</div><div class="trips" id="tripsToday">0 trips</div></div>
+                    <div class="earn-card"><div class="amount" id="earnWeek">₱0</div><div class="label">This Week</div><div class="trips" id="tripsWeek">0 trips</div></div>
+                    <div class="earn-card"><div class="amount" id="earnMonth">₱0</div><div class="label">This Month</div><div class="trips" id="tripsMonth">0 trips</div></div>
+                </div>
+                <h4 style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:10px">Recent Trips</h4>
+                <div id="recentTrips"><p style="font-size:13px;color:#9ca3af;text-align:center;padding:20px">No trips yet</p></div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="tabProfile" class="hidden">
+                <div class="profile-header">
+                    <div class="p-avatar" id="profInitial">D</div>
+                    <div class="p-name" id="profName">Driver</div>
+                    <div class="p-sub" id="profRole">Driver</div>
+                </div>
+                <div class="profile-row"><i class="fa-solid fa-user"></i><div><div class="pr-label">Full Name</div><div class="pr-value" id="profFullName">--</div></div></div>
+                <div class="profile-row"><i class="fa-solid fa-envelope"></i><div><div class="pr-label">Email</div><div class="pr-value" id="profEmail">--</div></div></div>
+                <div class="profile-row"><i class="fa-solid fa-phone"></i><div><div class="pr-label">Phone</div><div class="pr-value" id="profPhone">--</div></div></div>
+                <div class="profile-row"><i class="fa-solid fa-id-card"></i><div><div class="pr-label">License</div><div class="pr-value" id="profLicense">--</div></div></div>
+                <div class="profile-row"><i class="fa-solid fa-building"></i><div><div class="pr-label">TODA</div><div class="pr-value" id="profToda">--</div></div></div>
+                <div style="margin-top:16px">
+                    <button class="btn-action" style="background:#fee2e2;color:#dc2626" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px"></i> Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav (mobile) -->
+    <div class="bottom-nav" id="bottomNav">
+        <button class="nav-item active" onclick="switchTab('home')"><i class="fa-solid fa-house"></i><span>Home</span></button>
+        <button class="nav-item" onclick="switchTab('earnings')"><i class="fa-solid fa-peso-sign"></i><span>Earnings</span></button>
+        <button class="nav-item" onclick="switchTab('profile')"><i class="fa-solid fa-user"></i><span>Profile</span></button>
+    </div>
+
+    <script src="../assets/js/guard.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        const GMAP_KEY = 'AIzaSyAVF_yekJbPdCQIoaWxzT4dHBIkjazhq6A';
+        let gmap, driverMarker, currentPosition = null;
+        let activeTrip = null, activeBookingData = null;
+        let tripStartTime = null, timerInterval = null, updateInterval = null, bookingPollInterval = null;
+        let isOnline = true;
+
+        // ── Init Map ──
+        function initMap() {
+            gmap = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 14.0637, lng: 120.6283 }, zoom: 15,
+                disableDefaultUI: true, zoomControl: false, mapTypeId: 'roadmap'
+            });
+
+            // GPS
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(pos => {
+                    currentPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    if (!driverMarker) {
+                        driverMarker = new google.maps.Marker({ position: currentPosition, map: gmap,
+                            icon: { url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png', scaledSize: new google.maps.Size(36,36), anchor: new google.maps.Point(18,18) },
+                            title: 'You'
+                        });
+                        gmap.setCenter(currentPosition);
+                    } else {
+                        driverMarker.setPosition(currentPosition);
+                    }
+                }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 });
+            }
+
+            document.getElementById('myLocBtn').addEventListener('click', () => {
+                if (currentPosition) { gmap.panTo(currentPosition); gmap.setZoom(16); }
+            });
+
+            loadProfile();
+            loadEarnings();
+            checkActiveBooking();
+
+            // Auto-online: start polling for bookings immediately
+            bookingPollInterval = setInterval(pollBookings, 5000);
+            setTimeout(pollBookings, 1000);
+        }
+
+        // ── Tabs ──
+        function switchTab(tab) {
+            ['tabHome','tabEarnings','tabProfile'].forEach(t => document.getElementById(t).classList.toggle('hidden', t !== 'tab' + tab.charAt(0).toUpperCase() + tab.slice(1)));
+            // Mobile nav
+            document.querySelectorAll('.nav-item').forEach((b,i) => b.classList.toggle('active', ['home','earnings','profile'][i] === tab));
+            // Desktop nav
+            document.querySelectorAll('.desktop-nav button').forEach((b,i) => b.classList.toggle('active', ['home','earnings','profile'][i] === tab));
+            if (tab === 'earnings') loadEarnings();
+        }
+
+        // ── Online/Offline Toggle ──
+        document.getElementById('statusToggle').addEventListener('click', () => {
+            isOnline = !isOnline;
+            document.getElementById('statusDot').className = 'status-dot ' + (isOnline ? 'online' : 'offline');
+            document.getElementById('statusLabel').textContent = isOnline ? 'Online' : 'Offline';
+            if (isOnline) {
+                bookingPollInterval = setInterval(pollBookings, 5000);
+                pollBookings();
+                Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'success',title:'You are now online'});
+            } else {
+                clearInterval(bookingPollInterval);
+                document.getElementById('stateIncoming').classList.add('hidden');
+                document.getElementById('stateIdle').classList.remove('hidden');
+                Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'info',title:'You are now offline'});
+            }
+        });
+
+        // ── Poll Bookings ──
+        async function pollBookings() {
+            if (!isOnline || activeTrip || activeBookingData) return;
+            try {
+                const active = await bookings.driverActive();
+                if (active && active.id) { showActiveBooking(active); return; }
+
+                const lat = currentPosition ? currentPosition.lat : null;
+                const lng = currentPosition ? currentPosition.lng : null;
+                const pending = await bookings.pending(lat, lng);
+                if (pending.length > 0) showIncomingBooking(pending[0]);
+                else { document.getElementById('stateIncoming').classList.add('hidden'); document.getElementById('stateIdle').classList.remove('hidden'); }
+            } catch(e) { console.error('Booking poll error:', e); }
+        }
+
+        function showIncomingBooking(b) {
+            document.getElementById('stateIdle').classList.add('hidden');
+            document.getElementById('stateIncoming').classList.remove('hidden');
+            document.getElementById('bookingFrom').textContent = b.pickup_address || 'GPS Location';
+            document.getElementById('bookingTo').textContent = b.dropoff_address || 'Destination';
+            document.getElementById('bookingDist').textContent = (b.estimated_distance || '--') + ' km';
+            document.getElementById('bookingFare').textContent = '₱' + parseFloat(b.estimated_fare || 0).toFixed(0);
+            document.getElementById('bookingTime').textContent = new Date(b.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+            document.getElementById('pendingBookingId').value = b.id;
+        }
+
+        function showActiveBooking(b) {
+            activeBookingData = b;
+            document.getElementById('stateIdle').classList.add('hidden');
+            document.getElementById('stateIncoming').classList.add('hidden');
+
+            if (b.status === 'accepted') {
+                document.getElementById('passengerName').textContent = (b.passenger_first||'')+' '+(b.passenger_last||'');
+                document.getElementById('passengerInitial').textContent = (b.passenger_first||'P')[0];
+                document.getElementById('passengerPhone').textContent = b.passenger_phone || '--';
+                document.getElementById('acceptedPickup').textContent = b.pickup_address || '--';
+                document.getElementById('acceptedDropoff').textContent = b.dropoff_address || '--';
+                document.getElementById('callPassenger').onclick = () => { if(b.passenger_phone) window.open('tel:'+b.passenger_phone); };
+                document.getElementById('stateAccepted').classList.remove('hidden');
+                document.getElementById('stateTrip').classList.add('hidden');
+            } else if (b.status === 'in_progress') {
+                document.getElementById('tripPassengerName').textContent = (b.passenger_first||'')+' '+(b.passenger_last||'');
+                document.getElementById('tripPassengerInitial').textContent = (b.passenger_first||'P')[0];
+                document.getElementById('tripRoute').textContent = (b.pickup_address||'') + ' → ' + (b.dropoff_address||'');
+                document.getElementById('stateAccepted').classList.add('hidden');
+                document.getElementById('stateTrip').classList.remove('hidden');
+                if (!tripStartTime) { tripStartTime = Date.now(); timerInterval = setInterval(updateTimer, 1000); }
+                if (!updateInterval) updateInterval = setInterval(sendGPSUpdate, 5000);
+            }
+        }
+
+        // ── Accept / Decline ──
+        async function acceptBooking() {
+            const id = document.getElementById('pendingBookingId').value;
+            if (!id) return;
+            try {
+                await bookings.update(id, { status: 'accepted' });
+                Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'success',title:'Booking accepted!'});
+                pollBookings();
+            } catch(e) {
+                if (e.message && e.message.includes('tricycle')) {
+                    Swal.fire({icon:'warning',title:'No Tricycle Assigned',text:e.message,confirmButtonColor:'#10b981'});
+                } else if (e.message && e.message.includes('driver record')) {
+                    Swal.fire({icon:'warning',title:'Driver Profile Missing',text:e.message,confirmButtonColor:'#10b981'});
+                } else if (e.message && e.message.includes('already taken')) {
+                    Swal.fire({icon:'info',title:'Too Late',text:'This booking was taken by another driver.',confirmButtonColor:'#10b981'});
+                    document.getElementById('stateIncoming').classList.add('hidden');
+                    document.getElementById('stateIdle').classList.remove('hidden');
+                } else {
+                    Swal.fire({icon:'error',title:'Error',text:e.message,confirmButtonColor:'#10b981'});
+                }
+            }
+        }
+
+        function declineBooking() {
+            document.getElementById('stateIncoming').classList.add('hidden');
+            document.getElementById('stateIdle').classList.remove('hidden');
+        }
+
+        // ── Start Trip ──
+        async function startTrip() {
+            if (!activeBookingData) return;
+            try {
+                const result = await bookings.update(activeBookingData.id, { status: 'in_progress' });
+                Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'success',title:'Trip started!'});
+
+                // Check for GPS trip
+                if (result.trip_id) {
+                    activeTrip = { id: result.trip_id, distance: 0, fare: 0 };
+                    tripStartTime = Date.now();
+                    if (timerInterval) clearInterval(timerInterval);
+                    if (updateInterval) clearInterval(updateInterval);
+                    timerInterval = setInterval(updateTimer, 1000);
+                    updateInterval = setInterval(sendGPSUpdate, 5000);
+                } else {
+                    // Try to find active trip from GPS endpoint
+                    try {
+                        const tripStatus = await apiRequest('../api/trips/gps.php?action=status');
+                        if (tripStatus.active) {
+                            activeTrip = { id: tripStatus.trip.id, distance: 0, fare: 0 };
+                            tripStartTime = Date.now();
+                            if (timerInterval) clearInterval(timerInterval);
+                            if (updateInterval) clearInterval(updateInterval);
+                            timerInterval = setInterval(updateTimer, 1000);
+                            updateInterval = setInterval(sendGPSUpdate, 5000);
+                        }
+                    } catch(e2) {}
+                }
+
+                // Refresh UI
+                activeBookingData.status = 'in_progress';
+                showActiveBooking(activeBookingData);
+            } catch(e) {
+                Swal.fire({icon:'error',title:'Cannot Start Trip',text:e.message,confirmButtonColor:'#10b981'});
+            }
+        }
+
+        // ── GPS Update ──
+        async function sendGPSUpdate() {
+            if (!activeTrip || !activeTrip.id || !currentPosition) return;
+            try {
+                const r = await apiRequest('../api/trips/gps.php?action=update', 'POST', { latitude: currentPosition.lat, longitude: currentPosition.lng });
+                if (r.distance_km !== undefined) {
+                    document.getElementById('liveDist').textContent = parseFloat(r.distance_km).toFixed(2);
+                    document.getElementById('liveFare').textContent = '₱' + parseFloat(r.computed_fare).toFixed(0);
+                }
+            } catch(e) { /* Trip may not exist yet, ignore */ }
+        }
+
+        function updateTimer() {
+            if (!tripStartTime) return;
+            const s = Math.floor((Date.now() - tripStartTime) / 1000);
+            document.getElementById('liveTime').textContent = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+        }
+
+        // ── End Trip ──
+        async function endTrip() {
+            const r = await Swal.fire({title:'End trip?',icon:'question',showCancelButton:true,confirmButtonColor:'#10b981',confirmButtonText:'Yes, end trip'});
+            if (!r.isConfirmed) return;
+
+            clearInterval(timerInterval); clearInterval(updateInterval);
+            const elapsed = tripStartTime ? Math.floor((Date.now()-tripStartTime)/1000) : 0;
+            let fare = 0, dist = 0;
+
+            // Try to end GPS trip
+            if (activeTrip && activeTrip.id) {
+                try {
+                    const result = await apiRequest('../api/trips/gps.php?action=end', 'POST', {
+                        destination: activeBookingData ? activeBookingData.dropoff_address : 'GPS End',
+                        latitude: currentPosition?.lat, longitude: currentPosition?.lng
+                    });
+                    fare = result.computed_fare || 0;
+                    dist = result.distance_km || 0;
+                } catch(e) { /* GPS trip may not exist */ }
+            }
+
+            // Complete booking
+            if (activeBookingData) {
+                try { await bookings.update(activeBookingData.id, { status: 'completed' }); } catch(e) {}
+                if (fare === 0) fare = parseFloat(activeBookingData.estimated_fare || 0);
+                if (dist === 0) dist = parseFloat(activeBookingData.estimated_distance || 0);
+            }
+
+            document.getElementById('completeFare').textContent = '₱' + parseFloat(fare).toFixed(2);
+            document.getElementById('completeDist').textContent = parseFloat(dist).toFixed(1);
+            document.getElementById('completeTime').textContent = String(Math.floor(elapsed/60)).padStart(2,'0') + ':' + String(elapsed%60).padStart(2,'0');
+
+            document.getElementById('stateTrip').classList.add('hidden');
+            document.getElementById('stateComplete').classList.remove('hidden');
+
+            activeTrip = null; activeBookingData = null; tripStartTime = null; updateInterval = null; timerInterval = null;
+            loadEarnings();
+        }
+
+        function resetToIdle() {
+            document.getElementById('stateComplete').classList.add('hidden');
+            document.getElementById('stateIdle').classList.remove('hidden');
+        }
+
+        // ── Check Active Booking on Load ──
+        async function checkActiveBooking() {
+            try {
+                const active = await bookings.driverActive();
+                if (active && active.id) {
+                    isOnline = true;
+                    document.getElementById('statusDot').className = 'status-dot online';
+                    document.getElementById('statusLabel').textContent = 'Online';
+                    showActiveBooking(active);
+                    if (active.status === 'in_progress') {
+                        const tripStatus = await apiRequest('../api/trips/gps.php?action=status');
+                        if (tripStatus.active) {
+                            activeTrip = { id: tripStatus.trip.id, distance: parseFloat(tripStatus.trip.distance_km), fare: parseFloat(tripStatus.trip.computed_fare) };
+                            document.getElementById('liveDist').textContent = activeTrip.distance.toFixed(2);
+                            document.getElementById('liveFare').textContent = '₱' + activeTrip.fare.toFixed(0);
+                        }
+                    }
+                    bookingPollInterval = setInterval(pollBookings, 5000);
+                }
+            } catch(e) {}
+        }
+
+        // ── Load Profile ──
+        async function loadProfile() {
+            try {
+                const s = await auth.session();
+                const name = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
+                document.getElementById('profName').textContent = name || 'Driver';
+                document.getElementById('profInitial').textContent = (s.first_name||'D')[0];
+                document.getElementById('profFullName').textContent = name || '--';
+                document.getElementById('profEmail').textContent = s.email || '--';
+            } catch(e) { window.location.replace('/TodaShare/login.html'); }
+        }
+
+        // ── Load Earnings ──
+        async function loadEarnings() {
+            try {
+                const stats = await dashboard.driverStats();
+                document.getElementById('earnToday').textContent = formatCurrency(stats.today.earnings);
+                document.getElementById('tripsToday').textContent = stats.today.trip_count + ' trips';
+                document.getElementById('earnWeek').textContent = formatCurrency(stats.this_week.earnings);
+                document.getElementById('tripsWeek').textContent = stats.this_week.trip_count + ' trips';
+                document.getElementById('earnMonth').textContent = formatCurrency(stats.this_month.earnings);
+                document.getElementById('tripsMonth').textContent = stats.this_month.trip_count + ' trips';
+
+                if (stats.violations > 0) {
+                    document.getElementById('violationAlert').classList.remove('hidden');
+                    document.getElementById('violationText').textContent = 'You have ' + stats.violations + ' pending violation(s)';
+                }
+
+                const trips = stats.recent_trips || [];
+                if (trips.length === 0) {
+                    document.getElementById('recentTrips').innerHTML = '<p style="font-size:13px;color:#9ca3af;text-align:center;padding:20px">No trips yet</p>';
+                } else {
+                    document.getElementById('recentTrips').innerHTML = trips.map(t =>
+                        `<div class="trip-item">
+                            <div><div class="trip-route">${t.origin||'--'} → ${t.destination||'--'}</div><div class="trip-meta">${t.distance_km?t.distance_km+' km':''} · ${formatDate(t.started_at)}</div></div>
+                            <div class="trip-fare">${formatCurrency(t.actual_fare||t.computed_fare||0)}</div>
+                        </div>`
+                    ).join('');
+                }
+            } catch(e) {}
+        }
+
+        // ── Logout ──
+        async function handleLogout() {
+            const r = await Swal.fire({title:'Logout?',icon:'question',showCancelButton:true,confirmButtonColor:'#ef4444',confirmButtonText:'Yes'});
+            if (r.isConfirmed) {
+                clearInterval(bookingPollInterval); clearInterval(timerInterval); clearInterval(updateInterval);
+                await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html');
+            }
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAVF_yekJbPdCQIoaWxzT4dHBIkjazhq6A&libraries=places&callback=initMap" async defer></script>
+</body>
+</html>
