@@ -355,7 +355,6 @@
                     <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-user"></i></div><div class="pr-content"><div class="pr-label">Full Name</div><div class="pr-value" id="profFullName">--</div></div></div>
                     <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-envelope"></i></div><div class="pr-content"><div class="pr-label">Email</div><div class="pr-value" id="profEmail">--</div></div></div>
                     <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-phone"></i></div><div class="pr-content"><div class="pr-label">Phone</div><div class="pr-value" id="profPhone">--</div></div></div>
-                    <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-address-book"></i></div><div class="pr-content"><div class="pr-label">Contact Number</div><div class="pr-value" id="profContact">--</div></div></div>
                     <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-location-dot"></i></div><div class="pr-content"><div class="pr-label">Address</div><div class="pr-value" id="profAddress">--</div></div></div>
                     <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="pr-content"><div class="pr-label">Violations</div><div class="pr-value" id="profViolations">0</div></div></div>
                 </div>
@@ -799,7 +798,7 @@
                     const stats = await dashboard.driverStats();
                     driverData = stats.driver || null;
                     if (driverData) {
-                        document.getElementById('profContact').textContent = driverData.contact_number || sessionData.phone || '--';
+                        document.getElementById('profPhone').textContent = driverData.contact_number || sessionData.phone || '--';
                         document.getElementById('profAddress').textContent = driverData.address || '--';
                     }
                     document.getElementById('profViolations').textContent = (stats.violations || 0) + ' violation(s)';
@@ -812,6 +811,7 @@
             if (!sessionData) await loadProfile();
             const s = sessionData;
             const d = driverData;
+            const phone = (d && d.contact_number) ? d.contact_number : (s.phone || '');
 
             const { value: formData } = await Swal.fire({
                 title: 'Edit Profile',
@@ -825,10 +825,8 @@
                     <input id="swal-ln" value="${s.last_name||''}" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--d-bg-alt);color:var(--d-text);font-family:inherit;outline:none">
                     <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--d-text-muted)">Email</label>
                     <input value="${s.email||''}" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--d-bg-muted);color:var(--d-text-faint);font-family:inherit;outline:none" readonly>
-                    <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--d-text-muted)">Phone</label>
-                    <input id="swal-ph" value="${s.phone||''}" placeholder="09xxxxxxxxx" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--d-bg-alt);color:var(--d-text);font-family:inherit;outline:none">
-                    <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--d-text-muted)">Contact Number</label>
-                    <input id="swal-ct" value="${d ? d.contact_number||'' : s.phone||''}" placeholder="09xxxxxxxxx" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--d-bg-alt);color:var(--d-text);font-family:inherit;outline:none">
+                    <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--d-text-muted)">Phone *</label>
+                    <input id="swal-ph" value="${phone}" placeholder="09xxxxxxxxx" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--d-bg-alt);color:var(--d-text);font-family:inherit;outline:none">
                     <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--d-text-muted)">Address</label>
                     <input id="swal-addr" value="${d ? d.address||'' : ''}" placeholder="Home address" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;background:var(--d-bg-alt);color:var(--d-text);font-family:inherit;outline:none">
                 </div>`,
@@ -841,15 +839,24 @@
                     first_name: document.getElementById('swal-fn').value.trim(),
                     last_name: document.getElementById('swal-ln').value.trim(),
                     phone: document.getElementById('swal-ph').value.trim(),
-                    contact_number: document.getElementById('swal-ct').value.trim(),
                     address: document.getElementById('swal-addr').value.trim()
                 })
             });
 
             if (!formData) return;
 
+            // Validation with SweetAlert popups
             if (!formData.first_name) {
-                return Swal.fire({ icon: 'warning', title: 'Required', text: 'First name is required.', confirmButtonColor: '#10b981' });
+                await Swal.fire({ icon:'warning', title:'Required', text:'First name is required.', confirmButtonColor:'#10b981' });
+                return editDriverProfile();
+            }
+            if (!formData.phone) {
+                await Swal.fire({ icon:'warning', title:'Required', text:'Phone number is required.', confirmButtonColor:'#10b981' });
+                return editDriverProfile();
+            }
+            if (!/^09\d{9}$/.test(formData.phone)) {
+                await Swal.fire({ icon:'error', title:'Invalid Phone', text:'Phone must be 09XXXXXXXXX format (11 digits).', confirmButtonColor:'#10b981' });
+                return editDriverProfile();
             }
 
             try {
@@ -863,7 +870,7 @@
                 // Update driver record (contact, address)
                 if (driverData && driverData.id) {
                     await drivers.update(driverData.id, {
-                        contact_number: formData.contact_number,
+                        contact_number: formData.phone,
                         address: formData.address
                     });
                 }

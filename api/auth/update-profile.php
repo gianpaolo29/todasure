@@ -26,6 +26,7 @@ $stmt->execute([$firstName, $lastName, $phone, $session['user_id']]);
 // Update session
 $_SESSION['first_name'] = $firstName;
 $_SESSION['last_name'] = $lastName;
+$_SESSION['phone'] = $phone;
 
 jsonResponse([
     'message' => 'Profile updated',

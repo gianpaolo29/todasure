@@ -121,8 +121,17 @@ switch ($method) {
         break;
 
     case 'PUT':
-        requireAdmin();
+        $session = requireAuth();
         if (!$id) jsonResponse(['error' => 'Driver ID required'], 400);
+
+        // Allow drivers to update their own record
+        if ($session['role'] !== 'admin') {
+            $stmt = $pdo->prepare("SELECT id FROM drivers WHERE id = ? AND user_id = ?");
+            $stmt->execute([$id, $session['user_id']]);
+            if (!$stmt->fetch()) {
+                jsonResponse(['error' => 'Not authorized'], 403);
+            }
+        }
 
         $input = getInput();
         $fields = [];

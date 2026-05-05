@@ -13,6 +13,11 @@ $driverId = $session['driver_id'];
 $pdo = getConnection();
 $stats = [];
 
+// Driver info
+$stmt = $pdo->prepare("SELECT id, first_name, last_name, contact_number, address, toda_id FROM drivers WHERE id = ?");
+$stmt->execute([$driverId]);
+$stats['driver'] = $stmt->fetch();
+
 // Today's stats
 $stmt = $pdo->prepare("
     SELECT COUNT(*) as trip_count, COALESCE(SUM(actual_fare), 0) as earnings
