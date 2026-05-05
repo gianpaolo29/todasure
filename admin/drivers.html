@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<style>.swal2-popup{background:#0f172a!important;color:#f1f5f9!important}.swal2-title{color:#f1f5f9!important}.swal2-html-container{color:#94a3b8!important}</style>
+<style>.swal2-popup{background:var(--bg-card-solid)!important;color:var(--text)!important}.swal2-title{color:var(--text)!important}.swal2-html-container{color:var(--text-secondary)!important}</style>
 </head>
 <body>
     <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
@@ -19,7 +19,7 @@
     <div class="layout">
         <aside class="sidebar" id="sidebar">
             <div class="logo">
-                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="logo-icon"><img src="../todasure-logo.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"></div>
                 <div>
                     <h2>TODASURE</h2>
                     <span>Admin Panel</span>
@@ -29,12 +29,12 @@
                 <a href="dashboard.html"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
                 <a href="drivers.html" class="active"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
                 <a href="tricycles.html"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
-                <a href="toda.html"><i class="fa-solid fa-building icon"></i> TODA</a>
                 <a href="trips.html"><i class="fa-solid fa-route icon"></i> Trips</a>
                 <a href="fares.html"><i class="fa-solid fa-peso-sign icon"></i> Fare Rates</a>
                 <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
                 <a href="violations.html"><i class="fa-solid fa-gavel icon"></i> Violations</a>
                 <a href="users.html"><i class="fa-solid fa-users icon"></i> Passengers</a>
+                <a href="officials.html"><i class="fa-solid fa-user-tie icon"></i> Brgy Officials</a>
                 <a href="barangays.html"><i class="fa-solid fa-map-location-dot icon"></i> Barangays</a>
             </nav>
         </aside>
@@ -47,9 +47,21 @@
                     <input type="text" placeholder="Search..." id="globalSearch">
                 </div>
                 <div class="header-actions">
-                    <button class="header-icon-btn" id="notifBtn" title="Notifications">
-                        <i class="fa-solid fa-bell"></i>
-                    </button>
+                    <div style="position:relative">
+                        <button class="header-icon-btn" id="notifBtn" title="Notifications">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notif-dot" id="notifDot" style="display:none"></span>
+                        </button>
+                        <div class="dropdown-menu" id="notifDropdown" style="min-width:320px;max-width:380px;padding:0">
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)">
+                                <span style="font-size:14px;font-weight:700;color:var(--text)">Notifications</span>
+                                <button onclick="markAllNotifRead()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Mark all read</button>
+                            </div>
+                            <div id="notifList" style="max-height:340px;overflow-y:auto">
+                                <div style="padding:30px 16px;text-align:center;color:var(--text-muted);font-size:13px">No notifications</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="profile-dropdown">
                         <button class="profile-btn" id="profileBtn">
                             <div class="profile-avatar" id="profileInitial">A</div>
@@ -60,7 +72,12 @@
                             <i class="fa-solid fa-chevron-down chevron"></i>
                         </button>
                         <div class="dropdown-menu" id="profileMenu">
-                            <a href="#"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+                                <div style="font-size:14px;font-weight:600;color:var(--text)" id="dropdownName">Admin</div>
+                                <div style="font-size:11px;color:var(--text-muted)" id="dropdownEmail">admin@todasure.com</div>
+                            </div>
+                            <a href="#" onclick="openAdminProfile()"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <button onclick="themeToggle()" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;font-family:inherit" id="themeMenuItem"><i class="fa-solid fa-moon"></i> Dark Mode</button>
                             <div class="divider"></div>
                             <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
                         </div>
@@ -72,17 +89,8 @@
                 <!-- Filters -->
                 <div class="card" style="padding:16px;">
                     <div class="flex gap-2">
-                        <input type="text" id="searchInput" class="form-control" placeholder="Search by name or license..." style="max-width:300px;">
-                        <select id="filterToda" class="form-control" style="max-width:200px;">
-                            <option value="">All TODAs</option>
-                        </select>
-                        <select id="filterStatus" class="form-control" style="max-width:150px;">
-                            <option value="">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="suspended">Suspended</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                        <button class="btn btn-outline" onclick="loadDrivers()">Filter</button>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by name..." style="max-width:300px;">
+                        <button class="btn btn-outline" onclick="loadDrivers()">Search</button>
                     </div>
                 </div>
 
@@ -98,12 +106,8 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Name</th>
-                                    
-                                    <th>TODA</th>
-                                    <th>Barangay</th>
                                     <th>Contact</th>
                                     <th>Tricycles</th>
-                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -117,42 +121,68 @@
         </main>
     </div>
 
-    <!-- Add/Edit Modal -->
-    <div class="modal-overlay" id="driverModal">
+    <!-- Add Driver Modal -->
+    <div class="modal-overlay" id="addDriverModal">
         <div class="modal">
             <div class="modal-header">
-                <h2 id="modalTitle"><i class="fa-solid fa-id-card" style="color:var(--accent)"></i> Add Driver</h2>
-                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+                <h2><i class="fa-solid fa-user-plus" style="color:var(--accent)"></i> Add Driver</h2>
+                <button class="modal-close" onclick="closeAddModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="driverForm">
-                <input type="hidden" id="driverId">
-                <div class="form-row">
-                    <div class="form-group"><label>First Name *</label><input type="text" id="firstName" class="form-control" placeholder="Enter first name" required></div>
-                    <div class="form-group"><label>Last Name *</label><input type="text" id="lastName" class="form-control" placeholder="Enter last name" required></div>
+            <form id="addDriverForm">
+                <div class="form-group" style="position:relative">
+                    <label>Search User *</label>
+                    <input type="text" id="searchUser" class="form-control" placeholder="Type name or email to search..." autocomplete="off">
+                    <input type="hidden" id="selectedUserId">
+                    <div id="userResults" style="position:absolute;left:0;right:0;top:100%;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto;z-index:10;display:none;box-shadow:var(--shadow-md)"></div>
+                    <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block">Search for a registered passenger to promote to driver</small>
                 </div>
-                <div class="form-row">
-                    <div class="form-group"><label>Middle Name</label><input type="text" id="middleName" class="form-control" placeholder="Optional"></div>
-                    
-                </div>
-                <div class="form-group"><label>TODA</label><select id="todaId" class="form-control"><option value="">Unassigned</option></select></div>
-                <div class="form-row">
-                    <div class="form-group"><label>Contact Number</label><input type="text" id="contactNumber" class="form-control" placeholder="09xxxxxxxxx"></div>
-                    <div class="form-group"><label>Address</label><input type="text" id="address" class="form-control" placeholder="Home address"></div>
-                </div>
-                <div id="accountFields">
-                    <div class="form-row">
-                        <div class="form-group"><label>Email *</label><input type="email" id="driverEmail" class="form-control" placeholder="driver@email.com" required></div>
-                        <div class="form-group"><label>Password *</label><input type="password" id="driverPassword" class="form-control" placeholder="Login password" required></div>
+                <div id="selectedUserInfo" style="display:none;padding:12px;background:var(--bg-hover);border-radius:10px;margin-bottom:14px">
+                    <div style="font-size:13px;color:var(--text-secondary)">
+                        <div><strong style="color:var(--text)">Name:</strong> <span id="selName">--</span></div>
+                        <div><strong style="color:var(--text)">Email:</strong> <span id="selEmail">--</span></div>
+                        <div><strong style="color:var(--text)">Phone:</strong> <span id="selPhone">--</span></div>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Contact Number</label><input type="text" id="addContact" class="form-control" placeholder="09xxxxxxxxx"></div>
+                    <div class="form-group"><label>Address</label><input type="text" id="addAddress" class="form-control" placeholder="Home address"></div>
+                </div>
                 <div style="display:flex;gap:10px;margin-top:8px">
-                    <button type="button" class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeAddModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center"><i class="fa-solid fa-check"></i> Add as Driver</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Driver Modal -->
+    <div class="modal-overlay" id="editDriverModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-id-card" style="color:var(--accent)"></i> Edit Driver</h2>
+                <button class="modal-close" onclick="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="editDriverForm">
+                <input type="hidden" id="editDriverId">
+                <div id="editUserInfo" style="padding:12px;background:var(--bg-hover);border-radius:10px;margin-bottom:14px">
+                    <div style="font-size:13px;color:var(--text-secondary)">
+                        <div><strong style="color:var(--text)">Name:</strong> <span id="editName">--</span></div>
+                        <div><strong style="color:var(--text)">Email:</strong> <span id="editEmail">--</span></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Contact Number</label><input type="text" id="editContact" class="form-control" placeholder="09xxxxxxxxx"></div>
+                    <div class="form-group"><label>Address</label><input type="text" id="editAddress" class="form-control" placeholder="Home address"></div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:8px">
+                    <button type="button" class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeEditModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center"><i class="fa-solid fa-check"></i> Save</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <script src="../assets/js/theme.js"></script>
     <script src="../assets/js/guard.js"></script>
     <script src="../assets/js/api.js"></script>
     <script>
@@ -191,8 +221,21 @@
                 var n = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
                 document.getElementById('profileName').textContent = n || 'Admin';
                 document.getElementById('profileInitial').textContent = (s.first_name||'A')[0].toUpperCase();
+                var dn = document.getElementById('dropdownName'); if(dn) dn.textContent = n || 'Admin';
+                var de = document.getElementById('dropdownEmail'); if(de) de.textContent = s.email || '';
             } catch(e) {}
         })();
+
+        // Theme menu item update
+        function updateThemeMenuItem() {
+            var el = document.getElementById('themeMenuItem');
+            if (!el) return;
+            var theme = document.documentElement.getAttribute('data-theme');
+            el.innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i> Light Mode' : '<i class="fa-solid fa-moon"></i> Dark Mode';
+        }
+        updateThemeMenuItem();
+        var _adminThemeToggle = window.themeToggle;
+        window.themeToggle = function() { _adminThemeToggle(); updateThemeMenuItem(); };
 
         // SweetAlert showAlert
         window.showAlert = function(msg, type) {
@@ -200,38 +243,130 @@
                 .fire({ icon: type==='error'?'error':'success', title: msg });
         };
 
+        // Admin Profile
+        async function openAdminProfile() {
+            document.getElementById('profileMenu').classList.remove('show');
+            try {
+                const s = await auth.session();
+                const { value: formData } = await Swal.fire({
+                    title: 'Account Profile',
+                    html: `
+                        <div style="text-align:left;font-size:13px">
+                            <div style="text-align:center;margin-bottom:16px">
+                                <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#00e6a0,#059669);display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff">${(s.first_name||'A')[0].toUpperCase()}</div>
+                            </div>
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">First Name</label>
+                            <input id="swal-fn" value="${s.first_name||''}" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--bg-input);color:var(--text);font-family:inherit;outline:none">
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">Last Name</label>
+                            <input id="swal-ln" value="${s.last_name||''}" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--bg-input);color:var(--text);font-family:inherit;outline:none">
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">Email</label>
+                            <input value="${s.email||''}" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--bg-hover);color:var(--text-muted);font-family:inherit;outline:none" readonly>
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">Phone</label>
+                            <input id="swal-ph" value="${s.phone||''}" placeholder="09xxxxxxxxx" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg-input);color:var(--text);font-family:inherit;outline:none">
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Save Changes',
+                    confirmButtonColor: '#00e6a0',
+                    cancelButtonText: 'Close',
+                    cancelButtonColor: '#9ca3af',
+                    preConfirm: () => ({
+                        first_name: document.getElementById('swal-fn').value.trim(),
+                        last_name: document.getElementById('swal-ln').value.trim(),
+                        phone: document.getElementById('swal-ph').value.trim()
+                    })
+                });
+                if (formData) {
+                    if (!formData.first_name) return Swal.fire({icon:'warning',title:'Required',text:'First name is required.',confirmButtonColor:'#00e6a0'});
+                    await apiRequest('../api/auth/update-profile.php','POST',formData);
+                    Swal.fire({icon:'success',title:'Profile Updated',confirmButtonColor:'#00e6a0'});
+                    var n = (formData.first_name + ' ' + formData.last_name).trim();
+                    document.getElementById('profileName').textContent = n;
+                    document.getElementById('profileInitial').textContent = formData.first_name[0].toUpperCase();
+                    var dn = document.getElementById('dropdownName'); if(dn) dn.textContent = n;
+                }
+            } catch(err) {
+                Swal.fire({icon:'error',title:'Error',text:err.message||'Failed to load profile.',confirmButtonColor:'#00e6a0'});
+            }
+        }
+
+
+        // Notifications Dropdown
+        function timeAgo(dateStr) {
+            var d = new Date(dateStr); var now = new Date(); var s = Math.floor((now-d)/1000);
+            if (s < 60) return 'Just now';
+            if (s < 3600) return Math.floor(s/60) + 'm ago';
+            if (s < 86400) return Math.floor(s/3600) + 'h ago';
+            return Math.floor(s/86400) + 'd ago';
+        }
+        function getNotifIcon(type) {
+            if (type === 'complaint') return '<i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b"></i>';
+            if (type === 'violation') return '<i class="fa-solid fa-gavel" style="color:#ef4444"></i>';
+            if (type === 'booking') return '<i class="fa-solid fa-motorcycle" style="color:#0ea5e9"></i>';
+            return '<i class="fa-solid fa-bell" style="color:var(--accent)"></i>';
+        }
+        async function loadNotifications() {
+            try {
+                var data = await notifications.list();
+                var dot = document.getElementById('notifDot');
+                if (dot) dot.style.display = data.unread_count > 0 ? 'block' : 'none';
+                var container = document.getElementById('notifList');
+                var list = data.notifications || [];
+                if (list.length === 0) {
+                    container.innerHTML = '<div style="padding:30px 16px;text-align:center;color:var(--text-muted);font-size:13px"><i class="fa-solid fa-bell-slash" style="font-size:20px;display:block;margin-bottom:8px;opacity:.3"></i>No notifications</div>';
+                    return;
+                }
+                container.innerHTML = list.slice(0,15).map(function(n) {
+                    var bg = n.is_read == 0 ? 'background:rgba(0,230,160,.03);' : '';
+                    return '<div style="display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);' + bg + 'transition:background .15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='' + (n.is_read == 0 ? 'rgba(0,230,160,.03)' : 'none') + ''">' +
+                        '<div style="width:32px;height:32px;border-radius:50%;background:var(--bg-input);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px">' + getNotifIcon(n.type) + '</div>' +
+                        '<div style="flex:1;min-width:0">' +
+                            '<div style="font-size:13px;font-weight:' + (n.is_read == 0 ? '600' : '400') + ';color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + n.title + '</div>' +
+                            '<div style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (n.message || '') + '</div>' +
+                            '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + timeAgo(n.created_at) + '</div>' +
+                        '</div>' +
+                        (n.is_read == 0 ? '<div style="width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;margin-top:6px"></div>' : '') +
+                    '</div>';
+                }).join('');
+            } catch(e) {}
+        }
+        async function markAllNotifRead() {
+            try {
+                await notifications.markAllRead();
+                loadNotifications();
+            } catch(e) {}
+        }
+        document.getElementById('notifBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('profileMenu').classList.remove('show');
+            document.getElementById('notifDropdown').classList.toggle('show');
+            loadNotifications();
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#notifDropdown') && !e.target.closest('#notifBtn')) {
+                document.getElementById('notifDropdown').classList.remove('show');
+            }
+        });
+        loadNotifications();
+
         // Logout
         async function handleLogout() {
             var r = await Swal.fire({ title:'Logout?', text:'Are you sure?', icon:'question', showCancelButton:true, confirmButtonColor:'#00e6a0', cancelButtonColor:'#9ca3af', confirmButtonText:'Yes, logout' });
             if (r.isConfirmed) { await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html'); }
         }
 
-        let todaList = [];
+        let passengerUsers = [];
 
-        async function loadTodas() {
-            todaList = await todas.list();
-            const selects = [document.getElementById('todaId'), document.getElementById('filterToda')];
-            selects.forEach(sel => {
-                const firstOption = sel.options[0];
-                sel.innerHTML = '';
-                sel.appendChild(firstOption);
-                todaList.forEach(t => {
-                    const opt = document.createElement('option');
-                    opt.value = t.id;
-                    opt.textContent = t.name;
-                    sel.appendChild(opt);
-                });
-            });
+        async function loadPassengerUsers() {
+            try {
+                passengerUsers = await users.list({ role: 'passenger' });
+            } catch(e) { passengerUsers = []; }
         }
 
         async function loadDrivers() {
             const params = {};
             const search = document.getElementById('searchInput').value;
-            const toda = document.getElementById('filterToda').value;
-            const status = document.getElementById('filterStatus').value;
             if (search) params.search = search;
-            if (toda) params.toda_id = toda;
-            if (status) params.status = status;
 
             try {
                 const [list, allTricycles] = await Promise.all([
@@ -239,7 +374,6 @@
                     tricycles.list()
                 ]);
 
-                // Count tricycles per driver
                 const tricycleCount = {};
                 allTricycles.forEach(t => {
                     tricycleCount[t.driver_id] = (tricycleCount[t.driver_id] || 0) + 1;
@@ -247,24 +381,18 @@
 
                 const tbody = document.getElementById('driversTable');
                 if (list.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No drivers found</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No drivers found</td></tr>';
                     return;
                 }
                 tbody.innerHTML = list.map(d => `
                     <tr>
                         <td>#${d.id}</td>
                         <td>${d.first_name} ${d.last_name}</td>
-                        <td>${d.toda_name || 'Unassigned'}</td>
-                        <td>${d.barangay_name}</td>
                         <td>${d.contact_number || '-'}</td>
                         <td>${tricycleCount[d.id] || 0}</td>
-                        <td><span class="${badgeClass(d.status)}">${d.status}</span></td>
                         <td>
                             <button class="btn btn-outline btn-sm" onclick="editDriver(${d.id})">Edit</button>
-                            ${d.status === 'active' ?
-                                `<button class="btn btn-danger btn-sm" onclick="deactivateDriver(${d.id})">Deactivate</button>` :
-                                `<button class="btn btn-success btn-sm" onclick="activateDriver(${d.id})">Activate</button>`
-                            }
+                            <button class="btn btn-danger btn-sm" onclick="deleteDriver(${d.id})">Delete</button>
                         </td>
                     </tr>
                 `).join('');
@@ -273,89 +401,160 @@
             }
         }
 
-        function openAddModal() {
-            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-id-card" style="color:var(--accent)"></i> Add Driver';
-            document.getElementById('driverForm').reset();
-            document.getElementById('driverId').value = '';
-            document.getElementById('accountFields').style.display = 'block';
-            document.getElementById('driverEmail').required = true;
-            document.getElementById('driverPassword').required = true;
-            document.getElementById('driverModal').classList.add('active');
+        // ── Add Driver Modal ──
+        let searchTimeout = null;
+
+        async function openAddModal() {
+            await loadPassengerUsers();
+            document.getElementById('addDriverForm').reset();
+            document.getElementById('selectedUserId').value = '';
+            document.getElementById('selectedUserInfo').style.display = 'none';
+            document.getElementById('userResults').style.display = 'none';
+            document.getElementById('addDriverModal').classList.add('active');
         }
 
-        async function editDriver(id) {
-            try {
-                const d = await drivers.get(id);
-                document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-id-card" style="color:var(--accent)"></i> Edit Driver';
-                document.getElementById('driverId').value = d.id;
-                document.getElementById('firstName').value = d.first_name;
-                document.getElementById('lastName').value = d.last_name;
-                document.getElementById('middleName').value = d.middle_name || '';
-                document.getElementById('todaId').value = d.toda_id;
-                document.getElementById('contactNumber').value = d.contact_number || '';
-                document.getElementById('address').value = d.address || '';
-                document.getElementById('accountFields').style.display = 'none';
-                document.getElementById('driverEmail').required = false;
-                document.getElementById('driverPassword').required = false;
-                document.getElementById('driverModal').classList.add('active');
-            } catch (err) {
-                showAlert(err.message, 'error');
-            }
-        }
+        document.getElementById('searchUser').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const q = this.value.trim().toLowerCase();
+            const resultsDiv = document.getElementById('userResults');
 
-        function closeModal() {
-            document.getElementById('driverModal').classList.remove('active');
-        }
+            if (q.length < 2) { resultsDiv.style.display = 'none'; return; }
 
-        document.getElementById('driverForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('driverId').value;
-            const data = {
-                first_name: document.getElementById('firstName').value,
-                last_name: document.getElementById('lastName').value,
-                middle_name: document.getElementById('middleName').value,
-                toda_id: document.getElementById('todaId').value,
-                contact_number: document.getElementById('contactNumber').value,
-                address: document.getElementById('address').value
-            };
+            searchTimeout = setTimeout(() => {
+                const matches = passengerUsers.filter(u => {
+                    const name = ((u.first_name || '') + ' ' + (u.last_name || '')).toLowerCase();
+                    return name.includes(q) || (u.email || '').toLowerCase().includes(q);
+                }).slice(0, 8);
 
-            try {
-                if (id) {
-                    await drivers.update(id, data);
-                    showAlert('Driver updated successfully');
+                if (matches.length === 0) {
+                    resultsDiv.innerHTML = '<div style="padding:12px 16px;color:var(--text-muted);font-size:13px">No users found</div>';
                 } else {
-                    data.email = document.getElementById('driverEmail').value;
-                    data.username = data.email.split('@')[0];
-                    data.password = document.getElementById('driverPassword').value;
-                    await drivers.create(data);
-                    showAlert('Driver registered successfully');
+                    resultsDiv.innerHTML = matches.map(u => {
+                        const name = ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || u.username;
+                        return `<div onclick="selectUser(${u.id})" style="padding:10px 16px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='none'">
+                            <div style="font-weight:600;color:var(--text)">${name}</div>
+                            <div style="color:var(--text-muted);font-size:11px">${u.email}</div>
+                        </div>`;
+                    }).join('');
                 }
-                closeModal();
-                loadDrivers();
-            } catch (err) {
-                showAlert(err.message, 'error');
+                resultsDiv.style.display = 'block';
+            }, 200);
+        });
+
+        function selectUser(id) {
+            const u = passengerUsers.find(p => p.id == id);
+            if (!u) return;
+            const name = ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || u.username;
+            document.getElementById('searchUser').value = name;
+            document.getElementById('selectedUserId').value = u.id;
+            document.getElementById('selName').textContent = name;
+            document.getElementById('selEmail').textContent = u.email;
+            document.getElementById('selPhone').textContent = u.phone || '--';
+            if (u.phone) document.getElementById('addContact').value = u.phone;
+            document.getElementById('selectedUserInfo').style.display = 'block';
+            document.getElementById('userResults').style.display = 'none';
+        }
+
+        // Close results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#searchUser') && !e.target.closest('#userResults')) {
+                document.getElementById('userResults').style.display = 'none';
             }
         });
 
-        async function deactivateDriver(id) {
-            const r = await Swal.fire({ title: 'Deactivate Driver?', text: 'This driver will be set to inactive.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#00e6a0', cancelButtonColor: '#9ca3af', confirmButtonText: 'Yes, deactivate' });
+        function closeAddModal() {
+            document.getElementById('addDriverModal').classList.remove('active');
+        }
+
+        document.getElementById('addDriverForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('selectedUserId').value;
+
+            if (!userId) {
+                return Swal.fire({ icon:'warning', title:'No User Selected', text:'Please search and select a user to promote to driver.', confirmButtonColor:'#00e6a0' });
+            }
+
+            const contact = document.getElementById('addContact').value.trim();
+            if (!contact) {
+                return Swal.fire({ icon:'warning', title:'Missing Field', text:'Contact number is required.', confirmButtonColor:'#00e6a0' });
+            }
+
+            const u = passengerUsers.find(p => p.id == userId);
+            const data = {
+                user_id: userId,
+                first_name: u.first_name || u.username,
+                last_name: u.last_name || '',
+                contact_number: contact,
+                address: document.getElementById('addAddress').value
+            };
+
+            try {
+                await drivers.create(data);
+                Swal.fire({ icon:'success', title:'Driver Added', text:`${u.first_name || u.username} has been promoted to driver.`, confirmButtonColor:'#00e6a0' });
+                closeAddModal();
+                loadDrivers();
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to add driver.', confirmButtonColor:'#00e6a0' });
+            }
+        });
+
+        // ── Edit Driver Modal ──
+        async function editDriver(id) {
+            try {
+                const d = await drivers.get(id);
+                document.getElementById('editDriverId').value = d.id;
+                document.getElementById('editName').textContent = d.first_name + ' ' + d.last_name;
+                document.getElementById('editEmail').textContent = d.username || '--';
+                document.getElementById('editContact').value = d.contact_number || '';
+                document.getElementById('editAddress').value = d.address || '';
+                document.getElementById('editDriverModal').classList.add('active');
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to load driver.', confirmButtonColor:'#00e6a0' });
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editDriverModal').classList.remove('active');
+        }
+
+        document.getElementById('editDriverForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editDriverId').value;
+            const contact = document.getElementById('editContact').value.trim();
+
+            if (!contact) {
+                return Swal.fire({ icon:'warning', title:'Missing Field', text:'Contact number is required.', confirmButtonColor:'#00e6a0' });
+            }
+
+            const data = {
+                contact_number: contact,
+                address: document.getElementById('editAddress').value
+            };
+
+            try {
+                await drivers.update(id, data);
+                Swal.fire({ icon:'success', title:'Driver Updated', text:'Driver details have been saved.', confirmButtonColor:'#00e6a0' });
+                closeEditModal();
+                loadDrivers();
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to update driver.', confirmButtonColor:'#00e6a0' });
+            }
+        });
+
+        // ── Delete Driver ──
+        async function deleteDriver(id) {
+            const r = await Swal.fire({ title: 'Delete Driver?', text: 'This will remove the driver permanently. Are you sure?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#9ca3af', confirmButtonText: 'Yes, delete', cancelButtonText: 'No' });
             if (!r.isConfirmed) return;
             try {
                 await drivers.delete(id);
-                showAlert('Driver deactivated');
+                Swal.fire({ icon:'success', title:'Deleted', text:'Driver has been removed.', confirmButtonColor:'#00e6a0' });
                 loadDrivers();
-            } catch (err) { showAlert(err.message, 'error'); }
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to delete driver.', confirmButtonColor:'#00e6a0' });
+            }
         }
 
-        async function activateDriver(id) {
-            try {
-                await drivers.update(id, { status: 'active' });
-                showAlert('Driver activated');
-                loadDrivers();
-            } catch (err) { showAlert(err.message, 'error'); }
-        }
-
-        loadTodas();
+        document.getElementById('searchInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') loadDrivers(); });
         loadDrivers();
     </script>
 </body>

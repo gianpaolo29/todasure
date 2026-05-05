@@ -77,7 +77,15 @@ switch ($method) {
             $input['description']
         ]);
 
-        jsonResponse(['message' => 'Complaint submitted successfully', 'id' => $pdo->lastInsertId()], 201);
+        $complaintId = $pdo->lastInsertId();
+
+        // Create notification for admin
+        try {
+            $pdo->prepare("INSERT INTO notifications (role_target, type, title, message, link) VALUES ('admin', 'complaint', 'New Complaint Filed', ?, 'complaints.html')")
+                ->execute([$input['complaint_type'] . ' - ' . substr($input['description'], 0, 80)]);
+        } catch(Exception $e) {}
+
+        jsonResponse(['message' => 'Complaint submitted successfully', 'id' => $complaintId], 201);
         break;
 
     case 'PUT':

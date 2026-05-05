@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<style>.swal2-popup{background:#0f172a!important;color:#f1f5f9!important}.swal2-title{color:#f1f5f9!important}.swal2-html-container{color:#94a3b8!important}</style>
+<style>.swal2-popup{background:var(--bg-card-solid)!important;color:var(--text)!important}.swal2-title{color:var(--text)!important}.swal2-html-container{color:var(--text-secondary)!important}</style>
 </head>
 <body>
     <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
@@ -19,7 +19,7 @@
     <div class="layout">
         <aside class="sidebar" id="sidebar">
             <div class="logo">
-                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="logo-icon"><img src="../todasure-logo.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"></div>
                 <div>
                     <h2>TODASURE</h2>
                     <span>Admin Panel</span>
@@ -29,12 +29,12 @@
                 <a href="dashboard.html"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
                 <a href="drivers.html"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
                 <a href="tricycles.html"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
-                <a href="toda.html" class="active"><i class="fa-solid fa-building icon"></i> TODA</a>
                 <a href="trips.html"><i class="fa-solid fa-route icon"></i> Trips</a>
                 <a href="fares.html"><i class="fa-solid fa-peso-sign icon"></i> Fare Rates</a>
                 <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
                 <a href="violations.html"><i class="fa-solid fa-gavel icon"></i> Violations</a>
                 <a href="users.html"><i class="fa-solid fa-users icon"></i> Passengers</a>
+                <a href="officials.html"><i class="fa-solid fa-user-tie icon"></i> Brgy Officials</a>
                 <a href="barangays.html"><i class="fa-solid fa-map-location-dot icon"></i> Barangays</a>
             </nav>
         </aside>
@@ -47,9 +47,21 @@
                     <input type="text" placeholder="Search..." id="globalSearch">
                 </div>
                 <div class="header-actions">
-                    <button class="header-icon-btn" id="notifBtn" title="Notifications">
-                        <i class="fa-solid fa-bell"></i>
-                    </button>
+                    <div style="position:relative">
+                        <button class="header-icon-btn" id="notifBtn" title="Notifications">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notif-dot" id="notifDot" style="display:none"></span>
+                        </button>
+                        <div class="dropdown-menu" id="notifDropdown" style="min-width:320px;max-width:380px;padding:0">
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)">
+                                <span style="font-size:14px;font-weight:700;color:var(--text)">Notifications</span>
+                                <button onclick="markAllNotifRead()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Mark all read</button>
+                            </div>
+                            <div id="notifList" style="max-height:340px;overflow-y:auto">
+                                <div style="padding:30px 16px;text-align:center;color:var(--text-muted);font-size:13px">No notifications</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="profile-dropdown">
                         <button class="profile-btn" id="profileBtn">
                             <div class="profile-avatar" id="profileInitial">A</div>
@@ -60,7 +72,12 @@
                             <i class="fa-solid fa-chevron-down chevron"></i>
                         </button>
                         <div class="dropdown-menu" id="profileMenu">
-                            <a href="#"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+                                <div style="font-size:14px;font-weight:600;color:var(--text)" id="dropdownName">Admin</div>
+                                <div style="font-size:11px;color:var(--text-muted)" id="dropdownEmail">admin@todasure.com</div>
+                            </div>
+                            <a href="#" onclick="openAdminProfile()"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <button onclick="themeToggle()" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;font-family:inherit" id="themeMenuItem"><i class="fa-solid fa-moon"></i> Dark Mode</button>
                             <div class="divider"></div>
                             <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
                         </div>
@@ -135,6 +152,7 @@
         </div>
     </div>
 
+    <script src="../assets/js/theme.js"></script>
     <script src="../assets/js/guard.js"></script>
     <script src="../assets/js/api.js"></script>
     <script>
@@ -173,14 +191,133 @@
                 var n = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
                 document.getElementById('profileName').textContent = n || 'Admin';
                 document.getElementById('profileInitial').textContent = (s.first_name||'A')[0].toUpperCase();
+                var dn = document.getElementById('dropdownName'); if(dn) dn.textContent = n || 'Admin';
+                var de = document.getElementById('dropdownEmail'); if(de) de.textContent = s.email || '';
             } catch(e) {}
         })();
+
+        // Theme menu item update
+        function updateThemeMenuItem() {
+            var el = document.getElementById('themeMenuItem');
+            if (!el) return;
+            var theme = document.documentElement.getAttribute('data-theme');
+            el.innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i> Light Mode' : '<i class="fa-solid fa-moon"></i> Dark Mode';
+        }
+        updateThemeMenuItem();
+        var _adminThemeToggle = window.themeToggle;
+        window.themeToggle = function() { _adminThemeToggle(); updateThemeMenuItem(); };
 
         // SweetAlert showAlert
         window.showAlert = function(msg, type) {
             Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000, timerProgressBar:true })
                 .fire({ icon: type==='error'?'error':'success', title: msg });
         };
+
+        // Admin Profile
+        async function openAdminProfile() {
+            document.getElementById('profileMenu').classList.remove('show');
+            try {
+                const s = await auth.session();
+                const { value: formData } = await Swal.fire({
+                    title: 'Account Profile',
+                    html: `
+                        <div style="text-align:left;font-size:13px">
+                            <div style="text-align:center;margin-bottom:16px">
+                                <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#00e6a0,#059669);display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff">${(s.first_name||'A')[0].toUpperCase()}</div>
+                            </div>
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">First Name</label>
+                            <input id="swal-fn" value="${s.first_name||''}" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--bg-input);color:var(--text);font-family:inherit;outline:none">
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">Last Name</label>
+                            <input id="swal-ln" value="${s.last_name||''}" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--bg-input);color:var(--text);font-family:inherit;outline:none">
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">Email</label>
+                            <input value="${s.email||''}" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--bg-hover);color:var(--text-muted);font-family:inherit;outline:none" readonly>
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">Phone</label>
+                            <input id="swal-ph" value="${s.phone||''}" placeholder="09xxxxxxxxx" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg-input);color:var(--text);font-family:inherit;outline:none">
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Save Changes',
+                    confirmButtonColor: '#00e6a0',
+                    cancelButtonText: 'Close',
+                    cancelButtonColor: '#9ca3af',
+                    preConfirm: () => ({
+                        first_name: document.getElementById('swal-fn').value.trim(),
+                        last_name: document.getElementById('swal-ln').value.trim(),
+                        phone: document.getElementById('swal-ph').value.trim()
+                    })
+                });
+                if (formData) {
+                    if (!formData.first_name) return Swal.fire({icon:'warning',title:'Required',text:'First name is required.',confirmButtonColor:'#00e6a0'});
+                    await apiRequest('../api/auth/update-profile.php','POST',formData);
+                    Swal.fire({icon:'success',title:'Profile Updated',confirmButtonColor:'#00e6a0'});
+                    var n = (formData.first_name + ' ' + formData.last_name).trim();
+                    document.getElementById('profileName').textContent = n;
+                    document.getElementById('profileInitial').textContent = formData.first_name[0].toUpperCase();
+                    var dn = document.getElementById('dropdownName'); if(dn) dn.textContent = n;
+                }
+            } catch(err) {
+                Swal.fire({icon:'error',title:'Error',text:err.message||'Failed to load profile.',confirmButtonColor:'#00e6a0'});
+            }
+        }
+
+
+        // Notifications Dropdown
+        function timeAgo(dateStr) {
+            var d = new Date(dateStr); var now = new Date(); var s = Math.floor((now-d)/1000);
+            if (s < 60) return 'Just now';
+            if (s < 3600) return Math.floor(s/60) + 'm ago';
+            if (s < 86400) return Math.floor(s/3600) + 'h ago';
+            return Math.floor(s/86400) + 'd ago';
+        }
+        function getNotifIcon(type) {
+            if (type === 'complaint') return '<i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b"></i>';
+            if (type === 'violation') return '<i class="fa-solid fa-gavel" style="color:#ef4444"></i>';
+            if (type === 'booking') return '<i class="fa-solid fa-motorcycle" style="color:#0ea5e9"></i>';
+            return '<i class="fa-solid fa-bell" style="color:var(--accent)"></i>';
+        }
+        async function loadNotifications() {
+            try {
+                var data = await notifications.list();
+                var dot = document.getElementById('notifDot');
+                if (dot) dot.style.display = data.unread_count > 0 ? 'block' : 'none';
+                var container = document.getElementById('notifList');
+                var list = data.notifications || [];
+                if (list.length === 0) {
+                    container.innerHTML = '<div style="padding:30px 16px;text-align:center;color:var(--text-muted);font-size:13px"><i class="fa-solid fa-bell-slash" style="font-size:20px;display:block;margin-bottom:8px;opacity:.3"></i>No notifications</div>';
+                    return;
+                }
+                container.innerHTML = list.slice(0,15).map(function(n) {
+                    var bg = n.is_read == 0 ? 'background:rgba(0,230,160,.03);' : '';
+                    return '<div style="display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);' + bg + 'transition:background .15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='' + (n.is_read == 0 ? 'rgba(0,230,160,.03)' : 'none') + ''">' +
+                        '<div style="width:32px;height:32px;border-radius:50%;background:var(--bg-input);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px">' + getNotifIcon(n.type) + '</div>' +
+                        '<div style="flex:1;min-width:0">' +
+                            '<div style="font-size:13px;font-weight:' + (n.is_read == 0 ? '600' : '400') + ';color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + n.title + '</div>' +
+                            '<div style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (n.message || '') + '</div>' +
+                            '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + timeAgo(n.created_at) + '</div>' +
+                        '</div>' +
+                        (n.is_read == 0 ? '<div style="width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;margin-top:6px"></div>' : '') +
+                    '</div>';
+                }).join('');
+            } catch(e) {}
+        }
+        async function markAllNotifRead() {
+            try {
+                await notifications.markAllRead();
+                loadNotifications();
+            } catch(e) {}
+        }
+        document.getElementById('notifBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('profileMenu').classList.remove('show');
+            document.getElementById('notifDropdown').classList.toggle('show');
+            loadNotifications();
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#notifDropdown') && !e.target.closest('#notifBtn')) {
+                document.getElementById('notifDropdown').classList.remove('show');
+            }
+        });
+        loadNotifications();
 
         // Logout
         async function handleLogout() {

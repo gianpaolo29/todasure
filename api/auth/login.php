@@ -35,6 +35,7 @@ $_SESSION['username'] = $user['username'];
 $_SESSION['email'] = $user['email'];
 $_SESSION['first_name'] = $user['first_name'];
 $_SESSION['last_name'] = $user['last_name'];
+$_SESSION['phone'] = $user['phone'] ?? null;
 $_SESSION['role'] = $user['role'];
 $_SESSION['barangay_id'] = $user['barangay_id'] ?? null;
 

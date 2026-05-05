@@ -44,7 +44,7 @@ switch ($method) {
         $input = getInput();
         $fields = [];
         $params = [];
-        $allowed = ['name', 'municipality', 'province'];
+        $allowed = ['name', 'municipality', 'province', 'status'];
         foreach ($allowed as $field) {
             if (isset($input[$field])) {
                 $fields[] = "$field = ?";

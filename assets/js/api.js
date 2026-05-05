@@ -94,10 +94,24 @@ const violations = {
     update: (id, data) => apiRequest('violations/index.php?id=' + id, 'PUT', data)
 };
 
+// Users
+const users = {
+    list: (params) => apiRequest('users/index.php' + (params ? '?' + new URLSearchParams(params) : '')),
+    get: (id) => apiRequest('users/index.php?id=' + id),
+    update: (id, data) => apiRequest('users/index.php?id=' + id, 'PUT', data)
+};
+
 // Barangays
 const barangays = {
     list: () => apiRequest('barangays/index.php'),
     create: (data) => apiRequest('barangays/index.php', 'POST', data)
+};
+
+// Notifications
+const notifications = {
+    list: () => apiRequest('notifications/index.php'),
+    markRead: (id) => apiRequest('notifications/index.php?id=' + id, 'PUT', {}),
+    markAllRead: () => apiRequest('notifications/index.php', 'PUT', { mark_all_read: true })
 };
 
 // Bookings

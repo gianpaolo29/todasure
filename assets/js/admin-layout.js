@@ -20,7 +20,7 @@
     <div class="layout">
         <aside class="sidebar" id="sidebar">
             <div class="logo">
-                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="logo-icon"><img src="../todasure-logo.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"></div>
                 <div>
                     <h2>TODASURE</h2>
                     <span>Admin Panel</span>
@@ -30,11 +30,11 @@
                 <a href="dashboard.html" class="${navClass('dashboard.html')}"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
                 <a href="drivers.html" class="${navClass('drivers.html')}"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
                 <a href="tricycles.html" class="${navClass('tricycles.html')}"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
-                <a href="toda.html" class="${navClass('toda.html')}"><i class="fa-solid fa-building icon"></i> TODA</a>
                 <a href="trips.html" class="${navClass('trips.html')}"><i class="fa-solid fa-route icon"></i> Trips</a>
                 <a href="fares.html" class="${navClass('fares.html')}"><i class="fa-solid fa-peso-sign icon"></i> Fare Rates</a>
                 <a href="complaints.html" class="${navClass('complaints.html')}"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
                 <a href="violations.html" class="${navClass('violations.html')}"><i class="fa-solid fa-gavel icon"></i> Violations</a>
+                <a href="officials.html" class="${navClass('officials.html')}"><i class="fa-solid fa-user-tie icon"></i> Brgy Officials</a>
             </nav>
         </aside>
         <main class="main-content">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TODASURE - Fare Rates</title>
+    <title>TODASURE - Barangay Officials</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -30,18 +30,18 @@
                 <a href="drivers.html"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
                 <a href="tricycles.html"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
                 <a href="trips.html"><i class="fa-solid fa-route icon"></i> Trips</a>
-                <a href="fares.html" class="active"><i class="fa-solid fa-peso-sign icon"></i> Fare Rates</a>
+                <a href="fares.html"><i class="fa-solid fa-peso-sign icon"></i> Fare Rates</a>
                 <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
                 <a href="violations.html"><i class="fa-solid fa-gavel icon"></i> Violations</a>
                 <a href="users.html"><i class="fa-solid fa-users icon"></i> Passengers</a>
-                <a href="officials.html"><i class="fa-solid fa-user-tie icon"></i> Brgy Officials</a>
+                <a href="officials.html" class="active"><i class="fa-solid fa-user-tie icon"></i> Brgy Officials</a>
                 <a href="barangays.html"><i class="fa-solid fa-map-location-dot icon"></i> Barangays</a>
             </nav>
         </aside>
 
         <main class="main-content">
             <div class="top-header">
-                <span class="page-title">Fare Rates</span>
+                <span class="page-title">Barangay Officials</span>
                 <div class="header-search">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" placeholder="Search..." id="globalSearch">
@@ -86,28 +86,32 @@
             </div>
 
             <div class="page-body">
+                <div class="card" style="padding:16px;">
+                    <div class="flex gap-2">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by name..." style="max-width:250px;">
+                        <button class="btn btn-outline" onclick="loadOfficials()">Search</button>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-                        <h3><i class="fa-solid fa-peso-sign" style="color:var(--accent);margin-right:8px;"></i>Fare Rates</h3>
-                        <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="fa-solid fa-plus" style="margin-right:4px;"></i> Add Rate</button>
+                        <h3><i class="fa-solid fa-user-tie" style="color:var(--accent);margin-right:8px;"></i>Barangay Officials <span id="officialCount" style="font-size:12px;color:var(--text-muted);font-weight:400"></span></h3>
+                        <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="fa-solid fa-plus" style="margin-right:4px;"></i> Add Official</button>
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
                                     <th>Barangay</th>
-                                    <th>Base Fare</th>
-                                    <th>Base Distance</th>
-                                    <th>Per KM Rate</th>
-                                    <th>Senior/PWD</th>
-                                    <th>Student</th>
-                                    <th>Effective Date</th>
-                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="faresTable">
-                                <tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>
+                            <tbody id="officialsTable">
+                                <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -116,52 +120,37 @@
         </main>
     </div>
 
-    <!-- Modal -->
-    <div class="modal-overlay" id="fareModal">
+    <!-- Add Official Modal -->
+    <div class="modal-overlay" id="addModal">
         <div class="modal">
             <div class="modal-header">
-                <h2 id="modalTitle">Add Fare Rate</h2>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <h2><i class="fa-solid fa-user-tie" style="color:var(--accent)"></i> Add Barangay Official</h2>
+                <button class="modal-close" onclick="closeAddModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="fareForm">
-                <input type="hidden" id="fareId">
+            <form id="addForm">
+                <div class="form-group" style="position:relative">
+                    <label>Search User *</label>
+                    <input type="text" id="searchUser" class="form-control" placeholder="Type name or email to search..." autocomplete="off">
+                    <input type="hidden" id="selectedUserId">
+                    <div id="userResults" style="position:absolute;left:0;right:0;top:100%;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto;z-index:10;display:none;box-shadow:var(--shadow-md)"></div>
+                    <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block">Search for a registered passenger to promote</small>
+                </div>
+                <div id="selectedUserInfo" style="display:none;padding:12px;background:var(--bg-hover);border-radius:10px;margin-bottom:14px">
+                    <div style="font-size:13px;color:var(--text-secondary)">
+                        <div><strong style="color:var(--text)">Name:</strong> <span id="selName">--</span></div>
+                        <div><strong style="color:var(--text)">Email:</strong> <span id="selEmail">--</span></div>
+                        <div><strong style="color:var(--text)">Phone:</strong> <span id="selPhone">--</span></div>
+                    </div>
+                </div>
                 <div class="form-group">
-                    <label>Barangay *</label>
-                    <select id="barangayId" class="form-control" required>
-                        <option value="">Select Barangay</option>
+                    <label>Assign Barangay *</label>
+                    <select id="addBarangay" class="form-control" required>
+                        <option value="">-- Select Barangay --</option>
                     </select>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Base Fare (PHP) *</label>
-                        <input type="number" step="0.01" id="baseFare" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Base Distance (KM) *</label>
-                        <input type="number" step="0.01" id="baseDistance" class="form-control" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Per KM Rate (PHP) *</label>
-                    <input type="number" step="0.01" id="perKmRate" class="form-control" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Senior/PWD Discount (%)</label>
-                        <input type="number" step="0.01" id="discountSenior" class="form-control" value="20">
-                    </div>
-                    <div class="form-group">
-                        <label>Student Discount (%)</label>
-                        <input type="number" step="0.01" id="discountStudent" class="form-control" value="10">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Effective Date *</label>
-                    <input type="date" id="effectiveDate" class="form-control" required>
-                </div>
-                <div class="flex gap-2" style="justify-content:flex-end; margin-top:16px;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                <div style="display:flex;gap:10px;margin-top:8px">
+                    <button type="button" class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeAddModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center"><i class="fa-solid fa-check"></i> Add Official</button>
                 </div>
             </form>
         </div>
@@ -181,8 +170,7 @@
             document.getElementById('sidebar').classList.remove('open');
             document.getElementById('sidebarOverlay').classList.remove('show');
             document.getElementById('sidebarToggle').classList.remove('hide');
-});
-        // Close sidebar when nav link clicked (mobile)
+        });
         document.querySelectorAll('.sidebar nav a').forEach(function(link) {
             link.addEventListener('click', function() {
                 document.getElementById('sidebar').classList.remove('open');
@@ -221,12 +209,6 @@
         updateThemeMenuItem();
         var _adminThemeToggle = window.themeToggle;
         window.themeToggle = function() { _adminThemeToggle(); updateThemeMenuItem(); };
-
-        // SweetAlert showAlert
-        window.showAlert = function(msg, type) {
-            Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000, timerProgressBar:true })
-                .fire({ icon: type==='error'?'error':'success', title: msg });
-        };
 
         // Admin Profile
         async function openAdminProfile() {
@@ -340,10 +322,14 @@
             if (r.isConfirmed) { await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html'); }
         }
 
+        let passengerUsers = [];
+        let barangayList = [];
+
         async function loadBarangays() {
-            const list = await barangays.list();
-            const sel = document.getElementById('barangayId');
-            list.forEach(b => {
+            barangayList = await barangays.list();
+            const sel = document.getElementById('addBarangay');
+            sel.innerHTML = '<option value="">-- Select Barangay --</option>';
+            barangayList.forEach(b => {
                 const opt = document.createElement('option');
                 opt.value = b.id;
                 opt.textContent = b.name;
@@ -351,110 +337,134 @@
             });
         }
 
-        async function loadFares() {
+        async function loadOfficials() {
             try {
-                const list = await fares.list();
-                const tbody = document.getElementById('faresTable');
+                let list = await users.list({ role: 'barangay' });
+                const search = document.getElementById('searchInput').value.trim().toLowerCase();
+                if (search) {
+                    list = list.filter(u => {
+                        const name = ((u.first_name||'') + ' ' + (u.last_name||'')).toLowerCase();
+                        return name.includes(search) || (u.email||'').toLowerCase().includes(search);
+                    });
+                }
+                document.getElementById('officialCount').textContent = `(${list.length} total)`;
+                const tbody = document.getElementById('officialsTable');
                 if (list.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No fare rates</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No barangay officials found</td></tr>';
                     return;
                 }
-                tbody.innerHTML = list.map(f => `
+                tbody.innerHTML = list.map(u => `
                     <tr>
-                        <td>${f.barangay_name}</td>
-                        <td>${formatCurrency(f.base_fare)}</td>
-                        <td>${f.base_distance} km</td>
-                        <td>${formatCurrency(f.per_km_rate)}</td>
-                        <td>${f.discount_senior}%</td>
-                        <td>${f.discount_student || 0}%</td>
-                        <td>${f.effective_date}</td>
-                        <td><span class="${badgeClass(f.status)}">${f.status}</span></td>
-                        <td><button class="btn btn-outline btn-sm" onclick="editFare(${f.id})">Edit</button></td>
+                        <td>#${u.id}</td>
+                        <td>${(u.first_name||'') + ' ' + (u.last_name||'')}</td>
+                        <td>${u.email}</td>
+                        <td>${u.phone || '-'}</td>
+                        <td>${u.barangay_name || '<span class="text-muted">Unassigned</span>'}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="removeOfficial(${u.id})">Remove</button>
+                        </td>
                     </tr>
                 `).join('');
             } catch (err) {
-                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to load fare rates.', confirmButtonColor:'#00e6a0' });
+                Swal.fire({ icon:'error', title:'Error', text: err.message, confirmButtonColor:'#00e6a0' });
             }
         }
 
-        function openAddModal() {
-            document.getElementById('modalTitle').textContent = 'Add Fare Rate';
-            document.getElementById('fareForm').reset();
-            document.getElementById('fareId').value = '';
-            document.getElementById('discountSenior').value = '20';
-            document.getElementById('discountStudent').value = '10';
-            document.getElementById('fareModal').classList.add('active');
+        // ── Add Official Modal ──
+        let searchTimeout = null;
+
+        async function openAddModal() {
+            try { passengerUsers = await users.list({ role: 'passenger' }); } catch(e) { passengerUsers = []; }
+            document.getElementById('addForm').reset();
+            document.getElementById('selectedUserId').value = '';
+            document.getElementById('selectedUserInfo').style.display = 'none';
+            document.getElementById('userResults').style.display = 'none';
+            document.getElementById('addModal').classList.add('active');
         }
 
-        async function editFare(id) {
-            try {
-                const f = await fares.get(id);
-                document.getElementById('modalTitle').textContent = 'Edit Fare Rate';
-                document.getElementById('fareId').value = f.id;
-                document.getElementById('barangayId').value = f.barangay_id;
-                document.getElementById('baseFare').value = f.base_fare;
-                document.getElementById('baseDistance').value = f.base_distance;
-                document.getElementById('perKmRate').value = f.per_km_rate;
-                document.getElementById('discountSenior').value = f.discount_senior;
-                document.getElementById('discountStudent').value = f.discount_student || 10;
-                document.getElementById('effectiveDate').value = f.effective_date;
-                document.getElementById('fareModal').classList.add('active');
-            } catch (err) {
-                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to load fare rate.', confirmButtonColor:'#00e6a0' });
-            }
-        }
+        document.getElementById('searchUser').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const q = this.value.trim().toLowerCase();
+            const resultsDiv = document.getElementById('userResults');
+            if (q.length < 2) { resultsDiv.style.display = 'none'; return; }
 
-        function closeModal() {
-            document.getElementById('fareModal').classList.remove('active');
-        }
+            searchTimeout = setTimeout(() => {
+                const matches = passengerUsers.filter(u => {
+                    const name = ((u.first_name||'') + ' ' + (u.last_name||'')).toLowerCase();
+                    return name.includes(q) || (u.email||'').toLowerCase().includes(q);
+                }).slice(0, 8);
 
-        document.getElementById('fareForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('fareId').value;
-            const barangay = document.getElementById('barangayId').value;
-            const baseFare = document.getElementById('baseFare').value;
-            const baseDist = document.getElementById('baseDistance').value;
-            const perKm = document.getElementById('perKmRate').value;
-            const senior = document.getElementById('discountSenior').value;
-            const student = document.getElementById('discountStudent').value;
-            const date = document.getElementById('effectiveDate').value;
-
-            // Validation
-            if (!barangay) return Swal.fire({ icon:'warning', title:'Missing Field', text:'Please select a barangay.', confirmButtonColor:'#00e6a0' });
-            if (!baseFare || parseFloat(baseFare) <= 0) return Swal.fire({ icon:'warning', title:'Invalid Value', text:'Base fare must be greater than 0.', confirmButtonColor:'#00e6a0' });
-            if (!baseDist || parseFloat(baseDist) <= 0) return Swal.fire({ icon:'warning', title:'Invalid Value', text:'Base distance must be greater than 0.', confirmButtonColor:'#00e6a0' });
-            if (!perKm || parseFloat(perKm) <= 0) return Swal.fire({ icon:'warning', title:'Invalid Value', text:'Per KM rate must be greater than 0.', confirmButtonColor:'#00e6a0' });
-            if (parseFloat(senior) < 0 || parseFloat(senior) > 100) return Swal.fire({ icon:'warning', title:'Invalid Value', text:'Senior discount must be between 0 and 100.', confirmButtonColor:'#00e6a0' });
-            if (parseFloat(student) < 0 || parseFloat(student) > 100) return Swal.fire({ icon:'warning', title:'Invalid Value', text:'Student discount must be between 0 and 100.', confirmButtonColor:'#00e6a0' });
-            if (!date) return Swal.fire({ icon:'warning', title:'Missing Field', text:'Effective date is required.', confirmButtonColor:'#00e6a0' });
-
-            const data = {
-                barangay_id: barangay,
-                base_fare: baseFare,
-                base_distance: baseDist,
-                per_km_rate: perKm,
-                discount_senior: senior,
-                discount_student: student,
-                effective_date: date
-            };
-
-            try {
-                if (id) {
-                    await fares.update(id, data);
-                    Swal.fire({ icon:'success', title:'Fare Rate Updated', text:'The fare rate has been saved.', confirmButtonColor:'#00e6a0' });
+                if (matches.length === 0) {
+                    resultsDiv.innerHTML = '<div style="padding:12px 16px;color:var(--text-muted);font-size:13px">No users found</div>';
                 } else {
-                    await fares.create(data);
-                    Swal.fire({ icon:'success', title:'Fare Rate Created', text:'New fare rate has been added. Previous rate for this barangay was deactivated.', confirmButtonColor:'#00e6a0' });
+                    resultsDiv.innerHTML = matches.map(u => {
+                        const name = ((u.first_name||'') + ' ' + (u.last_name||'')).trim() || u.username;
+                        return `<div onclick="selectUser(${u.id})" style="padding:10px 16px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='none'">
+                            <div style="font-weight:600;color:var(--text)">${name}</div>
+                            <div style="color:var(--text-muted);font-size:11px">${u.email}</div>
+                        </div>`;
+                    }).join('');
                 }
-                closeModal();
-                loadFares();
-            } catch (err) {
-                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to save fare rate.', confirmButtonColor:'#00e6a0' });
+                resultsDiv.style.display = 'block';
+            }, 200);
+        });
+
+        function selectUser(id) {
+            const u = passengerUsers.find(p => p.id == id);
+            if (!u) return;
+            const name = ((u.first_name||'') + ' ' + (u.last_name||'')).trim() || u.username;
+            document.getElementById('searchUser').value = name;
+            document.getElementById('selectedUserId').value = u.id;
+            document.getElementById('selName').textContent = name;
+            document.getElementById('selEmail').textContent = u.email;
+            document.getElementById('selPhone').textContent = u.phone || '--';
+            document.getElementById('selectedUserInfo').style.display = 'block';
+            document.getElementById('userResults').style.display = 'none';
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#searchUser') && !e.target.closest('#userResults')) {
+                document.getElementById('userResults').style.display = 'none';
             }
         });
 
+        function closeAddModal() { document.getElementById('addModal').classList.remove('active'); }
+
+        document.getElementById('addForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('selectedUserId').value;
+            const brgyId = document.getElementById('addBarangay').value;
+
+            if (!userId) return Swal.fire({ icon:'warning', title:'No User Selected', text:'Please search and select a user.', confirmButtonColor:'#00e6a0' });
+            if (!brgyId) return Swal.fire({ icon:'warning', title:'Missing Field', text:'Please select a barangay.', confirmButtonColor:'#00e6a0' });
+
+            try {
+                await users.update(userId, { role: 'barangay', barangay_id: brgyId });
+                const u = passengerUsers.find(p => p.id == userId);
+                Swal.fire({ icon:'success', title:'Official Added', text:`${u ? u.first_name : 'User'} has been promoted to barangay official.`, confirmButtonColor:'#00e6a0' });
+                closeAddModal();
+                loadOfficials();
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to add official.', confirmButtonColor:'#00e6a0' });
+            }
+        });
+
+        // ── Remove Official ──
+        async function removeOfficial(id) {
+            const r = await Swal.fire({ title:'Remove Official?', text:'This will revert this user back to passenger role.', icon:'warning', showCancelButton:true, confirmButtonColor:'#ef4444', cancelButtonColor:'#9ca3af', confirmButtonText:'Yes, remove', cancelButtonText:'No' });
+            if (!r.isConfirmed) return;
+            try {
+                await users.update(id, { role: 'passenger', barangay_id: null });
+                Swal.fire({ icon:'success', title:'Removed', text:'User has been reverted to passenger.', confirmButtonColor:'#00e6a0' });
+                loadOfficials();
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to remove official.', confirmButtonColor:'#00e6a0' });
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') loadOfficials(); });
         loadBarangays();
-        loadFares();
+        loadOfficials();
     </script>
 </body>
 </html>

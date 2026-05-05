@@ -54,8 +54,8 @@ switch ($method) {
         $stmt->execute([$input['barangay_id']]);
 
         $stmt = $pdo->prepare("
-            INSERT INTO fare_rates (barangay_id, base_fare, base_distance, per_km_rate, discount_senior, effective_date)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO fare_rates (barangay_id, base_fare, base_distance, per_km_rate, discount_senior, discount_student, effective_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $input['barangay_id'],
@@ -63,6 +63,7 @@ switch ($method) {
             $input['base_distance'],
             $input['per_km_rate'],
             $input['discount_senior'] ?? 20.00,
+            $input['discount_student'] ?? 10.00,
             $input['effective_date']
         ]);
 
@@ -77,7 +78,7 @@ switch ($method) {
         $fields = [];
         $params = [];
 
-        $allowed = ['base_fare', 'base_distance', 'per_km_rate', 'discount_senior', 'effective_date', 'status'];
+        $allowed = ['base_fare', 'base_distance', 'per_km_rate', 'discount_senior', 'discount_student', 'effective_date', 'status'];
         foreach ($allowed as $field) {
             if (isset($input[$field])) {
                 $fields[] = "$field = ?";

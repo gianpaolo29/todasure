@@ -10,8 +10,8 @@ if (getMethod() !== 'POST') {
 
 $input = getInput();
 
-// Validate required fields
-$required = ['first_name', 'last_name', 'email', 'phone', 'password', 'confirm_password'];
+// Validate required fields (last_name is optional)
+$required = ['first_name', 'email', 'phone', 'password', 'confirm_password'];
 foreach ($required as $field) {
     if (empty($input[$field])) {
         jsonResponse(['error' => ucfirst(str_replace('_', ' ', $field)) . ' is required'], 400);
@@ -19,7 +19,7 @@ foreach ($required as $field) {
 }
 
 $firstName = trim($input['first_name']);
-$lastName = trim($input['last_name']);
+$lastName = trim($input['last_name'] ?? '');
 $email = trim($input['email']);
 $phone = trim($input['phone']);
 $password = $input['password'];
@@ -66,9 +66,19 @@ $stmt->execute([$username, $email, $hashedPassword, $firstName, $lastName, $phon
 
 $userId = $pdo->lastInsertId();
 
+// Auto-login: start session for the new user
+session_start();
+$_SESSION['user_id'] = $userId;
+$_SESSION['username'] = $username;
+$_SESSION['email'] = $email;
+$_SESSION['first_name'] = $firstName;
+$_SESSION['last_name'] = $lastName;
+$_SESSION['role'] = 'passenger';
+
 jsonResponse([
     'success' => true,
     'message' => 'Registration successful',
+    'redirect' => '/TodaShare/passenger/dashboard.html',
     'user' => [
         'id' => $userId,
         'username' => $username,

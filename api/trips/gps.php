@@ -293,6 +293,12 @@ switch ($method) {
                     $trip['id'],
                     "Overcharged: PHP " . round($actualFare, 2) . " vs computed PHP " . round($computedFare, 2)
                 ]);
+
+                // Notify admin of violation
+                try {
+                    $pdo->prepare("INSERT INTO notifications (role_target, type, title, message, link) VALUES ('admin', 'violation', 'Fare Overcharge Detected', ?, 'violations.html')")
+                        ->execute(["PHP " . round($actualFare, 2) . " charged vs PHP " . round($computedFare, 2) . " computed"]);
+                } catch(Exception $e) {}
             }
 
             jsonResponse([

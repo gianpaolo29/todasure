@@ -11,127 +11,277 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        .swal2-popup{background:#0f172a!important;color:#f1f5f9!important}
-        .swal2-title{color:#f1f5f9!important}
-        .swal2-html-container{color:#94a3b8!important}
+        :root{--b-bg:#f0f2f5;--b-card:#ffffff;--b-text:#1a1a2e;--b-text2:#4a5568;--b-text3:#a0aec0;--b-border:#e8ecf1;--b-green:#10b981;--b-green-bg:rgba(16,185,129,.08);--b-green-light:#d1fae5;--b-shadow:0 2px 12px rgba(0,0,0,.06);--b-shadow-lg:0 8px 30px rgba(0,0,0,.08)}
+        [data-theme="dark"]{--b-bg:#0f172a;--b-card:#1e293b;--b-text:#f1f5f9;--b-text2:#94a3b8;--b-text3:#64748b;--b-border:#334155;--b-green:#10b981;--b-green-bg:rgba(16,185,129,.12);--b-green-light:rgba(16,185,129,.15);--b-shadow:0 2px 12px rgba(0,0,0,.3);--b-shadow-lg:0 8px 30px rgba(0,0,0,.4)}
+
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:var(--b-bg);color:var(--b-text);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+
+        /* ── Top Nav ── */
+        .topnav{position:sticky;top:0;z-index:50;background:var(--b-card);border-bottom:1px solid var(--b-border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--b-shadow)}
+        .topnav-brand{display:flex;align-items:center;gap:10px}
+        .topnav-brand .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--b-green),#059669);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px}
+        .topnav-brand h1{font-size:18px;font-weight:800;color:var(--b-green)}
+        .topnav-brand .brgy-name{font-size:11px;color:var(--b-text3);font-weight:500}
+        .topnav-links{display:flex;gap:4px}
+        .topnav-links a{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;color:var(--b-text2);text-decoration:none;transition:all .2s}
+        .topnav-links a:hover{background:var(--b-green-bg);color:var(--b-green)}
+        .topnav-links a.active{background:var(--b-green);color:#fff}
+        .topnav-right{display:flex;align-items:center;gap:12px}
+        .topnav-right .icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--b-border);background:var(--b-card);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--b-text2);font-size:15px;transition:all .2s;position:relative}
+        .topnav-right .icon-btn:hover{background:var(--b-green-bg);color:var(--b-green);border-color:var(--b-green)}
+        .notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:#ef4444;border-radius:50%;display:none}
+        .user-btn{display:flex;align-items:center;gap:10px;padding:6px 12px 6px 6px;border-radius:12px;border:1px solid var(--b-border);background:var(--b-card);cursor:pointer;transition:all .2s}
+        .user-btn:hover{border-color:var(--b-green)}
+        .user-avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--b-green),#059669);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700}
+        .user-name{font-size:13px;font-weight:600;color:var(--b-text)}
+        .profile-dropdown{position:relative}
+        .dropdown-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:200px;background:var(--b-card);border:1px solid var(--b-border);border-radius:12px;box-shadow:var(--b-shadow-lg);display:none;z-index:60;overflow:hidden}
+        .dropdown-menu.show{display:block}
+        .dropdown-menu .dd-info{padding:12px 16px;border-bottom:1px solid var(--b-border)}
+        .dropdown-menu .dd-info .dd-name{font-size:14px;font-weight:600;color:var(--b-text)}
+        .dropdown-menu .dd-info .dd-email{font-size:11px;color:var(--b-text3)}
+        .dropdown-menu a,.dropdown-menu button{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:var(--b-text2);cursor:pointer;border:none;background:none;width:100%;font-family:inherit;text-decoration:none;text-align:left;transition:background .15s}
+        .dropdown-menu a:hover,.dropdown-menu button:hover{background:var(--b-green-bg)}
+        .dropdown-menu .divider{height:1px;background:var(--b-border);margin:4px 0}
+        .dropdown-menu button.danger{color:#ef4444}
+        .dropdown-menu button.danger:hover{background:rgba(239,68,68,.06)}
+
+        /* ── Mobile Nav ── */
+        .mobile-toggle{display:none;width:38px;height:38px;border-radius:10px;border:1px solid var(--b-border);background:var(--b-card);align-items:center;justify-content:center;cursor:pointer;color:var(--b-text2);font-size:16px}
+        .mobile-nav{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.4);backdrop-filter:blur(4px)}
+        .mobile-nav.show{display:block}
+        .mobile-nav-panel{position:fixed;top:0;left:0;bottom:0;width:280px;background:var(--b-card);padding:20px;transform:translateX(-100%);transition:transform .3s ease;display:flex;flex-direction:column;gap:8px}
+        .mobile-nav.show .mobile-nav-panel{transform:translateX(0)}
+        .mobile-nav-panel a{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;font-size:14px;font-weight:500;color:var(--b-text2);text-decoration:none;transition:all .2s}
+        .mobile-nav-panel a:hover{background:var(--b-green-bg)}
+        .mobile-nav-panel a.active{background:var(--b-green);color:#fff}
+        .mobile-nav-panel .nav-logo{display:flex;align-items:center;gap:10px;padding:8px 0 16px;border-bottom:1px solid var(--b-border);margin-bottom:8px}
+
+        @media(max-width:768px){
+            .topnav-links{display:none}
+            .mobile-toggle{display:flex}
+            .user-name{display:none}
+        }
+
+        /* ── Content ── */
+        .content{max-width:1200px;margin:0 auto;padding:24px}
+
+        /* ── Page Cards ── */
+        .page-card{background:var(--b-card);border-radius:16px;box-shadow:var(--b-shadow);border:1px solid var(--b-border);overflow:hidden;margin-bottom:20px}
+        .page-card-header{padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:center}
+        .page-card-header h3{font-size:16px;font-weight:700;color:var(--b-text)}
+        .filter-card{background:var(--b-card);border-radius:16px;box-shadow:var(--b-shadow);border:1px solid var(--b-border);padding:16px 24px;margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+        /* ── Table Styles ── */
+        .table-container{overflow-x:auto}
+        .table-container table{width:100%;border-collapse:collapse}
+        .table-container th{padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:var(--b-text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--b-border);background:var(--b-bg)}
+        .table-container td{padding:12px 16px;font-size:13px;color:var(--b-text);border-bottom:1px solid var(--b-border)}
+        .table-container tr:hover td{background:var(--b-green-bg)}
+        .text-center{text-align:center}
+        .text-muted{color:var(--b-text3)}
+
+        /* ── Buttons ── */
+        .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:all .2s;font-family:inherit}
+        .btn-primary{background:var(--b-green);color:#fff}
+        .btn-primary:hover{background:#059669}
+        .btn-outline{background:var(--b-card);border:1px solid var(--b-border);color:var(--b-text2)}
+        .btn-outline:hover{border-color:var(--b-green);color:var(--b-green)}
+        .btn-danger{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+        .btn-danger:hover{background:#ef4444;color:#fff}
+        .btn-sm{padding:6px 12px;font-size:12px}
+
+        /* ── Form Controls ── */
+        .form-control-inline{padding:9px 14px;border-radius:8px;border:1px solid var(--b-border);background:var(--b-card);color:var(--b-text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s}
+        .form-control-inline:focus{border-color:var(--b-green)}
+
+        @media(max-width:768px){
+            .content{padding:16px}
+            .topnav{padding:0 16px}
+            .filter-card{padding:12px 16px}
+        }
+
+        /* ── SweetAlert ── */
+        .swal2-popup{background:var(--b-card)!important;color:var(--b-text)!important;border-radius:16px!important}
+        .swal2-title{color:var(--b-text)!important}
+        .swal2-html-container{color:var(--b-text2)!important}
     </style>
 </head>
 <body>
-    <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <div class="layout">
-        <aside class="sidebar" id="sidebar">
-            <div class="logo">
-                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
-                <div>
-                    <h2>TODASURE</h2>
-                    <span id="brgyLabel">Barangay</span>
-                </div>
+    <!-- Mobile Nav -->
+    <div class="mobile-nav" id="mobileNav" onclick="closeMobileNav()">
+        <div class="mobile-nav-panel" onclick="event.stopPropagation()">
+            <div class="nav-logo">
+                <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--b-green),#059669);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px"><img src="../todasure-logo.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"></div>
+                <div><div style="font-size:16px;font-weight:800;color:var(--b-green)">TODASURE</div><div style="font-size:10px;color:var(--b-text3)" id="mobileLabel">Barangay</div></div>
             </div>
-            <nav>
-                <a href="dashboard.html"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
-                <a href="drivers.html" class="active"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
-                <a href="tricycles.html"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
-                <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
-                <a href="violations.html"><i class="fa-solid fa-gavel icon"></i> Violations</a>
-            </nav>
-        </aside>
-
-        <main class="main-content">
-            <div class="top-header">
-                <span class="page-title" id="pageTitle">Driver Management</span>
-                <div class="header-actions">
-                    <button class="header-icon-btn" id="notifBtn"><i class="fa-solid fa-bell"></i></button>
-                    <div class="profile-dropdown">
-                        <button class="profile-btn" id="profileBtn">
-                            <div class="profile-avatar" id="profileInitial">B</div>
-                            <div class="profile-info">
-                                <div class="profile-name" id="profileName">Barangay</div>
-                                <div class="profile-role">Barangay Official</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-down chevron"></i>
-                        </button>
-                        <div class="dropdown-menu" id="profileMenu">
-                            <a href="#"><i class="fa-solid fa-user"></i> Account Profile</a>
-                            <div class="divider"></div>
-                            <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="page-body">
-                <div class="card">
-                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                        <h3><i class="fa-solid fa-id-card" style="color:var(--accent);margin-right:6px"></i> Drivers</h3>
-                        <button class="btn btn-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Driver</button>
-                    </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr><th>Name</th><th>TODA</th><th>Contact</th><th>Status</th><th>Actions</th></tr>
-                            </thead>
-                            <tbody id="driversTable">
-                                <tr><td colspan="6" class="text-center text-muted" style="padding:30px">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </main>
+            <a href="dashboard.html"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+            <a href="drivers.html" class="active"><i class="fa-solid fa-id-card"></i> Drivers</a>
+            <a href="tricycles.html"><i class="fa-solid fa-motorcycle"></i> Tricycles</a>
+            <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation"></i> Complaints</a>
+            <a href="violations.html"><i class="fa-solid fa-gavel"></i> Violations</a>
+        </div>
     </div>
 
-    <!-- Add/Edit Driver Modal -->
-    <div class="modal-overlay" id="driverModal">
+    <!-- Top Nav -->
+    <nav class="topnav">
+        <div style="display:flex;align-items:center;gap:16px">
+            <button class="mobile-toggle" onclick="openMobileNav()"><i class="fa-solid fa-bars"></i></button>
+            <div class="topnav-brand">
+                <div class="logo-icon"><img src="../todasure-logo.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"></div>
+                <div>
+                    <h1>TODASURE</h1>
+                    <div class="brgy-name" id="brgyLabel">Barangay</div>
+                </div>
+            </div>
+        </div>
+        <div class="topnav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="drivers.html" class="active">Drivers</a>
+            <a href="tricycles.html">Tricycles</a>
+            <a href="complaints.html">Complaints</a>
+            <a href="violations.html">Violations</a>
+        </div>
+        <div class="topnav-right">
+            <button class="icon-btn" onclick="themeToggle()" id="themeBtn"><i class="fas fa-moon"></i></button>
+            <button class="icon-btn" id="notifBtn"><i class="fa-solid fa-bell"></i><span class="notif-dot" id="notifDot"></span></button>
+            <div class="profile-dropdown">
+                <button class="user-btn" id="profileBtn">
+                    <div class="user-avatar" id="profileInitial">B</div>
+                    <span class="user-name" id="profileName">Barangay</span>
+                </button>
+                <div class="dropdown-menu" id="profileMenu">
+                    <div class="dd-info">
+                        <div class="dd-name" id="dropdownName">Barangay</div>
+                        <div class="dd-email" id="dropdownEmail"></div>
+                    </div>
+                    <a href="#" onclick="openAdminProfile()"><i class="fa-solid fa-user"></i> Account Profile</a>
+                    <div class="divider"></div>
+                    <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Filter Card -->
+        <div class="filter-card">
+            <input type="text" id="searchInput" class="form-control-inline" placeholder="Search by name..." style="max-width:300px;flex:1">
+            <button class="btn btn-outline" onclick="filterDrivers()"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+        </div>
+
+        <!-- Drivers Table Card -->
+        <div class="page-card">
+            <div class="page-card-header">
+                <h3><i class="fa-solid fa-id-card" style="color:var(--b-green);margin-right:8px"></i>Drivers</h3>
+                <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Driver</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Tricycles</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driversTable">
+                        <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Driver Modal -->
+    <div class="modal-overlay" id="addDriverModal">
         <div class="modal">
             <div class="modal-header">
-                <h2 id="modalTitle"><i class="fa-solid fa-id-card" style="color:var(--accent)"></i> Add Driver</h2>
-                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+                <h2><i class="fa-solid fa-user-plus" style="color:var(--accent)"></i> Add Driver</h2>
+                <button class="modal-close" onclick="closeAddModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="driverForm" onsubmit="handleDriverSubmit(event)">
-                <input type="hidden" id="editId">
-                <div class="form-row">
-                    <div class="form-group"><label>First Name *</label><input type="text" id="firstName" class="form-control" placeholder="Enter first name" required></div>
-                    <div class="form-group"><label>Last Name *</label><input type="text" id="lastName" class="form-control" placeholder="Enter last name" required></div>
+            <form id="addDriverForm">
+                <div class="form-group" style="position:relative">
+                    <label>Search User *</label>
+                    <input type="text" id="searchUser" class="form-control" placeholder="Type name or email to search..." autocomplete="off">
+                    <input type="hidden" id="selectedUserId">
+                    <div id="userResults" style="position:absolute;left:0;right:0;top:100%;background:var(--bg-card-solid,var(--b-card));border:1px solid var(--border,var(--b-border));border-radius:10px;max-height:200px;overflow-y:auto;z-index:10;display:none;box-shadow:var(--shadow-md,var(--b-shadow-lg))"></div>
+                    <small style="color:var(--b-text3);font-size:11px;margin-top:4px;display:block">Search for a registered passenger to promote to driver</small>
                 </div>
-                
-                <div class="form-group"><label>TODA *</label><select id="todaSelect" class="form-control" required><option value="">Select TODA</option></select></div>
-                <div class="form-row">
-                    <div class="form-group"><label>Contact Number</label><input type="text" id="contact" class="form-control" placeholder="09xxxxxxxxx"></div>
-                    <div class="form-group"><label>Address</label><input type="text" id="address" class="form-control" placeholder="Home address"></div>
-                </div>
-                <div id="credentialsSection">
-                    <div class="form-row">
-                        <div class="form-group"><label>Email *</label><input type="email" id="driverEmail" class="form-control" placeholder="driver@email.com" required></div>
-                        <div class="form-group"><label>Password *</label><input type="password" id="password" class="form-control" placeholder="Login password" required></div>
+                <div id="selectedUserInfo" style="display:none;padding:12px;background:var(--b-green-bg);border-radius:10px;margin-bottom:14px">
+                    <div style="font-size:13px;color:var(--b-text2)">
+                        <div><strong style="color:var(--b-text)">Name:</strong> <span id="selName">--</span></div>
+                        <div><strong style="color:var(--b-text)">Email:</strong> <span id="selEmail">--</span></div>
+                        <div><strong style="color:var(--b-text)">Phone:</strong> <span id="selPhone">--</span></div>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Contact Number</label><input type="text" id="addContact" class="form-control" placeholder="09xxxxxxxxx"></div>
+                    <div class="form-group"><label>Address</label><input type="text" id="addAddress" class="form-control" placeholder="Home address"></div>
+                </div>
                 <div style="display:flex;gap:10px;margin-top:8px">
-                    <button type="button" class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeAddModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center"><i class="fa-solid fa-check"></i> Add as Driver</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Driver Modal -->
+    <div class="modal-overlay" id="editDriverModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-id-card" style="color:var(--accent)"></i> Edit Driver</h2>
+                <button class="modal-close" onclick="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="editDriverForm">
+                <input type="hidden" id="editDriverId">
+                <div id="editUserInfo" style="padding:12px;background:var(--b-green-bg);border-radius:10px;margin-bottom:14px">
+                    <div style="font-size:13px;color:var(--b-text2)">
+                        <div><strong style="color:var(--b-text)">Name:</strong> <span id="editName">--</span></div>
+                        <div><strong style="color:var(--b-text)">Email:</strong> <span id="editEmail">--</span></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Contact Number</label><input type="text" id="editContact" class="form-control" placeholder="09xxxxxxxxx"></div>
+                    <div class="form-group"><label>Address</label><input type="text" id="editAddress" class="form-control" placeholder="Home address"></div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:8px">
+                    <button type="button" class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeEditModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center"><i class="fa-solid fa-check"></i> Save</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <script src="../assets/js/theme.js"></script>
     <script src="../assets/js/guard.js"></script>
     <script src="../assets/js/api.js"></script>
     <script>
-        // ── Common UI ──
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.add('open');
-            document.getElementById('sidebarOverlay').classList.add('show');
-            this.classList.add('hide');
-        });
-        document.getElementById('sidebarOverlay').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('sidebarOverlay').classList.remove('show');
-            document.getElementById('sidebarToggle').classList.remove('hide');
-        });
+        // ── Mobile Nav ──
+        function openMobileNav() { document.getElementById('mobileNav').classList.add('show'); }
+        function closeMobileNav() { document.getElementById('mobileNav').classList.remove('show'); }
+
+        // ── Profile Dropdown ──
         document.getElementById('profileBtn').addEventListener('click', function(e) { e.stopPropagation(); document.getElementById('profileMenu').classList.toggle('show'); });
         document.addEventListener('click', function() { document.getElementById('profileMenu').classList.remove('show'); });
 
+        // ── Theme Button ──
+        function updateThemeBtn() {
+            var btn = document.getElementById('themeBtn');
+            if (!btn) return;
+            var theme = document.documentElement.getAttribute('data-theme');
+            btn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+        var _origToggle = window.themeToggle;
+        window.themeToggle = function() { _origToggle(); updateThemeBtn(); };
+        updateThemeBtn();
+
+        // ── Load Profile ──
         (async function() {
             try {
                 var s = await auth.session();
@@ -139,136 +289,253 @@
                 var n = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
                 document.getElementById('profileName').textContent = n || 'Barangay';
                 document.getElementById('profileInitial').textContent = (s.first_name||'B')[0].toUpperCase();
+                var dn = document.getElementById('dropdownName'); if(dn) dn.textContent = n || 'Barangay';
+                var de = document.getElementById('dropdownEmail'); if(de) de.textContent = s.email || '';
             } catch(e) { window.location.replace('/TodaShare/login.html'); }
         })();
 
-        window.showAlert = function(msg, type) {
-            Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000, timerProgressBar:true })
-                .fire({ icon: type==='error'?'error':'success', title: msg });
-        };
+        // ── Admin Profile ──
+        async function openAdminProfile() {
+            document.getElementById('profileMenu').classList.remove('show');
+            try {
+                const s = await auth.session();
+                const { value: formData } = await Swal.fire({
+                    title: 'Account Profile',
+                    html: `<div style="text-align:left;font-size:13px">
+                        <div style="text-align:center;margin-bottom:16px"><div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff">${(s.first_name||'B')[0].toUpperCase()}</div></div>
+                        <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--b-text2)">First Name</label>
+                        <input id="swal-fn" value="${s.first_name||''}" style="width:100%;padding:10px;border:1px solid var(--b-border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--b-card);color:var(--b-text);font-family:inherit;outline:none">
+                        <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--b-text2)">Last Name</label>
+                        <input id="swal-ln" value="${s.last_name||''}" style="width:100%;padding:10px;border:1px solid var(--b-border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--b-card);color:var(--b-text);font-family:inherit;outline:none">
+                        <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--b-text2)">Email</label>
+                        <input value="${s.email||''}" style="width:100%;padding:10px;border:1px solid var(--b-border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--b-bg);color:var(--b-text3);font-family:inherit;outline:none" readonly>
+                        <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--b-text2)">Phone</label>
+                        <input id="swal-ph" value="${s.phone||''}" placeholder="09xxxxxxxxx" style="width:100%;padding:10px;border:1px solid var(--b-border);border-radius:8px;font-size:13px;background:var(--b-card);color:var(--b-text);font-family:inherit;outline:none">
+                    </div>`,
+                    showCancelButton: true, confirmButtonText: 'Save Changes', confirmButtonColor: '#10b981', cancelButtonText: 'Close', cancelButtonColor: '#9ca3af',
+                    preConfirm: () => ({ first_name: document.getElementById('swal-fn').value.trim(), last_name: document.getElementById('swal-ln').value.trim(), phone: document.getElementById('swal-ph').value.trim() })
+                });
+                if (formData) {
+                    if (!formData.first_name) return Swal.fire({icon:'warning',title:'Required',text:'First name is required.',confirmButtonColor:'#10b981'});
+                    await apiRequest('../api/auth/update-profile.php','POST',formData);
+                    Swal.fire({icon:'success',title:'Profile Updated',confirmButtonColor:'#10b981'});
+                    var nn = (formData.first_name + ' ' + formData.last_name).trim();
+                    document.getElementById('profileName').textContent = nn;
+                    document.getElementById('profileInitial').textContent = formData.first_name[0].toUpperCase();
+                    var dn = document.getElementById('dropdownName'); if(dn) dn.textContent = nn;
+                }
+            } catch(err) { Swal.fire({icon:'error',title:'Error',text:err.message,confirmButtonColor:'#10b981'}); }
+        }
 
+        // ── Logout ──
         async function handleLogout() {
-            var r = await Swal.fire({ title:'Logout?', icon:'question', showCancelButton:true, confirmButtonColor:'#00e6a0', confirmButtonText:'Yes' });
+            var r = await Swal.fire({ title:'Do you want to logout?', text:'You will need to login again.', icon:'question', showCancelButton:true, confirmButtonColor:'#ef4444', confirmButtonText:'Yes, logout', cancelButtonText:'No', cancelButtonColor:'#9ca3af' });
             if (r.isConfirmed) { await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html'); }
         }
 
+        // ── Notifications ──
         document.getElementById('notifBtn').addEventListener('click', function() {
-            Swal.fire({ title:'Notifications', html:'<p>Driver management page</p>', icon:'info', confirmButtonColor:'#00e6a0' });
+            Swal.fire({ title:'Notifications', html:'<p style="margin:4px 0">Check the dashboard for pending items.</p>', icon:'info', confirmButtonColor:'#10b981' });
         });
 
         // ── Data ──
         var statsData = null;
+        var allDrivers = [];
 
-        function openAddModal() {
-            document.getElementById('modalTitle').textContent = 'Add Driver';
-            document.getElementById('driverForm').reset();
-            document.getElementById('editId').value = '';
-            document.getElementById('credentialsSection').style.display = 'block';
-            document.getElementById('driverModal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('driverModal').classList.remove('active');
-        }
-
-        async function openEditModal(id) {
-            try {
-                var d = await drivers.get(id);
-                document.getElementById('modalTitle').textContent = 'Edit Driver';
-                document.getElementById('editId').value = id;
-                document.getElementById('firstName').value = d.first_name || '';
-                document.getElementById('lastName').value = d.last_name || '';
-                document.getElementById('todaSelect').value = d.toda_id || '';
-                document.getElementById('contact').value = d.contact_number || '';
-                document.getElementById('address').value = d.address || '';
-                document.getElementById('credentialsSection').style.display = 'none';
-                document.getElementById('driverModal').classList.add('active');
-            } catch(err) { showAlert(err.message, 'error'); }
-        }
-
-        async function handleDriverSubmit(e) {
-            e.preventDefault();
-            var id = document.getElementById('editId').value;
-            var data = {
-                first_name: document.getElementById('firstName').value,
-                last_name: document.getElementById('lastName').value,
-                toda_id: document.getElementById('todaSelect').value,
-                contact_number: document.getElementById('contact').value,
-                address: document.getElementById('address').value
-            };
-            if (!id) {
-                data.email = document.getElementById('driverEmail').value;
-                data.username = data.email.split('@')[0];
-                data.password = document.getElementById('password').value;
+        function filterDrivers() {
+            var search = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+            if (!search) {
+                renderDrivers(allDrivers);
+                return;
             }
-            try {
-                if (id) { await drivers.update(id, data); showAlert('Driver updated successfully'); }
-                else { await drivers.create(data); showAlert('Driver added successfully'); }
-                closeModal();
-                loadPage();
-            } catch(err) { showAlert(err.message, 'error'); }
-        }
-
-        async function toggleDriverStatus(id, currentStatus) {
-            var action = currentStatus === 'active' ? 'Suspend' : 'Activate';
-            var r = await Swal.fire({
-                title: action + ' Driver?',
-                text: 'Are you sure you want to ' + action.toLowerCase() + ' this driver?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: currentStatus === 'active' ? '#ef4444' : '#00e6a0',
-                confirmButtonText: 'Yes, ' + action
+            var filtered = allDrivers.filter(function(d) {
+                var name = ((d.first_name||'') + ' ' + (d.last_name||'')).toLowerCase();
+                return name.includes(search);
             });
-            if (r.isConfirmed) {
-                try {
-                    var newStatus = currentStatus === 'active' ? 'suspended' : 'active';
-                    await drivers.update(id, { status: newStatus });
-                    showAlert('Driver ' + action.toLowerCase() + 'd successfully');
-                    loadPage();
-                } catch(err) { showAlert(err.message, 'error'); }
-            }
+            renderDrivers(filtered);
         }
 
         function renderDrivers(list) {
-            var tb = document.getElementById('driversTable');
-            if (!list || !list.length) {
-                tb.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:30px">No drivers found</td></tr>';
+            var tricycleCount = {};
+            if (statsData && statsData.tricycles) {
+                statsData.tricycles.forEach(function(t) {
+                    tricycleCount[t.driver_id] = (tricycleCount[t.driver_id] || 0) + 1;
+                });
+            }
+
+            var tbody = document.getElementById('driversTable');
+            if (!list || list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No drivers found</td></tr>';
                 return;
             }
-            tb.innerHTML = list.map(function(d) {
-                var statusBadge = '<span class="badge badge-' + (d.status||'active') + '">' + (d.status||'active') + '</span>';
-                var toggleLabel = (d.status === 'active') ? 'Suspend' : 'Activate';
-                var toggleColor = (d.status === 'active') ? 'color:var(--danger)' : 'color:var(--accent)';
+            tbody.innerHTML = list.map(function(d) {
                 return '<tr>' +
+                    '<td>#' + d.id + '</td>' +
                     '<td>' + (d.first_name||'') + ' ' + (d.last_name||'') + '</td>' +
-                    '<td>' + (d.toda_name||'-') + '</td>' +
-                    '<td>' + (d.contact_number||'-') + '</td>' +
-                    '<td>' + statusBadge + '</td>' +
+                    '<td>' + (d.contact_number || '-') + '</td>' +
+                    '<td>' + (tricycleCount[d.id] || 0) + '</td>' +
                     '<td>' +
-                        '<button onclick="openEditModal(' + d.id + ')" class="btn btn-sm" style="margin-right:4px" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>' +
-                        '<button onclick="toggleDriverStatus(' + d.id + ',\'' + (d.status||'active') + '\')" class="btn btn-sm" style="' + toggleColor + '" title="' + toggleLabel + '"><i class="fa-solid fa-' + (d.status === 'active' ? 'ban' : 'check') + '"></i></button>' +
+                        '<button class="btn btn-outline btn-sm" onclick="editDriver(' + d.id + ')">Edit</button> ' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteDriver(' + d.id + ')">Delete</button>' +
                     '</td></tr>';
             }).join('');
         }
 
-        function populateTodas(todasList) {
-            var sel = document.getElementById('todaSelect');
-            sel.innerHTML = '<option value="">Select TODA</option>';
-            (todasList||[]).forEach(function(t) {
-                sel.innerHTML += '<option value="' + t.id + '">' + (t.name||t.toda_name||'TODA '+t.id) + '</option>';
-            });
+        // ── Edit Driver ──
+        async function editDriver(id) {
+            try {
+                var d = await drivers.get(id);
+                document.getElementById('editDriverId').value = d.id;
+                document.getElementById('editName').textContent = (d.first_name||'') + ' ' + (d.last_name||'');
+                document.getElementById('editEmail').textContent = d.username || d.email || '--';
+                document.getElementById('editContact').value = d.contact_number || '';
+                document.getElementById('editAddress').value = d.address || '';
+                document.getElementById('editDriverModal').classList.add('active');
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to load driver.', confirmButtonColor:'#10b981' });
+            }
         }
 
+        function closeEditModal() {
+            document.getElementById('editDriverModal').classList.remove('active');
+        }
+
+        document.getElementById('editDriverForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var id = document.getElementById('editDriverId').value;
+            var contact = document.getElementById('editContact').value.trim();
+
+            if (!contact) {
+                return Swal.fire({ icon:'warning', title:'Missing Field', text:'Contact number is required.', confirmButtonColor:'#10b981' });
+            }
+
+            var data = {
+                contact_number: contact,
+                address: document.getElementById('editAddress').value
+            };
+
+            try {
+                await drivers.update(id, data);
+                Swal.fire({ icon:'success', title:'Driver Updated', text:'Driver details have been saved.', confirmButtonColor:'#10b981' });
+                closeEditModal();
+                loadPage();
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to update driver.', confirmButtonColor:'#10b981' });
+            }
+        });
+
+        // ── Delete Driver ──
+        async function deleteDriver(id) {
+            var r = await Swal.fire({ title: 'Delete Driver?', text: 'This will remove the driver permanently. Are you sure?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#9ca3af', confirmButtonText: 'Yes, delete', cancelButtonText: 'No' });
+            if (!r.isConfirmed) return;
+            try {
+                await drivers.delete(id);
+                Swal.fire({ icon:'success', title:'Deleted', text:'Driver has been removed.', confirmButtonColor:'#10b981' });
+                loadPage();
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to delete driver.', confirmButtonColor:'#10b981' });
+            }
+        }
+
+        // ── Add Driver ──
+        let passengerUsers = [];
+        let addSearchTimeout = null;
+
+        async function openAddModal() {
+            try { passengerUsers = await users.list({ role: 'passenger' }); } catch(e) { passengerUsers = []; }
+            document.getElementById('addDriverForm').reset();
+            document.getElementById('selectedUserId').value = '';
+            document.getElementById('selectedUserInfo').style.display = 'none';
+            document.getElementById('userResults').style.display = 'none';
+            document.getElementById('addDriverModal').classList.add('active');
+        }
+
+        document.getElementById('searchUser').addEventListener('input', function() {
+            clearTimeout(addSearchTimeout);
+            const q = this.value.trim().toLowerCase();
+            const resultsDiv = document.getElementById('userResults');
+            if (q.length < 2) { resultsDiv.style.display = 'none'; return; }
+            addSearchTimeout = setTimeout(() => {
+                const matches = passengerUsers.filter(u => {
+                    const name = ((u.first_name||'') + ' ' + (u.last_name||'')).toLowerCase();
+                    return name.includes(q) || (u.email||'').toLowerCase().includes(q);
+                }).slice(0, 8);
+                if (matches.length === 0) {
+                    resultsDiv.innerHTML = '<div style="padding:12px 16px;color:var(--b-text3);font-size:13px">No users found</div>';
+                } else {
+                    resultsDiv.innerHTML = matches.map(u => {
+                        const name = ((u.first_name||'') + ' ' + (u.last_name||'')).trim() || u.username;
+                        return `<div onclick="selectUser(${u.id})" style="padding:10px 16px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--b-border);transition:background .15s" onmouseover="this.style.background='var(--b-green-bg)'" onmouseout="this.style.background='none'">
+                            <div style="font-weight:600;color:var(--b-text)">${name}</div>
+                            <div style="color:var(--b-text3);font-size:11px">${u.email}</div>
+                        </div>`;
+                    }).join('');
+                }
+                resultsDiv.style.display = 'block';
+            }, 200);
+        });
+
+        function selectUser(id) {
+            const u = passengerUsers.find(p => p.id == id);
+            if (!u) return;
+            const name = ((u.first_name||'') + ' ' + (u.last_name||'')).trim() || u.username;
+            document.getElementById('searchUser').value = name;
+            document.getElementById('selectedUserId').value = u.id;
+            document.getElementById('selName').textContent = name;
+            document.getElementById('selEmail').textContent = u.email;
+            document.getElementById('selPhone').textContent = u.phone || '--';
+            if (u.phone) document.getElementById('addContact').value = u.phone;
+            document.getElementById('selectedUserInfo').style.display = 'block';
+            document.getElementById('userResults').style.display = 'none';
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#searchUser') && !e.target.closest('#userResults')) {
+                document.getElementById('userResults').style.display = 'none';
+            }
+        });
+
+        function closeAddModal() { document.getElementById('addDriverModal').classList.remove('active'); }
+
+        document.getElementById('addDriverForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('selectedUserId').value;
+            if (!userId) return Swal.fire({ icon:'warning', title:'No User Selected', text:'Please search and select a user.', confirmButtonColor:'#10b981' });
+
+            const contact = document.getElementById('addContact').value.trim();
+            if (!contact) return Swal.fire({ icon:'warning', title:'Missing Field', text:'Contact number is required.', confirmButtonColor:'#10b981' });
+
+            const u = passengerUsers.find(p => p.id == userId);
+            try {
+                await drivers.create({
+                    user_id: userId,
+                    first_name: u.first_name || u.username,
+                    last_name: u.last_name || '',
+                    contact_number: contact,
+                    address: document.getElementById('addAddress').value
+                });
+                Swal.fire({ icon:'success', title:'Driver Added', text:`${u.first_name || u.username} has been promoted to driver.`, confirmButtonColor:'#10b981' });
+                closeAddModal();
+                loadPage();
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to add driver.', confirmButtonColor:'#10b981' });
+            }
+        });
+
+        // ── Load Page ──
         async function loadPage() {
             try {
                 statsData = await apiRequest('dashboard/barangay-stats.php');
                 document.getElementById('brgyLabel').textContent = 'Brgy. ' + statsData.barangay_name;
-                populateTodas(statsData.todas);
-                renderDrivers(statsData.drivers);
-            } catch(err) { showAlert(err.message, 'error'); }
+                var ml = document.getElementById('mobileLabel'); if(ml) ml.textContent = 'Brgy. ' + statsData.barangay_name;
+                allDrivers = statsData.drivers || [];
+                renderDrivers(allDrivers);
+            } catch(err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message, confirmButtonColor:'#10b981' });
+            }
         }
 
-        // ── Init ──
+        document.getElementById('searchInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') filterDrivers(); });
         loadPage();
     </script>
 </body>

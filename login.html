@@ -490,9 +490,41 @@
                 padding-bottom: 80px;
             }
         }
+
+        /* ── Light Theme ── */
+        [data-theme="light"] body { background: #f1f5f9; color: #0f172a; }
+        [data-theme="light"] .bg-canvas .orb { opacity: 0.08; }
+        [data-theme="light"] .stars { display: none; }
+        [data-theme="light"] .header h1 { background: linear-gradient(135deg, #0f172a, #475569); -webkit-background-clip: text; background-clip: text; }
+        [data-theme="light"] .header p { color: #64748b; }
+        [data-theme="light"] .card { background: rgba(255,255,255,0.85); border-color: rgba(0,0,0,0.08); }
+        [data-theme="light"] .card::before { background: linear-gradient(160deg, rgba(5,150,105,0.2), transparent 40%, transparent 60%, rgba(14,165,233,0.1)); }
+        [data-theme="light"] .form-group label { color: #475569; }
+        [data-theme="light"] .form-control { background: #f1f5f9; border-color: rgba(0,0,0,0.1); color: #0f172a; }
+        [data-theme="light"] .form-control:focus { background: #fff; border-color: rgba(5,150,105,0.5); box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
+        [data-theme="light"] .form-control::placeholder { color: #94a3b8; }
+        [data-theme="light"] .input-wrapper .field-icon { color: #94a3b8; }
+        [data-theme="light"] .toggle-password { color: #94a3b8; }
+        [data-theme="light"] .toggle-password:hover { color: #475569; }
+        [data-theme="light"] .logo-inner { background: #fff; }
+        [data-theme="light"] .btn-submit { color: #fff; }
+        [data-theme="light"] .footer-text { color: #64748b; }
+        [data-theme="light"] .footer-text a { color: #059669; }
+        [data-theme="light"] .btn-back { background: rgba(5,150,105,0.06); border-color: rgba(0,0,0,0.08); color: #059669; }
+        [data-theme="light"] .btn-back:hover { background: rgba(5,150,105,0.1); border-color: rgba(5,150,105,0.2); }
+        [data-theme="light"] .top-brand { color: #0f172a; text-shadow: none; }
+
+        /* ── Theme Toggle ── */
+        .theme-toggle-float { position: fixed; top: 16px; right: 16px; z-index: 10; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; color: #f1f5f9; font-size: 16px; transition: all .2s; }
+        .theme-toggle-float:hover { background: rgba(255,255,255,0.25); }
+        [data-theme="light"] .theme-toggle-float { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.1); color: #0f172a; }
+        [data-theme="light"] .theme-toggle-float:hover { background: rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle-float" onclick="themeToggle()" id="themeBtn"><i class="fas fa-moon"></i></button>
+
     <!-- Animated Background -->
     <div class="bg-canvas">
         <div class="orb orb-1"></div>
@@ -510,7 +542,7 @@
                     <div class="logo-glow"></div>
                     <div class="logo-ring">
                         <div class="logo-inner">
-                            <i class="fa-solid fa-shield-halved"></i>
+                            <img src="todasure-logo.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">
                         </div>
                     </div>
                 </div>
@@ -555,7 +587,19 @@
         </div>
     </div>
 
+    <script src="assets/js/theme.js"></script>
     <script>
+        // Update theme toggle button
+        function updateThemeBtn() {
+            const btn = document.getElementById('themeBtn');
+            if (!btn) return;
+            const theme = document.documentElement.getAttribute('data-theme');
+            btn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+        const _origToggle = window.themeToggle;
+        window.themeToggle = function() { _origToggle(); updateThemeBtn(); };
+        updateThemeBtn();
+
         // Stars
         const starsContainer = document.getElementById('stars');
         for (let i = 0; i < 40; i++) {

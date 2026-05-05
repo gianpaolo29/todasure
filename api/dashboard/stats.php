@@ -34,6 +34,9 @@ $stats['pending_complaints'] = $stmt->fetch()['total'];
 $stmt = $pdo->query("SELECT COUNT(*) as total FROM violations WHERE status = 'pending'");
 $stats['pending_violations'] = $stmt->fetch()['total'];
 
+$stmt = $pdo->query("SELECT COUNT(*) as total FROM users WHERE role = 'passenger'");
+$stats['total_passengers'] = $stmt->fetch()['total'];
+
 // Recent trips (last 10)
 $stmt = $pdo->query("
     SELECT t.*, d.first_name, d.last_name, tr.plate_number

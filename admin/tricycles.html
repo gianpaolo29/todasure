@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<style>.swal2-popup{background:#0f172a!important;color:#f1f5f9!important}.swal2-title{color:#f1f5f9!important}.swal2-html-container{color:#94a3b8!important}</style>
+<style>.swal2-popup{background:var(--bg-card-solid)!important;color:var(--text)!important}.swal2-title{color:var(--text)!important}.swal2-html-container{color:var(--text-secondary)!important}</style>
 </head>
 <body>
     <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
@@ -19,7 +19,7 @@
     <div class="layout">
         <aside class="sidebar" id="sidebar">
             <div class="logo">
-                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="logo-icon"><img src="../todasure-logo.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"></div>
                 <div>
                     <h2>TODASURE</h2>
                     <span>Admin Panel</span>
@@ -29,12 +29,12 @@
                 <a href="dashboard.html"><i class="fa-solid fa-gauge icon"></i> Dashboard</a>
                 <a href="drivers.html"><i class="fa-solid fa-id-card icon"></i> Drivers</a>
                 <a href="tricycles.html" class="active"><i class="fa-solid fa-motorcycle icon"></i> Tricycles</a>
-                <a href="toda.html"><i class="fa-solid fa-building icon"></i> TODA</a>
                 <a href="trips.html"><i class="fa-solid fa-route icon"></i> Trips</a>
                 <a href="fares.html"><i class="fa-solid fa-peso-sign icon"></i> Fare Rates</a>
                 <a href="complaints.html"><i class="fa-solid fa-triangle-exclamation icon"></i> Complaints</a>
                 <a href="violations.html"><i class="fa-solid fa-gavel icon"></i> Violations</a>
                 <a href="users.html"><i class="fa-solid fa-users icon"></i> Passengers</a>
+                <a href="officials.html"><i class="fa-solid fa-user-tie icon"></i> Brgy Officials</a>
                 <a href="barangays.html"><i class="fa-solid fa-map-location-dot icon"></i> Barangays</a>
             </nav>
         </aside>
@@ -47,9 +47,21 @@
                     <input type="text" placeholder="Search..." id="globalSearch">
                 </div>
                 <div class="header-actions">
-                    <button class="header-icon-btn" id="notifBtn" title="Notifications">
-                        <i class="fa-solid fa-bell"></i>
-                    </button>
+                    <div style="position:relative">
+                        <button class="header-icon-btn" id="notifBtn" title="Notifications">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notif-dot" id="notifDot" style="display:none"></span>
+                        </button>
+                        <div class="dropdown-menu" id="notifDropdown" style="min-width:320px;max-width:380px;padding:0">
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)">
+                                <span style="font-size:14px;font-weight:700;color:var(--text)">Notifications</span>
+                                <button onclick="markAllNotifRead()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Mark all read</button>
+                            </div>
+                            <div id="notifList" style="max-height:340px;overflow-y:auto">
+                                <div style="padding:30px 16px;text-align:center;color:var(--text-muted);font-size:13px">No notifications</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="profile-dropdown">
                         <button class="profile-btn" id="profileBtn">
                             <div class="profile-avatar" id="profileInitial">A</div>
@@ -60,7 +72,12 @@
                             <i class="fa-solid fa-chevron-down chevron"></i>
                         </button>
                         <div class="dropdown-menu" id="profileMenu">
-                            <a href="#"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+                                <div style="font-size:14px;font-weight:600;color:var(--text)" id="dropdownName">Admin</div>
+                                <div style="font-size:11px;color:var(--text-muted)" id="dropdownEmail">admin@todasure.com</div>
+                            </div>
+                            <a href="#" onclick="openAdminProfile()"><i class="fa-solid fa-user"></i> Account Profile</a>
+                            <button onclick="themeToggle()" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;font-family:inherit" id="themeMenuItem"><i class="fa-solid fa-moon"></i> Dark Mode</button>
                             <div class="divider"></div>
                             <button class="danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
                         </div>
@@ -73,13 +90,7 @@
                 <div class="card" style="padding:16px;">
                     <div class="flex gap-2">
                         <input type="text" id="searchInput" class="form-control" placeholder="Search by plate or body number..." style="max-width:300px;">
-                        <select id="filterStatus" class="form-control" style="max-width:150px;">
-                            <option value="">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="maintenance">Maintenance</option>
-                        </select>
-                        <button class="btn btn-outline" onclick="loadTricycles()">Filter</button>
+                        <button class="btn btn-outline" onclick="loadTricycles()">Search</button>
                     </div>
                 </div>
 
@@ -98,7 +109,6 @@
                                     <th>Driver</th>
                                     <th>Color</th>
                                     <th>Model</th>
-                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -121,11 +131,17 @@
             </div>
             <form id="tricycleForm">
                 <input type="hidden" id="tricycleId">
-                <div class="form-group">
-                    <label>Driver</label>
-                    <select id="driverId" class="form-control">
-                        <option value="">Unassigned</option>
-                    </select>
+                <input type="hidden" id="selectedDriverId">
+                <div class="form-group" style="position:relative">
+                    <label>Driver (Owner)</label>
+                    <input type="text" id="searchDriver" class="form-control" placeholder="Search driver by name..." autocomplete="off">
+                    <div id="driverResults" style="position:absolute;left:0;right:0;top:100%;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto;z-index:10;display:none;box-shadow:var(--shadow-md)"></div>
+                </div>
+                <div id="selectedDriverInfo" style="display:none;padding:10px 14px;background:var(--bg-hover);border-radius:10px;margin-bottom:14px;display:none">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <span style="font-size:13px;color:var(--text)" id="selDriverName">--</span>
+                        <button type="button" onclick="clearDriver()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:12px;font-weight:600"><i class="fa-solid fa-xmark"></i> Remove</button>
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -155,6 +171,7 @@
         </div>
     </div>
 
+    <script src="../assets/js/theme.js"></script>
     <script src="../assets/js/guard.js"></script>
     <script src="../assets/js/api.js"></script>
     <script>
@@ -193,8 +210,21 @@
                 var n = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
                 document.getElementById('profileName').textContent = n || 'Admin';
                 document.getElementById('profileInitial').textContent = (s.first_name||'A')[0].toUpperCase();
+                var dn = document.getElementById('dropdownName'); if(dn) dn.textContent = n || 'Admin';
+                var de = document.getElementById('dropdownEmail'); if(de) de.textContent = s.email || '';
             } catch(e) {}
         })();
+
+        // Theme menu item update
+        function updateThemeMenuItem() {
+            var el = document.getElementById('themeMenuItem');
+            if (!el) return;
+            var theme = document.documentElement.getAttribute('data-theme');
+            el.innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i> Light Mode' : '<i class="fa-solid fa-moon"></i> Dark Mode';
+        }
+        updateThemeMenuItem();
+        var _adminThemeToggle = window.themeToggle;
+        window.themeToggle = function() { _adminThemeToggle(); updateThemeMenuItem(); };
 
         // SweetAlert showAlert
         window.showAlert = function(msg, type) {
@@ -202,34 +232,132 @@
                 .fire({ icon: type==='error'?'error':'success', title: msg });
         };
 
+        // Admin Profile
+        async function openAdminProfile() {
+            document.getElementById('profileMenu').classList.remove('show');
+            try {
+                const s = await auth.session();
+                const { value: formData } = await Swal.fire({
+                    title: 'Account Profile',
+                    html: `
+                        <div style="text-align:left;font-size:13px">
+                            <div style="text-align:center;margin-bottom:16px">
+                                <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#00e6a0,#059669);display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff">${(s.first_name||'A')[0].toUpperCase()}</div>
+                            </div>
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">First Name</label>
+                            <input id="swal-fn" value="${s.first_name||''}" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--bg-input);color:var(--text);font-family:inherit;outline:none">
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">Last Name</label>
+                            <input id="swal-ln" value="${s.last_name||''}" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--bg-input);color:var(--text);font-family:inherit;outline:none">
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">Email</label>
+                            <input value="${s.email||''}" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--bg-hover);color:var(--text-muted);font-family:inherit;outline:none" readonly>
+                            <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--text-secondary)">Phone</label>
+                            <input id="swal-ph" value="${s.phone||''}" placeholder="09xxxxxxxxx" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg-input);color:var(--text);font-family:inherit;outline:none">
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Save Changes',
+                    confirmButtonColor: '#00e6a0',
+                    cancelButtonText: 'Close',
+                    cancelButtonColor: '#9ca3af',
+                    preConfirm: () => ({
+                        first_name: document.getElementById('swal-fn').value.trim(),
+                        last_name: document.getElementById('swal-ln').value.trim(),
+                        phone: document.getElementById('swal-ph').value.trim()
+                    })
+                });
+                if (formData) {
+                    if (!formData.first_name) return Swal.fire({icon:'warning',title:'Required',text:'First name is required.',confirmButtonColor:'#00e6a0'});
+                    await apiRequest('../api/auth/update-profile.php','POST',formData);
+                    Swal.fire({icon:'success',title:'Profile Updated',confirmButtonColor:'#00e6a0'});
+                    var n = (formData.first_name + ' ' + formData.last_name).trim();
+                    document.getElementById('profileName').textContent = n;
+                    document.getElementById('profileInitial').textContent = formData.first_name[0].toUpperCase();
+                    var dn = document.getElementById('dropdownName'); if(dn) dn.textContent = n;
+                }
+            } catch(err) {
+                Swal.fire({icon:'error',title:'Error',text:err.message||'Failed to load profile.',confirmButtonColor:'#00e6a0'});
+            }
+        }
+
+
+        // Notifications Dropdown
+        function timeAgo(dateStr) {
+            var d = new Date(dateStr); var now = new Date(); var s = Math.floor((now-d)/1000);
+            if (s < 60) return 'Just now';
+            if (s < 3600) return Math.floor(s/60) + 'm ago';
+            if (s < 86400) return Math.floor(s/3600) + 'h ago';
+            return Math.floor(s/86400) + 'd ago';
+        }
+        function getNotifIcon(type) {
+            if (type === 'complaint') return '<i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b"></i>';
+            if (type === 'violation') return '<i class="fa-solid fa-gavel" style="color:#ef4444"></i>';
+            if (type === 'booking') return '<i class="fa-solid fa-motorcycle" style="color:#0ea5e9"></i>';
+            return '<i class="fa-solid fa-bell" style="color:var(--accent)"></i>';
+        }
+        async function loadNotifications() {
+            try {
+                var data = await notifications.list();
+                var dot = document.getElementById('notifDot');
+                if (dot) dot.style.display = data.unread_count > 0 ? 'block' : 'none';
+                var container = document.getElementById('notifList');
+                var list = data.notifications || [];
+                if (list.length === 0) {
+                    container.innerHTML = '<div style="padding:30px 16px;text-align:center;color:var(--text-muted);font-size:13px"><i class="fa-solid fa-bell-slash" style="font-size:20px;display:block;margin-bottom:8px;opacity:.3"></i>No notifications</div>';
+                    return;
+                }
+                container.innerHTML = list.slice(0,15).map(function(n) {
+                    var bg = n.is_read == 0 ? 'background:rgba(0,230,160,.03);' : '';
+                    return '<div style="display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);' + bg + 'transition:background .15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='' + (n.is_read == 0 ? 'rgba(0,230,160,.03)' : 'none') + ''">' +
+                        '<div style="width:32px;height:32px;border-radius:50%;background:var(--bg-input);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px">' + getNotifIcon(n.type) + '</div>' +
+                        '<div style="flex:1;min-width:0">' +
+                            '<div style="font-size:13px;font-weight:' + (n.is_read == 0 ? '600' : '400') + ';color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + n.title + '</div>' +
+                            '<div style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (n.message || '') + '</div>' +
+                            '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + timeAgo(n.created_at) + '</div>' +
+                        '</div>' +
+                        (n.is_read == 0 ? '<div style="width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;margin-top:6px"></div>' : '') +
+                    '</div>';
+                }).join('');
+            } catch(e) {}
+        }
+        async function markAllNotifRead() {
+            try {
+                await notifications.markAllRead();
+                loadNotifications();
+            } catch(e) {}
+        }
+        document.getElementById('notifBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('profileMenu').classList.remove('show');
+            document.getElementById('notifDropdown').classList.toggle('show');
+            loadNotifications();
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#notifDropdown') && !e.target.closest('#notifBtn')) {
+                document.getElementById('notifDropdown').classList.remove('show');
+            }
+        });
+        loadNotifications();
+
         // Logout
         async function handleLogout() {
             var r = await Swal.fire({ title:'Logout?', text:'Are you sure?', icon:'question', showCancelButton:true, confirmButtonColor:'#00e6a0', cancelButtonColor:'#9ca3af', confirmButtonText:'Yes, logout' });
             if (r.isConfirmed) { await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html'); }
         }
 
+        let driverList = [];
+
         async function loadDriverList() {
-            const list = await drivers.list();
-            const sel = document.getElementById('driverId');
-            list.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d.id;
-                opt.textContent = `${d.first_name} ${d.last_name} (${d.license_number})`;
-                sel.appendChild(opt);
-            });
+            try { driverList = await drivers.list(); } catch(e) { driverList = []; }
         }
 
         async function loadTricycles() {
             try {
                 const params = {};
-                const search = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
-                const status = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : '';
+                const search = document.getElementById('searchInput').value || '';
                 if (search) params.search = search;
-                if (status) params.status = status;
 
                 let list = await tricycles.list(params);
 
-                // Client-side search fallback if API doesn't support search param
                 if (search && list.length > 0) {
                     const q = search.toLowerCase();
                     list = list.filter(t =>
@@ -237,9 +365,6 @@
                         (t.body_number && t.body_number.toLowerCase().includes(q)) ||
                         ((t.first_name + ' ' + t.last_name).toLowerCase().includes(q))
                     );
-                }
-                if (status && list.length > 0) {
-                    list = list.filter(t => t.status === status);
                 }
 
                 const tbody = document.getElementById('tricyclesTable');
@@ -255,42 +380,86 @@
                         <td>${t.first_name ? t.first_name + ' ' + t.last_name : '<span class="text-muted">Unassigned</span>'}</td>
                         <td>${t.color || '-'}</td>
                         <td>${t.model || '-'}</td>
-                        <td><span class="${badgeClass(t.status)}">${t.status}</span></td>
                         <td>
                             <button class="btn btn-outline btn-sm" onclick="editTricycle(${t.id})">Edit</button>
-                            ${t.status === 'active' ?
-                                `<button class="btn btn-danger btn-sm" onclick="deactivateTricycle(${t.id})">Deactivate</button>` :
-                                t.status === 'inactive' ?
-                                `<button class="btn btn-success btn-sm" onclick="activateTricycle(${t.id})">Activate</button>` : ''
-                            }
+                            <button class="btn btn-danger btn-sm" onclick="deleteTricycle(${t.id})">Delete</button>
                         </td>
                     </tr>
                 `).join('');
             } catch (err) { showAlert(err.message, 'error'); }
         }
 
-        async function deactivateTricycle(id) {
-            const r = await Swal.fire({ title: 'Deactivate Tricycle?', text: 'This tricycle will be set to inactive.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#00e6a0', cancelButtonColor: '#9ca3af', confirmButtonText: 'Yes, deactivate' });
+        async function deleteTricycle(id) {
+            const r = await Swal.fire({ title: 'Delete Tricycle?', text: 'This will remove the tricycle permanently. Are you sure?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#9ca3af', confirmButtonText: 'Yes, delete', cancelButtonText: 'No' });
             if (!r.isConfirmed) return;
             try {
-                await tricycles.update(id, { status: 'inactive' });
-                showAlert('Tricycle deactivated');
+                await tricycles.delete(id);
+                Swal.fire({ icon:'success', title:'Deleted', text:'Tricycle has been removed.', confirmButtonColor:'#00e6a0' });
                 loadTricycles();
-            } catch (err) { showAlert(err.message, 'error'); }
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to delete tricycle.', confirmButtonColor:'#00e6a0' });
+            }
         }
 
-        async function activateTricycle(id) {
-            try {
-                await tricycles.update(id, { status: 'active' });
-                showAlert('Tricycle activated');
-                loadTricycles();
-            } catch (err) { showAlert(err.message, 'error'); }
+        // ── Driver Search ──
+        let driverSearchTimeout = null;
+
+        document.getElementById('searchDriver').addEventListener('input', function() {
+            clearTimeout(driverSearchTimeout);
+            const q = this.value.trim().toLowerCase();
+            const resultsDiv = document.getElementById('driverResults');
+
+            if (q.length < 2) { resultsDiv.style.display = 'none'; return; }
+
+            driverSearchTimeout = setTimeout(() => {
+                const matches = driverList.filter(d => {
+                    const name = (d.first_name + ' ' + d.last_name).toLowerCase();
+                    return name.includes(q);
+                }).slice(0, 8);
+
+                if (matches.length === 0) {
+                    resultsDiv.innerHTML = '<div style="padding:12px 16px;color:var(--text-muted);font-size:13px">No drivers found</div>';
+                } else {
+                    resultsDiv.innerHTML = matches.map(d => `
+                        <div onclick="pickDriver(${d.id})" style="padding:10px 16px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='none'">
+                            <div style="font-weight:600;color:var(--text)">${d.first_name} ${d.last_name}</div>
+                            <div style="color:var(--text-muted);font-size:11px">${d.contact_number || 'No contact'}</div>
+                        </div>
+                    `).join('');
+                }
+                resultsDiv.style.display = 'block';
+            }, 200);
+        });
+
+        function pickDriver(id) {
+            const d = driverList.find(x => x.id == id);
+            if (!d) return;
+            document.getElementById('selectedDriverId').value = d.id;
+            document.getElementById('searchDriver').value = d.first_name + ' ' + d.last_name;
+            document.getElementById('selDriverName').textContent = d.first_name + ' ' + d.last_name;
+            document.getElementById('selectedDriverInfo').style.display = 'block';
+            document.getElementById('driverResults').style.display = 'none';
         }
 
+        function clearDriver() {
+            document.getElementById('selectedDriverId').value = '';
+            document.getElementById('searchDriver').value = '';
+            document.getElementById('selectedDriverInfo').style.display = 'none';
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#searchDriver') && !e.target.closest('#driverResults')) {
+                document.getElementById('driverResults').style.display = 'none';
+            }
+        });
+
+        // ── Modals ──
         function openAddModal() {
             document.getElementById('modalTitle').textContent = 'Add Tricycle';
             document.getElementById('tricycleForm').reset();
             document.getElementById('tricycleId').value = '';
+            document.getElementById('selectedDriverId').value = '';
+            document.getElementById('selectedDriverInfo').style.display = 'none';
             document.getElementById('tricycleModal').classList.add('active');
         }
 
@@ -298,11 +467,29 @@
             const t = await tricycles.get(id);
             document.getElementById('modalTitle').textContent = 'Edit Tricycle';
             document.getElementById('tricycleId').value = t.id;
-            document.getElementById('driverId').value = t.driver_id;
             document.getElementById('plateNumber').value = t.plate_number;
             document.getElementById('bodyNumber').value = t.body_number;
             document.getElementById('color').value = t.color || '';
             document.getElementById('model').value = t.model || '';
+
+            // Set driver if assigned
+            if (t.driver_id) {
+                const d = driverList.find(x => x.id == t.driver_id);
+                if (d) {
+                    document.getElementById('selectedDriverId').value = d.id;
+                    document.getElementById('searchDriver').value = d.first_name + ' ' + d.last_name;
+                    document.getElementById('selDriverName').textContent = d.first_name + ' ' + d.last_name;
+                    document.getElementById('selectedDriverInfo').style.display = 'block';
+                } else {
+                    document.getElementById('searchDriver').value = t.first_name + ' ' + t.last_name;
+                    document.getElementById('selectedDriverId').value = t.driver_id;
+                    document.getElementById('selDriverName').textContent = t.first_name + ' ' + t.last_name;
+                    document.getElementById('selectedDriverInfo').style.display = 'block';
+                }
+            } else {
+                clearDriver();
+            }
+
             document.getElementById('tricycleModal').classList.add('active');
         }
 
@@ -311,22 +498,47 @@
         document.getElementById('tricycleForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('tricycleId').value;
-            const driverVal = document.getElementById('driverId').value;
+            const driverVal = document.getElementById('selectedDriverId').value;
+            const plate = document.getElementById('plateNumber').value.trim();
+            const body = document.getElementById('bodyNumber').value.trim();
+            const color = document.getElementById('color').value.trim();
+            const model = document.getElementById('model').value.trim();
+
+            // Validation
+            if (!plate) {
+                return Swal.fire({ icon:'warning', title:'Missing Field', text:'Plate number is required.', confirmButtonColor:'#00e6a0' });
+            }
+            if (!body) {
+                return Swal.fire({ icon:'warning', title:'Missing Field', text:'Body number is required.', confirmButtonColor:'#00e6a0' });
+            }
+            if (!driverVal) {
+                return Swal.fire({ icon:'warning', title:'No Driver Selected', text:'Please search and select a driver.', confirmButtonColor:'#00e6a0' });
+            }
+
             const data = {
-                driver_id: driverVal || null,
-                plate_number: document.getElementById('plateNumber').value,
-                body_number: document.getElementById('bodyNumber').value,
-                color: document.getElementById('color').value,
-                model: document.getElementById('model').value
+                driver_id: driverVal,
+                plate_number: plate,
+                body_number: body,
+                color: color,
+                model: model
             };
+
             try {
-                if (id) { await tricycles.update(id, data); showAlert('Tricycle updated'); }
-                else { await tricycles.create(data); showAlert('Tricycle registered'); }
+                if (id) {
+                    await tricycles.update(id, data);
+                    Swal.fire({ icon:'success', title:'Tricycle Updated', text:'Tricycle details have been saved.', confirmButtonColor:'#00e6a0' });
+                } else {
+                    await tricycles.create(data);
+                    Swal.fire({ icon:'success', title:'Tricycle Registered', text:'New tricycle has been added successfully.', confirmButtonColor:'#00e6a0' });
+                }
                 closeModal();
                 loadTricycles();
-            } catch (err) { showAlert(err.message, 'error'); }
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to save tricycle.', confirmButtonColor:'#00e6a0' });
+            }
         });
 
+        document.getElementById('searchInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') loadTricycles(); });
         loadDriverList();
         loadTricycles();
     </script>

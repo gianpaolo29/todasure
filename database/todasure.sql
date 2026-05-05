@@ -1,14 +1,16 @@
 -- ============================================
--- TODASURE Database Schema
+-- TODASURE - Complete Database Setup
 -- GPS-Based Digital Fare Meter with
 -- Centralized Monitoring System
+--
+-- Run this file once to set up the database
 -- ============================================
 
 CREATE DATABASE IF NOT EXISTS todasure_db;
 USE todasure_db;
 
 -- ============================================
--- Users table (all roles: admin, driver, passenger)
+-- Users (admin, driver, passenger, barangay)
 -- ============================================
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -16,7 +18,7 @@ CREATE TABLE users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) DEFAULT '',
     phone VARCHAR(20),
     role ENUM('admin', 'driver', 'passenger', 'barangay') NOT NULL DEFAULT 'passenger',
     barangay_id INT NULL,
@@ -26,13 +28,14 @@ CREATE TABLE users (
 ) ENGINE=InnoDB;
 
 -- ============================================
--- Barangays table
+-- Barangays (pre-populated with Nasugbu)
 -- ============================================
 CREATE TABLE barangays (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    municipality VARCHAR(100) NOT NULL,
-    province VARCHAR(100) NOT NULL,
+    municipality VARCHAR(100) NOT NULL DEFAULT 'Nasugbu',
+    province VARCHAR(100) NOT NULL DEFAULT 'Batangas',
+    status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -52,19 +55,17 @@ CREATE TABLE todas (
 ) ENGINE=InnoDB;
 
 -- ============================================
--- Drivers table
+-- Drivers
 -- ============================================
 CREATE TABLE drivers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     toda_id INT NULL,
     first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) DEFAULT '',
     middle_name VARCHAR(50),
-    -- license_number removed
     contact_number VARCHAR(20),
     address TEXT,
-    photo VARCHAR(255),
     status ENUM('active', 'suspended', 'inactive') NOT NULL DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -73,7 +74,7 @@ CREATE TABLE drivers (
 ) ENGINE=InnoDB;
 
 -- ============================================
--- Tricycles table
+-- Tricycles
 -- ============================================
 CREATE TABLE tricycles (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -89,15 +90,16 @@ CREATE TABLE tricycles (
 ) ENGINE=InnoDB;
 
 -- ============================================
--- Fare rates (per barangay)
+-- Fare Rates (per barangay)
 -- ============================================
 CREATE TABLE fare_rates (
     id INT AUTO_INCREMENT PRIMARY KEY,
     barangay_id INT NOT NULL,
-    base_fare DECIMAL(10,2) NOT NULL COMMENT 'Minimum fare in pesos',
-    base_distance DECIMAL(10,2) NOT NULL COMMENT 'Distance covered by base fare in km',
-    per_km_rate DECIMAL(10,2) NOT NULL COMMENT 'Rate per additional km in pesos',
-    discount_senior DECIMAL(5,2) DEFAULT 20.00 COMMENT 'Senior/PWD discount percentage',
+    base_fare DECIMAL(10,2) NOT NULL,
+    base_distance DECIMAL(10,2) NOT NULL,
+    per_km_rate DECIMAL(10,2) NOT NULL,
+    discount_senior DECIMAL(5,2) DEFAULT 20.00,
+    discount_student DECIMAL(5,2) DEFAULT 10.00,
     effective_date DATE NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -106,20 +108,20 @@ CREATE TABLE fare_rates (
 ) ENGINE=InnoDB;
 
 -- ============================================
--- Trips table (with GPS tracking support)
+-- Trips (GPS-tracked)
 -- ============================================
 CREATE TABLE trips (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tricycle_id INT NULL,
     driver_id INT NOT NULL,
     fare_rate_id INT,
-    origin VARCHAR(255) NOT NULL COMMENT 'Pickup location/barangay',
-    destination VARCHAR(255) NOT NULL COMMENT 'Drop-off location/barangay',
-    distance_km DECIMAL(10,2) NOT NULL COMMENT 'Total distance in km',
-    computed_fare DECIMAL(10,2) COMMENT 'System-computed fare',
-    actual_fare DECIMAL(10,2) COMMENT 'Fare actually charged',
+    origin VARCHAR(255) NOT NULL,
+    destination VARCHAR(255) NOT NULL,
+    distance_km DECIMAL(10,2) NOT NULL DEFAULT 0,
+    computed_fare DECIMAL(10,2),
+    actual_fare DECIMAL(10,2),
     passenger_count INT DEFAULT 1,
-    status ENUM('active', 'completed', 'cancelled') NOT NULL DEFAULT 'completed',
+    status ENUM('active', 'completed', 'cancelled') NOT NULL DEFAULT 'active',
     started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ended_at TIMESTAMP NULL,
     start_lat DECIMAL(10,7) NULL,
@@ -129,28 +131,27 @@ CREATE TABLE trips (
     current_lat DECIMAL(10,7) NULL,
     current_lng DECIMAL(10,7) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (tricycle_id) REFERENCES tricycles(id) ON DELETE RESTRICT,
+    FOREIGN KEY (tricycle_id) REFERENCES tricycles(id) ON DELETE SET NULL,
     FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE RESTRICT,
     FOREIGN KEY (fare_rate_id) REFERENCES fare_rates(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- ============================================
--- GPS breadcrumb locations for route tracking
+-- Trip GPS Breadcrumbs
 -- ============================================
 CREATE TABLE trip_locations (
     id INT AUTO_INCREMENT PRIMARY KEY,
     trip_id INT NOT NULL,
     latitude DECIMAL(10,7) NOT NULL,
     longitude DECIMAL(10,7) NOT NULL,
-    distance_from_prev DECIMAL(10,4) DEFAULT 0 COMMENT 'Distance from previous point in km',
+    distance_from_prev DECIMAL(10,4) DEFAULT 0,
     recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE,
-    INDEX idx_trip_id (trip_id),
-    INDEX idx_recorded_at (recorded_at)
+    INDEX idx_trip_id (trip_id)
 ) ENGINE=InnoDB;
 
 -- ============================================
--- Complaints (via QR code)
+-- Complaints
 -- ============================================
 CREATE TABLE complaints (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -191,7 +192,7 @@ CREATE TABLE violations (
 ) ENGINE=InnoDB;
 
 -- ============================================
--- Bookings table (ride requests from passengers)
+-- Bookings (ride requests)
 -- ============================================
 CREATE TABLE bookings (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -224,26 +225,55 @@ CREATE TABLE bookings (
 ) ENGINE=InnoDB;
 
 -- ============================================
--- Default admin account
--- Email: admin@todashare.com | Password: admin123
+-- Notifications
+-- ============================================
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NULL,
+    role_target ENUM('admin', 'driver', 'passenger', 'barangay') NULL,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    message TEXT,
+    is_read TINYINT(1) DEFAULT 0,
+    link VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_read (user_id, is_read),
+    INDEX idx_role_read (role_target, is_read)
+) ENGINE=InnoDB;
+
+-- ============================================
+-- Default Admin Account
+-- Email: admin@todasure.com | Password: admin123
 -- ============================================
 INSERT INTO users (username, email, password, first_name, last_name, role) VALUES
 ('admin', 'admin@todasure.com', '$2y$10$9jVcLLrnnZTyspe/OypgXeCxUhdYkqGXhMZTm5Ar9rDhyVluWjreW', 'System', 'Administrator', 'admin');
 
 -- ============================================
--- Sample barangays
+-- Nasugbu Barangays (44 barangays)
 -- ============================================
-INSERT INTO barangays (name, municipality, province) VALUES
-('Poblacion', 'Nasugbu', 'Batangas'),
-('San Isidro', 'Nasugbu', 'Batangas'),
-('Santa Cruz', 'Nasugbu', 'Batangas');
+INSERT INTO barangays (name) VALUES
+('Aga'), ('Balaytigui'), ('Banilad'),
+('Barangay 1 (Poblacion)'), ('Barangay 2 (Poblacion)'), ('Barangay 3 (Poblacion)'),
+('Barangay 4 (Poblacion)'), ('Barangay 5 (Poblacion)'), ('Barangay 6 (Poblacion)'),
+('Barangay 7 (Poblacion)'), ('Barangay 8 (Poblacion)'), ('Barangay 9 (Poblacion)'),
+('Barangay 10 (Poblacion)'), ('Barangay 11 (Poblacion)'), ('Barangay 12 (Poblacion)'),
+('Bilaran'), ('Bucana'), ('Bulihan'), ('Bunducan'), ('Butucan'),
+('Calayo'), ('Catandaan'), ('Cogunan'), ('Dayap'),
+('Kaylaway'), ('Kayrilaw'), ('Latag'), ('Looc'), ('Lumbangan'),
+('Malapad na Bato'), ('Mataas na Pulo'), ('Natipuan'), ('Pantalan'), ('Papaya'),
+('Putat'), ('Red Gate'), ('Reparo'), ('San Diego'), ('San Isidro'),
+('Santa Cruz'), ('Sinala'), ('Tumalim'), ('Utod'), ('Wawa');
 
 -- ============================================
--- Sample fare rates
+-- Default TODA
+-- ============================================
+INSERT INTO todas (name, barangay_id) VALUES ('Nasugbu TODA', 1);
+
+-- ============================================
+-- Sample Fare Rates
 -- ============================================
 INSERT INTO fare_rates (barangay_id, base_fare, base_distance, per_km_rate, effective_date) VALUES
 (1, 15.00, 1.00, 5.00, '2026-01-01'),
-(2, 15.00, 1.00, 5.50, '2026-01-01'),
-(3, 12.00, 0.80, 5.00, '2026-01-01');
-
-
+(39, 15.00, 1.00, 5.50, '2026-01-01'),
+(40, 12.00, 0.80, 5.00, '2026-01-01');

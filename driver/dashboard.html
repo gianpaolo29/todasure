@@ -10,124 +10,194 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        :root{--d-bg:#ffffff;--d-bg-alt:#f8fafc;--d-bg-muted:#f1f5f9;--d-text:#0f172a;--d-text-sec:#374151;--d-text-muted:#64748b;--d-text-faint:#9ca3af;--d-border:#f1f5f9;--d-line:#e2e8f0;--d-green:#10b981;--d-green-dark:#059669;--d-green-bg:#f0fdf4;--d-green-border:#bbf7d0;--d-shadow:rgba(0,0,0,.08);--d-card:#ffffff;--d-overlay:rgba(255,255,255,.92)}
+        [data-theme="dark"]{--d-bg:#0f172a;--d-bg-alt:#1e293b;--d-bg-muted:#334155;--d-text:#f1f5f9;--d-text-sec:#cbd5e1;--d-text-muted:#94a3b8;--d-text-faint:#64748b;--d-border:#1e293b;--d-line:#334155;--d-green:#10b981;--d-green-dark:#34d399;--d-green-bg:rgba(16,185,129,.1);--d-green-border:rgba(16,185,129,.25);--d-shadow:rgba(0,0,0,.4);--d-card:#1e293b;--d-overlay:rgba(15,23,42,.92)}
+
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Inter',sans-serif;background:#000;color:#1e293b;height:100vh;height:100dvh;overflow:hidden;position:relative}
+        body{font-family:'Inter',sans-serif;background:var(--d-bg-muted);color:var(--d-text);height:100vh;height:100dvh;overflow:hidden;position:relative}
 
         #map{position:absolute;inset:0;z-index:0}
 
-        /* ── Top Bar (desktop) ── */
-        .top-bar{position:absolute;top:0;left:0;right:0;z-index:40;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+        /* ── Top Bar ── */
+        .top-bar{position:absolute;top:0;left:0;right:0;z-index:40;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
         .top-bar>*{pointer-events:auto}
-        .top-btn{width:40px;height:40px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#1e293b;transition:all .2s}
-        .top-btn:active{transform:scale(.95)}
-        .top-brand{font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4)}
+        .top-left{display:flex;align-items:center;gap:12px}
+        .top-brand{font-size:17px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);letter-spacing:-.5px}
         .top-right{display:flex;gap:8px;align-items:center}
+        .top-btn{width:42px;height:42px;border-radius:50%;background:var(--d-card);border:none;box-shadow:0 2px 12px var(--d-shadow);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--d-text);transition:all .2s}
+        .top-btn:active{transform:scale(.92)}
 
-        /* ── Online/Offline Toggle ── */
-        .status-toggle{display:flex;align-items:center;gap:10px;background:#fff;border-radius:50px;padding:6px 16px 6px 6px;box-shadow:0 2px 12px rgba(0,0,0,.12);cursor:pointer;border:none;font-family:inherit}
-        .status-dot{width:12px;height:12px;border-radius:50%;transition:background .3s}
-        .status-dot.online{background:#10b981}
+        /* ── Online/Offline Pill Toggle ── */
+        .status-toggle{display:flex;align-items:center;gap:8px;background:var(--d-card);border-radius:50px;padding:6px 14px 6px 8px;box-shadow:0 2px 12px var(--d-shadow);cursor:pointer;border:none;font-family:inherit;transition:all .3s}
+        .status-toggle:active{transform:scale(.96)}
+        .status-dot{width:10px;height:10px;border-radius:50%;transition:all .3s;position:relative}
+        .status-dot.online{background:var(--d-green);box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+        .status-dot.online::after{content:'';position:absolute;inset:-3px;border-radius:50%;background:rgba(16,185,129,.3);animation:statusPulse 2s infinite}
         .status-dot.offline{background:#9ca3af}
-        .status-label{font-size:13px;font-weight:600;color:#374151}
+        @keyframes statusPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:0}}
+        .status-label{font-size:12px;font-weight:700;color:var(--d-text-sec);text-transform:uppercase;letter-spacing:.3px}
 
         /* ── Bottom Sheet ── */
-        .sheet{position:absolute;bottom:0;left:0;right:0;z-index:30;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.1);max-height:70vh;overflow-y:auto;transition:transform .3s ease}
-        .sheet-handle{width:36px;height:4px;background:#d1d5db;border-radius:4px;margin:10px auto 0}
-        .sheet-body{padding:16px 20px 100px}
+        .sheet{position:absolute;bottom:0;left:0;right:0;z-index:30;background:var(--d-card);border-radius:24px 24px 0 0;box-shadow:0 -8px 40px var(--d-shadow);max-height:72vh;overflow-y:auto;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+        .sheet-handle{width:40px;height:5px;background:var(--d-line);border-radius:5px;margin:12px auto 0}
+        .sheet-body{padding:20px 20px 100px}
 
         /* ── Bottom Nav (mobile) ── */
-        .bottom-nav{position:absolute;bottom:0;left:0;right:0;z-index:50;background:#fff;border-top:1px solid #f1f5f9;display:flex;padding:8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom))}
-        .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;border:none;background:none;font-family:inherit;color:#9ca3af;font-size:10px;font-weight:600;transition:color .2s}
-        .nav-item.active{color:#10b981}
-        .nav-item i{font-size:18px}
+        .bottom-nav{position:absolute;bottom:0;left:0;right:0;z-index:50;background:var(--d-card);border-top:1px solid var(--d-border);display:flex;padding:6px 0;padding-bottom:max(6px,env(safe-area-inset-bottom));backdrop-filter:blur(10px)}
+        .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;cursor:pointer;border:none;background:none;font-family:inherit;color:var(--d-text-faint);font-size:10px;font-weight:600;transition:all .2s}
+        .nav-item.active{color:var(--d-green)}
+        .nav-item.active i{transform:scale(1.1)}
+        .nav-item i{font-size:20px;transition:transform .2s}
 
         /* ── Desktop Top Nav ── */
         .desktop-nav{display:none}
 
-        /* ── Incoming Ride Card ── */
-        .ride-card{background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 4px 16px rgba(0,0,0,.08);animation:slideUp .4s ease}
-        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        .ride-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-        .ride-card-header h3{font-size:16px;font-weight:700;color:#0f172a}
-        .ride-card-header .badge{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600}
-        .ride-route{display:flex;gap:12px;margin-bottom:16px}
-        .ride-dots{display:flex;flex-direction:column;align-items:center;padding:4px 0}
-        .ride-dots .dot{width:10px;height:10px;border-radius:50%}
-        .ride-dots .line{width:2px;flex:1;background:#e2e8f0;margin:4px 0}
-        .ride-addrs{flex:1}
-        .ride-addr{font-size:13px;color:#64748b;padding:2px 0}
-        .ride-addr strong{color:#0f172a}
-        .ride-stats{display:flex;gap:10px;margin-bottom:16px}
-        .ride-stat{flex:1;text-align:center;background:#f8fafc;border-radius:10px;padding:10px}
-        .ride-stat .v{font-size:18px;font-weight:800;color:#0f172a}
-        .ride-stat .l{font-size:10px;color:#9ca3af;margin-top:2px;text-transform:uppercase}
-        .ride-stat.green .v{color:#10b981}
-        .ride-btns{display:flex;gap:10px}
-        .ride-btns button{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .2s}
-        .btn-accept{background:#10b981;color:#fff}
-        .btn-accept:hover{background:#059669}
-        .btn-decline{background:#f1f5f9;color:#64748b}
-        .btn-decline:hover{background:#e2e8f0}
-        .btn-action{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .2s}
-        .btn-start{background:#10b981;color:#fff}
-        .btn-start:hover{background:#059669}
-        .btn-end{background:#ef4444;color:#fff;animation:pulse 2s ease-in-out infinite}
-        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 10px rgba(239,68,68,0)}}
+        /* ── Status Display ── */
+        .status-display{text-align:center;padding:20px 0}
+        .status-display .status-icon{width:72px;height:72px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:12px}
+        .status-display .status-icon.online-icon{background:var(--d-green-bg);color:var(--d-green);border:2px solid var(--d-green-border);animation:breathe 3s ease-in-out infinite}
+        .status-display .status-icon.offline-icon{background:var(--d-bg-muted);color:var(--d-text-faint);border:2px solid var(--d-line)}
+        @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        .status-display h2{font-size:20px;font-weight:800;margin-bottom:4px}
+        .status-display p{font-size:13px;color:var(--d-text-faint)}
 
-        /* ── Driver Info ── */
-        .driver-info-card{background:#f8fafc;border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:12px}
-        .driver-info-card .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0}
+        /* ── Incoming Ride Card ── */
+        .ride-card{background:var(--d-card);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:0 4px 24px var(--d-shadow);border:1px solid var(--d-border);animation:slideUp .4s cubic-bezier(.4,0,.2,1)}
+        @keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+        .ride-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+        .ride-card-header h3{font-size:15px;font-weight:700;color:var(--d-text)}
+        .ride-card-header .badge{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600}
+        .ride-route{display:flex;gap:12px;margin-bottom:18px}
+        .ride-dots{display:flex;flex-direction:column;align-items:center;padding:4px 0}
+        .ride-dots .dot{width:12px;height:12px;border-radius:50%;border:3px solid}
+        .ride-dots .dot.pickup{border-color:var(--d-green);background:var(--d-green-bg)}
+        .ride-dots .dot.dropoff{border-color:#ef4444;background:#fef2f2}
+        .ride-dots .line{width:2px;flex:1;background:linear-gradient(to bottom,var(--d-green),#ef4444);margin:4px 0;border-radius:2px}
+        .ride-addrs{flex:1}
+        .ride-addr{font-size:13px;color:var(--d-text-muted);padding:2px 0}
+        .ride-addr strong{color:var(--d-text);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+        .ride-stats{display:flex;gap:10px;margin-bottom:18px}
+        .ride-stat{flex:1;text-align:center;background:var(--d-bg-alt);border-radius:14px;padding:12px 8px;border:1px solid var(--d-border)}
+        .ride-stat .v{font-size:20px;font-weight:800;color:var(--d-text)}
+        .ride-stat .l{font-size:10px;color:var(--d-text-faint);margin-top:2px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+        .ride-stat.green .v{color:var(--d-green)}
+        .ride-btns{display:flex;gap:10px}
+        .ride-btns button{flex:1;padding:14px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .2s}
+        .ride-btns button:active{transform:scale(.97)}
+        .btn-accept{background:var(--d-green);color:#fff;box-shadow:0 4px 16px rgba(16,185,129,.3)}
+        .btn-accept:hover{background:var(--d-green-dark)}
+        .btn-decline{background:var(--d-bg-muted);color:var(--d-text-muted)}
+        .btn-decline:hover{background:var(--d-line)}
+        .btn-action{width:100%;padding:16px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .2s}
+        .btn-action:active{transform:scale(.97)}
+        .btn-start{background:var(--d-green);color:#fff;box-shadow:0 4px 16px rgba(16,185,129,.3)}
+        .btn-start:hover{background:var(--d-green-dark)}
+        .btn-end{background:#ef4444;color:#fff;animation:pulseEnd 2s ease-in-out infinite}
+        @keyframes pulseEnd{0%,100%{box-shadow:0 4px 16px rgba(239,68,68,.3)}50%{box-shadow:0 4px 24px rgba(239,68,68,.5)}}
+
+        /* ── Driver/Passenger Info Card ── */
+        .driver-info-card{background:var(--d-bg-alt);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:14px;border:1px solid var(--d-border)}
+        .driver-info-card .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0}
         .driver-info-card .info{flex:1}
-        .driver-info-card .name{font-size:14px;font-weight:600;color:#0f172a}
-        .driver-info-card .sub{font-size:12px;color:#9ca3af}
+        .driver-info-card .name{font-size:14px;font-weight:600;color:var(--d-text)}
+        .driver-info-card .sub{font-size:12px;color:var(--d-text-faint)}
 
         /* ── Live Trip Stats ── */
         .live-stats{display:flex;gap:8px;margin-bottom:16px}
-        .live-stat{flex:1;text-align:center;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px}
-        .live-stat .v{font-size:22px;font-weight:800;color:#059669}
-        .live-stat .l{font-size:10px;color:#6b7280;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+        .live-stat{flex:1;text-align:center;background:var(--d-green-bg);border:1px solid var(--d-green-border);border-radius:14px;padding:14px 8px}
+        .live-stat .v{font-size:22px;font-weight:800;color:var(--d-green-dark)}
+        .live-stat .l{font-size:10px;color:var(--d-text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+
+        /* ── Completion ── */
+        .complete-card{text-align:center;padding:20px 0}
+        .complete-icon{width:64px;height:64px;border-radius:50%;background:var(--d-green-bg);border:2px solid var(--d-green-border);display:inline-flex;align-items:center;justify-content:center;font-size:28px;color:var(--d-green);margin-bottom:14px;animation:popIn .5s cubic-bezier(.175,.885,.32,1.275)}
+        @keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+        .complete-fare{font-size:36px;font-weight:800;color:var(--d-green-dark);margin:8px 0}
+        .complete-stats{display:flex;gap:16px;justify-content:center;margin-bottom:20px}
+        .complete-stat{text-align:center}
+        .complete-stat .v{font-size:18px;font-weight:700;color:var(--d-text)}
+        .complete-stat .l{font-size:10px;color:var(--d-text-faint);text-transform:uppercase;letter-spacing:.5px}
+        .complete-divider{width:1px;background:var(--d-line)}
+
+        /* ── Violation Alert ── */
+        .violation-alert{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px 14px;margin-top:16px;font-size:13px;color:#dc2626;display:flex;align-items:center;gap:8px}
+        [data-theme="dark"] .violation-alert{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2)}
 
         /* ── Earnings Tab ── */
-        .earnings-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-        .earn-card{background:#f8fafc;border-radius:12px;padding:14px;text-align:center}
-        .earn-card .amount{font-size:20px;font-weight:800;color:#0f172a}
-        .earn-card .label{font-size:11px;color:#9ca3af;margin-top:2px}
-        .earn-card .trips{font-size:11px;color:#6b7280;margin-top:4px}
+        .earnings-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+        .earn-card{background:var(--d-bg-alt);border-radius:14px;padding:16px 10px;text-align:center;border:1px solid var(--d-border)}
+        .earn-card .amount{font-size:18px;font-weight:800;color:var(--d-green-dark)}
+        .earn-card .label{font-size:11px;color:var(--d-text-faint);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+        .earn-card .trips{font-size:11px;color:var(--d-text-muted);margin-top:6px;background:var(--d-bg-muted);border-radius:20px;padding:3px 8px;display:inline-block}
 
         /* ── Profile Tab ── */
-        .profile-header{text-align:center;padding:24px 0 16px}
-        .profile-header .p-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;margin-bottom:10px}
-        .profile-header .p-name{font-size:18px;font-weight:700;color:#0f172a}
-        .profile-header .p-sub{font-size:13px;color:#9ca3af}
-        .profile-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+        .profile-header{text-align:center;padding:24px 0 20px}
+        .profile-header .p-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;margin-bottom:12px;box-shadow:0 4px 16px rgba(16,185,129,.3)}
+        .profile-header .p-name{font-size:20px;font-weight:800;color:var(--d-text)}
+        .profile-header .p-sub{font-size:13px;color:var(--d-text-faint);margin-top:2px}
+        .profile-section{background:var(--d-bg-alt);border-radius:16px;padding:4px 0;border:1px solid var(--d-border);margin-bottom:16px}
+        .profile-row{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--d-border)}
         .profile-row:last-child{border-bottom:none}
-        .profile-row i{width:20px;text-align:center;color:#9ca3af;font-size:15px}
-        .profile-row .pr-label{font-size:11px;color:#9ca3af}
-        .profile-row .pr-value{font-size:14px;color:#0f172a;font-weight:500}
+        .profile-row .pr-icon{width:34px;height:34px;border-radius:10px;background:var(--d-bg-muted);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .profile-row .pr-icon i{font-size:14px;color:var(--d-text-faint)}
+        .profile-row .pr-content{flex:1}
+        .profile-row .pr-label{font-size:11px;color:var(--d-text-faint);font-weight:500;margin-bottom:1px}
+        .profile-row .pr-value{font-size:14px;color:var(--d-text);font-weight:600}
+        .btn-logout{width:100%;padding:14px;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:inherit;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;transition:all .2s}
+        .btn-logout:active{transform:scale(.97)}
+        [data-theme="dark"] .btn-logout{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2)}
 
         /* ── Recent Trips ── */
-        .trip-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9}
+        .section-title{font-size:14px;font-weight:700;color:var(--d-text);margin-bottom:12px}
+        .trip-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--d-border)}
         .trip-item:last-child{border-bottom:none}
-        .trip-item .trip-route{font-size:13px;color:#374151}
-        .trip-item .trip-meta{font-size:11px;color:#9ca3af}
-        .trip-item .trip-fare{font-size:14px;font-weight:700;color:#059669}
+        .trip-item .trip-route{font-size:13px;color:var(--d-text-sec);font-weight:500}
+        .trip-item .trip-meta{font-size:11px;color:var(--d-text-faint);margin-top:2px}
+        .trip-item .trip-fare{font-size:14px;font-weight:700;color:var(--d-green-dark)}
+
+        /* ── SweetAlert Theme ── */
+        .swal2-popup{background:var(--d-card)!important;color:var(--d-text)!important;border-radius:20px!important;box-shadow:0 16px 48px rgba(0,0,0,.2)!important;max-width:calc(100vw - 32px)!important;width:auto!important;padding:24px 20px!important;font-size:14px!important}
+        .swal2-title{color:var(--d-text)!important;font-size:18px!important}
+        .swal2-html-container{color:var(--d-text-sec)!important;font-size:13px!important}
+        .swal2-container.swal2-backdrop-show{background:rgba(0,0,0,.3)!important}
+        .swal2-input{background:var(--d-bg-alt)!important;color:var(--d-text)!important;border-color:var(--d-line)!important;border-radius:12px!important}
+        .swal2-validation-message{background:var(--d-bg-alt)!important;color:#ef4444!important}
+        .swal2-actions{gap:8px!important}
+        .swal2-actions button{font-size:14px!important;padding:10px 20px!important;border-radius:12px!important}
+        .swal2-icon{width:56px!important;height:56px!important;margin:0 auto 8px!important}
+        @media(max-width:480px){
+            .swal2-popup{padding:20px 16px!important}
+            .swal2-title{font-size:16px!important}
+            .swal2-html-container{font-size:12px!important}
+            .swal2-actions button{font-size:13px!important;padding:10px 16px!important}
+            .swal2-icon{width:48px!important;height:48px!important}
+        }
 
         .hidden{display:none!important}
+
+        /* ── Theme Toggle ── */
+        .map-theme-btn{width:42px;height:42px;border-radius:50%;background:var(--d-card);border:none;box-shadow:0 2px 12px var(--d-shadow);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--d-text);transition:all .2s}
+        .map-theme-btn:active{transform:scale(.92)}
 
         /* ── Desktop ── */
         @media(min-width:768px){
             .bottom-nav{display:none}
-            .desktop-nav{display:flex;gap:4px;background:#fff;border-radius:50px;padding:4px;box-shadow:0 2px 12px rgba(0,0,0,.12)}
-            .desktop-nav button{padding:8px 16px;border-radius:50px;border:none;background:none;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
-            .desktop-nav button.active{background:#10b981;color:#fff}
-            .desktop-nav button:hover:not(.active){background:#f1f5f9}
-            .sheet{width:400px;left:24px;transform:none;border-radius:20px;bottom:24px;max-height:calc(100vh - 100px)}
-            .sheet-body{padding:16px 20px 20px}
+            .desktop-nav{display:flex;gap:4px;background:var(--d-card);border-radius:50px;padding:4px;box-shadow:0 2px 16px var(--d-shadow)}
+            .desktop-nav button{padding:8px 18px;border-radius:50px;border:none;background:none;font-size:13px;font-weight:600;color:var(--d-text-muted);cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
+            .desktop-nav button.active{background:var(--d-green);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.3)}
+            .desktop-nav button:hover:not(.active){background:var(--d-bg-muted)}
+            .sheet{width:400px;left:24px;border-radius:20px;bottom:24px;max-height:calc(100vh - 100px)}
+            .sheet-body{padding:20px 20px 24px}
         }
 
         @media(min-width:1024px){
             .sheet{width:420px}
         }
+
+        /* ── Scrollbar ── */
+        .sheet::-webkit-scrollbar{width:4px}
+        .sheet::-webkit-scrollbar-track{background:transparent}
+        .sheet::-webkit-scrollbar-thumb{background:var(--d-line);border-radius:4px}
     </style>
 </head>
 <body>
@@ -135,7 +205,7 @@
 
     <!-- Top Bar -->
     <div class="top-bar">
-        <div style="display:flex;align-items:center;gap:10px">
+        <div class="top-left">
             <span class="top-brand">TODASURE</span>
             <button class="status-toggle" id="statusToggle">
                 <span class="status-dot online" id="statusDot"></span>
@@ -149,6 +219,7 @@
                 <button onclick="switchTab('earnings')"><i class="fa-solid fa-peso-sign" style="margin-right:4px"></i> Earnings</button>
                 <button onclick="switchTab('profile')"><i class="fa-solid fa-user" style="margin-right:4px"></i> Profile</button>
             </div>
+            <button class="map-theme-btn" onclick="themeToggle()" id="themeBtn"><i class="fas fa-moon"></i></button>
             <button class="top-btn" id="myLocBtn"><i class="fa-solid fa-location-crosshairs"></i></button>
         </div>
     </div>
@@ -160,12 +231,15 @@
 
             <!-- Home Tab -->
             <div id="tabHome">
-                <!-- Idle state (no active booking) -->
+                <!-- Idle state -->
                 <div id="stateIdle">
-                    <h3 style="font-size:16px;font-weight:700;margin-bottom:4px;color:#0f172a">Ready to ride?</h3>
-                    <p style="font-size:13px;color:#9ca3af;margin-bottom:16px">Go online to start receiving bookings</p>
-                    <div id="violationAlert" class="hidden" style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#dc2626">
-                        <i class="fa-solid fa-triangle-exclamation" style="margin-right:4px"></i> <span id="violationText"></span>
+                    <div class="status-display">
+                        <div class="status-icon online-icon" id="idleStatusIcon"><i class="fa-solid fa-wifi"></i></div>
+                        <h2 id="idleStatusTitle">You're Online</h2>
+                        <p id="idleStatusSub">Waiting for ride requests...</p>
+                    </div>
+                    <div id="violationAlert" class="violation-alert hidden">
+                        <i class="fa-solid fa-triangle-exclamation"></i> <span id="violationText"></span>
                     </div>
                 </div>
 
@@ -178,13 +252,13 @@
                         </div>
                         <div class="ride-route">
                             <div class="ride-dots">
-                                <div class="dot" style="background:#10b981"></div>
+                                <div class="dot pickup"></div>
                                 <div class="line"></div>
-                                <div class="dot" style="background:#ef4444"></div>
+                                <div class="dot dropoff"></div>
                             </div>
                             <div class="ride-addrs">
                                 <div class="ride-addr"><strong>Pickup</strong><br><span id="bookingFrom">--</span></div>
-                                <div class="ride-addr" style="margin-top:8px"><strong>Drop-off</strong><br><span id="bookingTo">--</span></div>
+                                <div class="ride-addr" style="margin-top:10px"><strong>Drop-off</strong><br><span id="bookingTo">--</span></div>
                             </div>
                         </div>
                         <div class="ride-stats">
@@ -203,8 +277,8 @@
                 <div id="stateAccepted" class="hidden">
                     <div class="ride-card">
                         <div class="ride-card-header">
-                            <h3><i class="fa-solid fa-route" style="color:#10b981;margin-right:6px"></i> Navigate to Pickup</h3>
-                            <span class="badge" style="background:#d1fae5;color:#059669">Accepted</span>
+                            <h3><i class="fa-solid fa-route" style="color:var(--d-green);margin-right:6px"></i> Navigate to Pickup</h3>
+                            <span class="badge" style="background:var(--d-green-bg);color:var(--d-green-dark)">Accepted</span>
                         </div>
                         <div class="driver-info-card">
                             <div class="avatar" id="passengerInitial">P</div>
@@ -212,13 +286,12 @@
                                 <div class="name" id="passengerName">Passenger</div>
                                 <div class="sub" id="passengerPhone">--</div>
                             </div>
-                            <button class="top-btn" style="width:36px;height:36px;font-size:14px;color:#10b981" id="callPassenger"><i class="fa-solid fa-phone"></i></button>
                         </div>
                         <div class="ride-route">
-                            <div class="ride-dots"><div class="dot" style="background:#10b981"></div><div class="line"></div><div class="dot" style="background:#ef4444"></div></div>
+                            <div class="ride-dots"><div class="dot pickup"></div><div class="line"></div><div class="dot dropoff"></div></div>
                             <div class="ride-addrs">
-                                <div class="ride-addr"><span id="acceptedPickup">--</span></div>
-                                <div class="ride-addr" style="margin-top:8px"><span id="acceptedDropoff">--</span></div>
+                                <div class="ride-addr"><strong>Pickup</strong><br><span id="acceptedPickup">--</span></div>
+                                <div class="ride-addr" style="margin-top:10px"><strong>Drop-off</strong><br><span id="acceptedDropoff">--</span></div>
                             </div>
                         </div>
                         <button class="btn-action btn-start" onclick="startTrip()"><i class="fa-solid fa-play" style="margin-right:6px"></i> Arrived - Start Trip</button>
@@ -229,7 +302,7 @@
                 <div id="stateTrip" class="hidden">
                     <div class="live-stats">
                         <div class="live-stat"><div class="v" id="liveDist">0.00</div><div class="l">km</div></div>
-                        <div class="live-stat"><div class="v" id="liveFare">₱0</div><div class="l">fare</div></div>
+                        <div class="live-stat"><div class="v" id="liveFare">&#8369;0</div><div class="l">fare</div></div>
                         <div class="live-stat"><div class="v" id="liveTime">00:00</div><div class="l">time</div></div>
                     </div>
                     <div class="driver-info-card">
@@ -244,14 +317,14 @@
 
                 <!-- Trip complete -->
                 <div id="stateComplete" class="hidden">
-                    <div style="text-align:center;padding:16px 0">
-                        <div style="width:56px;height:56px;border-radius:50%;background:#d1fae5;display:inline-flex;align-items:center;justify-content:center;font-size:24px;color:#059669;margin-bottom:12px"><i class="fa-solid fa-check"></i></div>
-                        <h3 style="font-size:18px;font-weight:700;color:#0f172a">Trip Completed!</h3>
-                        <div style="font-size:32px;font-weight:800;color:#059669;margin:8px 0" id="completeFare">₱0.00</div>
-                        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px">
-                            <div style="text-align:center"><div style="font-size:16px;font-weight:700;color:#0f172a" id="completeDist">--</div><div style="font-size:10px;color:#9ca3af">km</div></div>
-                            <div style="width:1px;background:#e2e8f0"></div>
-                            <div style="text-align:center"><div style="font-size:16px;font-weight:700;color:#0f172a" id="completeTime">--</div><div style="font-size:10px;color:#9ca3af">duration</div></div>
+                    <div class="complete-card">
+                        <div class="complete-icon"><i class="fa-solid fa-check"></i></div>
+                        <h3 style="font-size:18px;font-weight:700;color:var(--d-text)">Trip Completed!</h3>
+                        <div class="complete-fare" id="completeFare">&#8369;0.00</div>
+                        <div class="complete-stats">
+                            <div class="complete-stat"><div class="v" id="completeDist">--</div><div class="l">km</div></div>
+                            <div class="complete-divider"></div>
+                            <div class="complete-stat"><div class="v" id="completeTime">--</div><div class="l">duration</div></div>
                         </div>
                         <button class="btn-action btn-start" onclick="resetToIdle()">Done</button>
                     </div>
@@ -260,14 +333,14 @@
 
             <!-- Earnings Tab -->
             <div id="tabEarnings" class="hidden">
-                <h3 style="font-size:16px;font-weight:700;margin-bottom:14px;color:#0f172a">Earnings</h3>
+                <h3 class="section-title" style="font-size:16px;margin-bottom:14px">Earnings</h3>
                 <div class="earnings-grid">
-                    <div class="earn-card"><div class="amount" id="earnToday">₱0</div><div class="label">Today</div><div class="trips" id="tripsToday">0 trips</div></div>
-                    <div class="earn-card"><div class="amount" id="earnWeek">₱0</div><div class="label">This Week</div><div class="trips" id="tripsWeek">0 trips</div></div>
-                    <div class="earn-card"><div class="amount" id="earnMonth">₱0</div><div class="label">This Month</div><div class="trips" id="tripsMonth">0 trips</div></div>
+                    <div class="earn-card"><div class="amount" id="earnToday">&#8369;0</div><div class="label">Today</div><div class="trips" id="tripsToday">0 trips</div></div>
+                    <div class="earn-card"><div class="amount" id="earnWeek">&#8369;0</div><div class="label">This Week</div><div class="trips" id="tripsWeek">0 trips</div></div>
+                    <div class="earn-card"><div class="amount" id="earnMonth">&#8369;0</div><div class="label">This Month</div><div class="trips" id="tripsMonth">0 trips</div></div>
                 </div>
-                <h4 style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:10px">Recent Trips</h4>
-                <div id="recentTrips"><p style="font-size:13px;color:#9ca3af;text-align:center;padding:20px">No trips yet</p></div>
+                <h4 class="section-title">Recent Trips</h4>
+                <div id="recentTrips"><p style="font-size:13px;color:var(--d-text-faint);text-align:center;padding:20px">No trips yet</p></div>
             </div>
 
             <!-- Profile Tab -->
@@ -277,14 +350,16 @@
                     <div class="p-name" id="profName">Driver</div>
                     <div class="p-sub" id="profRole">Driver</div>
                 </div>
-                <div class="profile-row"><i class="fa-solid fa-user"></i><div><div class="pr-label">Full Name</div><div class="pr-value" id="profFullName">--</div></div></div>
-                <div class="profile-row"><i class="fa-solid fa-envelope"></i><div><div class="pr-label">Email</div><div class="pr-value" id="profEmail">--</div></div></div>
-                <div class="profile-row"><i class="fa-solid fa-phone"></i><div><div class="pr-label">Phone</div><div class="pr-value" id="profPhone">--</div></div></div>
-                <div class="profile-row"><i class="fa-solid fa-id-card"></i><div><div class="pr-label">License</div><div class="pr-value" id="profLicense">--</div></div></div>
-                <div class="profile-row"><i class="fa-solid fa-building"></i><div><div class="pr-label">TODA</div><div class="pr-value" id="profToda">--</div></div></div>
-                <div style="margin-top:16px">
-                    <button class="btn-action" style="background:#fee2e2;color:#dc2626" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px"></i> Logout</button>
+                <button onclick="editDriverProfile()" style="width:100%;padding:10px;background:var(--d-green-bg);border:1px solid var(--d-green-border);border-radius:10px;color:var(--d-green);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:14px"><i class="fa-solid fa-pen" style="margin-right:4px"></i> Edit Profile</button>
+                <div class="profile-section">
+                    <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-user"></i></div><div class="pr-content"><div class="pr-label">Full Name</div><div class="pr-value" id="profFullName">--</div></div></div>
+                    <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-envelope"></i></div><div class="pr-content"><div class="pr-label">Email</div><div class="pr-value" id="profEmail">--</div></div></div>
+                    <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-phone"></i></div><div class="pr-content"><div class="pr-label">Phone</div><div class="pr-value" id="profPhone">--</div></div></div>
+                    <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-address-book"></i></div><div class="pr-content"><div class="pr-label">Contact Number</div><div class="pr-value" id="profContact">--</div></div></div>
+                    <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-location-dot"></i></div><div class="pr-content"><div class="pr-label">Address</div><div class="pr-value" id="profAddress">--</div></div></div>
+                    <div class="profile-row"><div class="pr-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="pr-content"><div class="pr-label">Violations</div><div class="pr-value" id="profViolations">0</div></div></div>
                 </div>
+                <button class="btn-logout" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px"></i> Logout</button>
             </div>
         </div>
     </div>
@@ -296,20 +371,104 @@
         <button class="nav-item" onclick="switchTab('profile')"><i class="fa-solid fa-user"></i><span>Profile</span></button>
     </div>
 
+    <script src="../assets/js/theme.js"></script>
     <script src="../assets/js/guard.js"></script>
     <script src="../assets/js/api.js"></script>
     <script>
-        const GMAP_KEY = 'AIzaSyAVF_yekJbPdCQIoaWxzT4dHBIkjazhq6A';
+        // Update theme toggle button icon
+        function updateThemeBtn() {
+            const btn = document.getElementById('themeBtn');
+            if (!btn) return;
+            const theme = document.documentElement.getAttribute('data-theme');
+            btn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+        const _origToggle = window.themeToggle;
+        window.themeToggle = function() { _origToggle(); updateThemeBtn(); };
+        updateThemeBtn();
+
+        const GMAP_KEY = 'AIzaSyAn1_cTdPkaV1_ogWAIGd9gMXfdp4PxuJg';
         let gmap, driverMarker, currentPosition = null;
         let activeTrip = null, activeBookingData = null;
         let tripStartTime = null, timerInterval = null, updateInterval = null, bookingPollInterval = null;
         let isOnline = true;
+        let directionsService = null, directionsRenderer = null;
+        let pickupMarker = null, dropoffMarker = null;
+
+        // Helper: format currency
+        function formatCurrency(val) { return '\u20B1' + parseFloat(val || 0).toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:2}); }
+        function formatDate(d) { if (!d) return '--'; const dt = new Date(d); return dt.toLocaleDateString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+
+        // ── Update idle state display ──
+        function updateIdleDisplay() {
+            const icon = document.getElementById('idleStatusIcon');
+            const title = document.getElementById('idleStatusTitle');
+            const sub = document.getElementById('idleStatusSub');
+            if (isOnline) {
+                icon.className = 'status-icon online-icon';
+                icon.innerHTML = '<i class="fa-solid fa-wifi"></i>';
+                title.textContent = "You're Online";
+                sub.textContent = 'Waiting for ride requests...';
+            } else {
+                icon.className = 'status-icon offline-icon';
+                icon.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                title.textContent = "You're Offline";
+                sub.textContent = 'Go online to start receiving bookings';
+            }
+        }
+
+        // ── Show Route on Map ──
+        function showRoute(pickupLat, pickupLng, dropoffLat, dropoffLng) {
+            if (!directionsService || !directionsRenderer) return;
+            clearRoute();
+
+            // Add pickup marker (green)
+            pickupMarker = new google.maps.Marker({
+                position: { lat: pickupLat, lng: pickupLng },
+                map: gmap,
+                icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: '#10b981', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 },
+                title: 'Pickup'
+            });
+
+            // Add dropoff marker (red)
+            dropoffMarker = new google.maps.Marker({
+                position: { lat: dropoffLat, lng: dropoffLng },
+                map: gmap,
+                icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: '#ef4444', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 },
+                title: 'Drop-off'
+            });
+
+            directionsService.route({
+                origin: { lat: pickupLat, lng: pickupLng },
+                destination: { lat: dropoffLat, lng: dropoffLng },
+                travelMode: google.maps.TravelMode.DRIVING
+            }, function(result, status) {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+                    // Fit bounds to show full route
+                    const bounds = new google.maps.LatLngBounds();
+                    bounds.extend({ lat: pickupLat, lng: pickupLng });
+                    bounds.extend({ lat: dropoffLat, lng: dropoffLng });
+                    if (currentPosition) bounds.extend(currentPosition);
+                    gmap.fitBounds(bounds, { top: 80, bottom: 350, left: 20, right: 20 });
+                }
+            });
+        }
+
+        function clearRoute() {
+            if (directionsRenderer) directionsRenderer.setDirections({ routes: [] });
+            if (pickupMarker) { pickupMarker.setMap(null); pickupMarker = null; }
+            if (dropoffMarker) { dropoffMarker.setMap(null); dropoffMarker = null; }
+        }
 
         // ── Init Map ──
         function initMap() {
             gmap = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 14.0637, lng: 120.6283 }, zoom: 15,
-                disableDefaultUI: true, zoomControl: false, mapTypeId: 'roadmap'
+                disableDefaultUI: true, zoomControl: false, mapTypeId: 'roadmap',
+                styles: [
+                    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+                    { featureType: 'transit', stylers: [{ visibility: 'off' }] }
+                ]
             });
 
             // GPS
@@ -327,6 +486,14 @@
                     }
                 }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 });
             }
+
+            // Directions
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: gmap,
+                suppressMarkers: true,
+                polylineOptions: { strokeColor: '#10b981', strokeWeight: 5, strokeOpacity: 0.8 }
+            });
 
             document.getElementById('myLocBtn').addEventListener('click', () => {
                 if (currentPosition) { gmap.panTo(currentPosition); gmap.setZoom(16); }
@@ -349,6 +516,7 @@
             // Desktop nav
             document.querySelectorAll('.desktop-nav button').forEach((b,i) => b.classList.toggle('active', ['home','earnings','profile'][i] === tab));
             if (tab === 'earnings') loadEarnings();
+            if (tab === 'profile') loadProfile();
         }
 
         // ── Online/Offline Toggle ──
@@ -356,15 +524,17 @@
             isOnline = !isOnline;
             document.getElementById('statusDot').className = 'status-dot ' + (isOnline ? 'online' : 'offline');
             document.getElementById('statusLabel').textContent = isOnline ? 'Online' : 'Offline';
+            updateIdleDisplay();
             if (isOnline) {
                 bookingPollInterval = setInterval(pollBookings, 5000);
                 pollBookings();
-                Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'success',title:'You are now online'});
+                Swal.fire({icon:'success',title:'You\'re Online!',text:'Ready to receive ride requests.',confirmButtonColor:'#10b981',timer:2000,showConfirmButton:false});
             } else {
                 clearInterval(bookingPollInterval);
+                clearRoute();
                 document.getElementById('stateIncoming').classList.add('hidden');
                 document.getElementById('stateIdle').classList.remove('hidden');
-                Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'info',title:'You are now offline'});
+                Swal.fire({icon:'info',title:'You\'re Offline',text:'You won\'t receive ride requests.',confirmButtonColor:'#10b981',timer:2000,showConfirmButton:false});
             }
         });
 
@@ -389,9 +559,14 @@
             document.getElementById('bookingFrom').textContent = b.pickup_address || 'GPS Location';
             document.getElementById('bookingTo').textContent = b.dropoff_address || 'Destination';
             document.getElementById('bookingDist').textContent = (b.estimated_distance || '--') + ' km';
-            document.getElementById('bookingFare').textContent = '₱' + parseFloat(b.estimated_fare || 0).toFixed(0);
+            document.getElementById('bookingFare').textContent = '\u20B1' + parseFloat(b.estimated_fare || 0).toFixed(0);
             document.getElementById('bookingTime').textContent = new Date(b.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
             document.getElementById('pendingBookingId').value = b.id;
+
+            // Show route on map
+            if (b.pickup_lat && b.pickup_lng && b.dropoff_lat && b.dropoff_lng) {
+                showRoute(parseFloat(b.pickup_lat), parseFloat(b.pickup_lng), parseFloat(b.dropoff_lat), parseFloat(b.dropoff_lng));
+            }
         }
 
         function showActiveBooking(b) {
@@ -399,19 +574,23 @@
             document.getElementById('stateIdle').classList.add('hidden');
             document.getElementById('stateIncoming').classList.add('hidden');
 
+            // Show route on map for both accepted and in-progress
+            if (b.pickup_lat && b.pickup_lng && b.dropoff_lat && b.dropoff_lng) {
+                showRoute(parseFloat(b.pickup_lat), parseFloat(b.pickup_lng), parseFloat(b.dropoff_lat), parseFloat(b.dropoff_lng));
+            }
+
             if (b.status === 'accepted') {
                 document.getElementById('passengerName').textContent = (b.passenger_first||'')+' '+(b.passenger_last||'');
                 document.getElementById('passengerInitial').textContent = (b.passenger_first||'P')[0];
                 document.getElementById('passengerPhone').textContent = b.passenger_phone || '--';
                 document.getElementById('acceptedPickup').textContent = b.pickup_address || '--';
                 document.getElementById('acceptedDropoff').textContent = b.dropoff_address || '--';
-                document.getElementById('callPassenger').onclick = () => { if(b.passenger_phone) window.open('tel:'+b.passenger_phone); };
                 document.getElementById('stateAccepted').classList.remove('hidden');
                 document.getElementById('stateTrip').classList.add('hidden');
             } else if (b.status === 'in_progress') {
                 document.getElementById('tripPassengerName').textContent = (b.passenger_first||'')+' '+(b.passenger_last||'');
                 document.getElementById('tripPassengerInitial').textContent = (b.passenger_first||'P')[0];
-                document.getElementById('tripRoute').textContent = (b.pickup_address||'') + ' → ' + (b.dropoff_address||'');
+                document.getElementById('tripRoute').textContent = (b.pickup_address||'') + ' \u2192 ' + (b.dropoff_address||'');
                 document.getElementById('stateAccepted').classList.add('hidden');
                 document.getElementById('stateTrip').classList.remove('hidden');
                 if (!tripStartTime) { tripStartTime = Date.now(); timerInterval = setInterval(updateTimer, 1000); }
@@ -425,7 +604,7 @@
             if (!id) return;
             try {
                 await bookings.update(id, { status: 'accepted' });
-                Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'success',title:'Booking accepted!'});
+                Swal.fire({icon:'success',title:'Booking Accepted!',text:'Navigate to the pickup location.',confirmButtonColor:'#10b981',timer:2000,showConfirmButton:false});
                 pollBookings();
             } catch(e) {
                 if (e.message && e.message.includes('tricycle')) {
@@ -442,7 +621,10 @@
             }
         }
 
-        function declineBooking() {
+        async function declineBooking() {
+            const r = await Swal.fire({ title: 'Decline this ride?', icon: 'question', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Yes, decline', cancelButtonText: 'No', cancelButtonColor: '#9ca3af' });
+            if (!r.isConfirmed) return;
+            clearRoute();
             document.getElementById('stateIncoming').classList.add('hidden');
             document.getElementById('stateIdle').classList.remove('hidden');
         }
@@ -452,7 +634,7 @@
             if (!activeBookingData) return;
             try {
                 const result = await bookings.update(activeBookingData.id, { status: 'in_progress' });
-                Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'success',title:'Trip started!'});
+                Swal.fire({icon:'success',title:'Trip Started!',text:'Drive safely to the destination.',confirmButtonColor:'#10b981',timer:2000,showConfirmButton:false});
 
                 // Check for GPS trip
                 if (result.trip_id) {
@@ -492,7 +674,7 @@
                 const r = await apiRequest('../api/trips/gps.php?action=update', 'POST', { latitude: currentPosition.lat, longitude: currentPosition.lng });
                 if (r.distance_km !== undefined) {
                     document.getElementById('liveDist').textContent = parseFloat(r.distance_km).toFixed(2);
-                    document.getElementById('liveFare').textContent = '₱' + parseFloat(r.computed_fare).toFixed(0);
+                    document.getElementById('liveFare').textContent = '\u20B1' + parseFloat(r.computed_fare).toFixed(0);
                 }
             } catch(e) { /* Trip may not exist yet, ignore */ }
         }
@@ -510,16 +692,43 @@
 
             clearInterval(timerInterval); clearInterval(updateInterval);
             const elapsed = tripStartTime ? Math.floor((Date.now()-tripStartTime)/1000) : 0;
+
+            // Get current live fare as the computed estimate
+            const liveFareEl = document.getElementById('liveFare');
+            const liveFare = liveFareEl ? liveFareEl.textContent.replace('\u20B1','') : '0';
+            const estimatedFare = parseFloat(liveFare) || (activeBookingData ? parseFloat(activeBookingData.estimated_fare || 0) : 0);
+
+            // Prompt driver to enter actual fare charged
+            const fareResult = await Swal.fire({
+                title: 'Actual Fare Charged',
+                html: `<p style="margin-bottom:8px;color:var(--d-text-muted);">Computed fare: <strong style="color:var(--d-green);">\u20B1${estimatedFare.toFixed(2)}</strong></p>
+                       <p style="font-size:0.85rem;color:var(--d-text-faint);">Enter the actual amount collected from the passenger.</p>`,
+                input: 'number',
+                inputValue: estimatedFare.toFixed(2),
+                inputAttributes: { min: 0, step: '0.50' },
+                showCancelButton: true,
+                cancelButtonText: 'Use computed fare',
+                confirmButtonText: 'Submit',
+                confirmButtonColor: '#10b981',
+                inputValidator: (value) => {
+                    if (!value || parseFloat(value) <= 0) return 'Please enter a valid fare amount';
+                }
+            });
+
+            const actualFare = fareResult.isConfirmed ? parseFloat(fareResult.value) : null;
+
             let fare = 0, dist = 0;
 
-            // Try to end GPS trip
+            // End GPS trip with actual_fare included
             if (activeTrip && activeTrip.id) {
                 try {
-                    const result = await apiRequest('../api/trips/gps.php?action=end', 'POST', {
+                    const payload = {
                         destination: activeBookingData ? activeBookingData.dropoff_address : 'GPS End',
                         latitude: currentPosition?.lat, longitude: currentPosition?.lng
-                    });
-                    fare = result.computed_fare || 0;
+                    };
+                    if (actualFare !== null) payload.actual_fare = actualFare;
+                    const result = await apiRequest('../api/trips/gps.php?action=end', 'POST', payload);
+                    fare = result.actual_fare || result.computed_fare || 0;
                     dist = result.distance_km || 0;
                 } catch(e) { /* GPS trip may not exist */ }
             }
@@ -527,11 +736,11 @@
             // Complete booking
             if (activeBookingData) {
                 try { await bookings.update(activeBookingData.id, { status: 'completed' }); } catch(e) {}
-                if (fare === 0) fare = parseFloat(activeBookingData.estimated_fare || 0);
+                if (fare === 0) fare = actualFare || parseFloat(activeBookingData.estimated_fare || 0);
                 if (dist === 0) dist = parseFloat(activeBookingData.estimated_distance || 0);
             }
 
-            document.getElementById('completeFare').textContent = '₱' + parseFloat(fare).toFixed(2);
+            document.getElementById('completeFare').textContent = '\u20B1' + parseFloat(fare).toFixed(2);
             document.getElementById('completeDist').textContent = parseFloat(dist).toFixed(1);
             document.getElementById('completeTime').textContent = String(Math.floor(elapsed/60)).padStart(2,'0') + ':' + String(elapsed%60).padStart(2,'0');
 
@@ -543,6 +752,7 @@
         }
 
         function resetToIdle() {
+            clearRoute();
             document.getElementById('stateComplete').classList.add('hidden');
             document.getElementById('stateIdle').classList.remove('hidden');
         }
@@ -555,13 +765,14 @@
                     isOnline = true;
                     document.getElementById('statusDot').className = 'status-dot online';
                     document.getElementById('statusLabel').textContent = 'Online';
+                    updateIdleDisplay();
                     showActiveBooking(active);
                     if (active.status === 'in_progress') {
                         const tripStatus = await apiRequest('../api/trips/gps.php?action=status');
                         if (tripStatus.active) {
                             activeTrip = { id: tripStatus.trip.id, distance: parseFloat(tripStatus.trip.distance_km), fare: parseFloat(tripStatus.trip.computed_fare) };
                             document.getElementById('liveDist').textContent = activeTrip.distance.toFixed(2);
-                            document.getElementById('liveFare').textContent = '₱' + activeTrip.fare.toFixed(0);
+                            document.getElementById('liveFare').textContent = '\u20B1' + activeTrip.fare.toFixed(0);
                         }
                     }
                     bookingPollInterval = setInterval(pollBookings, 5000);
@@ -570,15 +781,98 @@
         }
 
         // ── Load Profile ──
+        let sessionData = null;
+        let driverData = null;
+
         async function loadProfile() {
             try {
-                const s = await auth.session();
-                const name = ((s.first_name||'') + ' ' + (s.last_name||'')).trim();
+                sessionData = await auth.session();
+                const name = ((sessionData.first_name||'') + ' ' + (sessionData.last_name||'')).trim();
                 document.getElementById('profName').textContent = name || 'Driver';
-                document.getElementById('profInitial').textContent = (s.first_name||'D')[0];
+                document.getElementById('profInitial').textContent = (sessionData.first_name||'D')[0];
                 document.getElementById('profFullName').textContent = name || '--';
-                document.getElementById('profEmail').textContent = s.email || '--';
+                document.getElementById('profEmail').textContent = sessionData.email || '--';
+                document.getElementById('profPhone').textContent = sessionData.phone || '--';
+                document.getElementById('profRole').textContent = sessionData.role ? sessionData.role.charAt(0).toUpperCase() + sessionData.role.slice(1) : 'Driver';
+
+                try {
+                    const stats = await dashboard.driverStats();
+                    driverData = stats.driver || null;
+                    if (driverData) {
+                        document.getElementById('profContact').textContent = driverData.contact_number || sessionData.phone || '--';
+                        document.getElementById('profAddress').textContent = driverData.address || '--';
+                    }
+                    document.getElementById('profViolations').textContent = (stats.violations || 0) + ' violation(s)';
+                } catch(e2) {}
             } catch(e) { window.location.replace('/TodaShare/login.html'); }
+        }
+
+        // ── Edit Profile ──
+        async function editDriverProfile() {
+            if (!sessionData) await loadProfile();
+            const s = sessionData;
+            const d = driverData;
+
+            const { value: formData } = await Swal.fire({
+                title: 'Edit Profile',
+                html: `<div style="text-align:left;font-size:13px">
+                    <div style="text-align:center;margin-bottom:16px">
+                        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff">${(s.first_name||'D')[0].toUpperCase()}</div>
+                    </div>
+                    <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--d-text-muted)">First Name *</label>
+                    <input id="swal-fn" value="${s.first_name||''}" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--d-bg-alt);color:var(--d-text);font-family:inherit;outline:none">
+                    <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--d-text-muted)">Last Name</label>
+                    <input id="swal-ln" value="${s.last_name||''}" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--d-bg-alt);color:var(--d-text);font-family:inherit;outline:none">
+                    <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--d-text-muted)">Email</label>
+                    <input value="${s.email||''}" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--d-bg-muted);color:var(--d-text-faint);font-family:inherit;outline:none" readonly>
+                    <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--d-text-muted)">Phone</label>
+                    <input id="swal-ph" value="${s.phone||''}" placeholder="09xxxxxxxxx" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--d-bg-alt);color:var(--d-text);font-family:inherit;outline:none">
+                    <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--d-text-muted)">Contact Number</label>
+                    <input id="swal-ct" value="${d ? d.contact_number||'' : s.phone||''}" placeholder="09xxxxxxxxx" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;margin-bottom:10px;background:var(--d-bg-alt);color:var(--d-text);font-family:inherit;outline:none">
+                    <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--d-text-muted)">Address</label>
+                    <input id="swal-addr" value="${d ? d.address||'' : ''}" placeholder="Home address" style="width:100%;padding:10px;border:1px solid var(--d-line);border-radius:8px;font-size:13px;background:var(--d-bg-alt);color:var(--d-text);font-family:inherit;outline:none">
+                </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Save Changes',
+                confirmButtonColor: '#10b981',
+                cancelButtonText: 'Cancel',
+                cancelButtonColor: '#9ca3af',
+                preConfirm: () => ({
+                    first_name: document.getElementById('swal-fn').value.trim(),
+                    last_name: document.getElementById('swal-ln').value.trim(),
+                    phone: document.getElementById('swal-ph').value.trim(),
+                    contact_number: document.getElementById('swal-ct').value.trim(),
+                    address: document.getElementById('swal-addr').value.trim()
+                })
+            });
+
+            if (!formData) return;
+
+            if (!formData.first_name) {
+                return Swal.fire({ icon: 'warning', title: 'Required', text: 'First name is required.', confirmButtonColor: '#10b981' });
+            }
+
+            try {
+                // Update user profile (name, phone)
+                await apiRequest('../api/auth/update-profile.php', 'POST', {
+                    first_name: formData.first_name,
+                    last_name: formData.last_name,
+                    phone: formData.phone
+                });
+
+                // Update driver record (contact, address)
+                if (driverData && driverData.id) {
+                    await drivers.update(driverData.id, {
+                        contact_number: formData.contact_number,
+                        address: formData.address
+                    });
+                }
+
+                Swal.fire({ icon: 'success', title: 'Profile Updated', text: 'Your profile has been saved.', confirmButtonColor: '#10b981' });
+                loadProfile();
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to update profile.', confirmButtonColor: '#10b981' });
+            }
         }
 
         // ── Load Earnings ──
@@ -599,11 +893,11 @@
 
                 const trips = stats.recent_trips || [];
                 if (trips.length === 0) {
-                    document.getElementById('recentTrips').innerHTML = '<p style="font-size:13px;color:#9ca3af;text-align:center;padding:20px">No trips yet</p>';
+                    document.getElementById('recentTrips').innerHTML = '<p style="font-size:13px;color:var(--d-text-faint);text-align:center;padding:20px">No trips yet</p>';
                 } else {
                     document.getElementById('recentTrips').innerHTML = trips.map(t =>
                         `<div class="trip-item">
-                            <div><div class="trip-route">${t.origin||'--'} → ${t.destination||'--'}</div><div class="trip-meta">${t.distance_km?t.distance_km+' km':''} · ${formatDate(t.started_at)}</div></div>
+                            <div><div class="trip-route">${t.origin||'--'} \u2192 ${t.destination||'--'}</div><div class="trip-meta">${t.distance_km?t.distance_km+' km':''} \u00b7 ${formatDate(t.started_at)}</div></div>
                             <div class="trip-fare">${formatCurrency(t.actual_fare||t.computed_fare||0)}</div>
                         </div>`
                     ).join('');
@@ -613,13 +907,13 @@
 
         // ── Logout ──
         async function handleLogout() {
-            const r = await Swal.fire({title:'Logout?',icon:'question',showCancelButton:true,confirmButtonColor:'#ef4444',confirmButtonText:'Yes'});
+            const r = await Swal.fire({title:'Do you want to logout?',icon:'question',showCancelButton:true,confirmButtonColor:'#ef4444',confirmButtonText:'Yes, logout',cancelButtonText:'Cancel'});
             if (r.isConfirmed) {
                 clearInterval(bookingPollInterval); clearInterval(timerInterval); clearInterval(updateInterval);
                 await auth.logout(); localStorage.removeItem('user'); window.location.replace('/TodaShare/login.html');
             }
         }
     </script>
-    <script src="" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAn1_cTdPkaV1_ogWAIGd9gMXfdp4PxuJg&libraries=places&callback=initMap&loading=async" async defer></script>
 </body>
 </html>

@@ -66,42 +66,35 @@ switch ($method) {
         requireAdmin();
         $input = getInput();
 
-        // Validate required fields
-        $required = ['first_name', 'last_name', 'password'];
-        foreach ($required as $field) {
-            if (empty($input[$field])) {
-                jsonResponse(['error' => "Field '$field' is required"], 400);
-            }
+        // Promote existing user to driver
+        $userId = $input['user_id'] ?? null;
+        if (!$userId) {
+            jsonResponse(['error' => 'User ID is required. Select a user to promote to driver.'], 400);
         }
 
-        // Email or username required
-        $email = $input['email'] ?? '';
-        $username = $input['username'] ?? '';
-        if (empty($email) && empty($username)) {
-            jsonResponse(['error' => 'Email is required'], 400);
+        // Check user exists
+        $stmt = $pdo->prepare("SELECT id, first_name, last_name, phone, role FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        if (!$user) {
+            jsonResponse(['error' => 'User not found'], 404);
         }
-        if (empty($username)) $username = explode('@', $email)[0];
-        if (empty($email)) $email = $username . '@todasure.local';
 
-        // Check duplicates
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? OR username = ?");
-        $stmt->execute([$email, $username]);
+        // Check if already a driver
+        $stmt = $pdo->prepare("SELECT id FROM drivers WHERE user_id = ?");
+        $stmt->execute([$userId]);
         if ($stmt->fetch()) {
-            // Try with random suffix
-            $username = $username . rand(100, 999);
-            $stmt->execute([$email, $username]);
-            if ($stmt->fetch()) {
-                jsonResponse(['error' => 'Email already registered'], 409);
-            }
+            jsonResponse(['error' => 'This user is already registered as a driver'], 409);
         }
+
+        $firstName = $input['first_name'] ?? $user['first_name'];
+        $lastName = $input['last_name'] ?? $user['last_name'] ?? '';
 
         $pdo->beginTransaction();
         try {
-            // Create user account
-            $hashedPassword = password_hash($input['password'], PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, first_name, last_name, phone, role) VALUES (?, ?, ?, ?, ?, ?, 'driver')");
-            $stmt->execute([$username, $email, $hashedPassword, $input['first_name'], $input['last_name'], $input['contact_number'] ?? null]);
-            $userId = $pdo->lastInsertId();
+            // Update user role to driver
+            $stmt = $pdo->prepare("UPDATE users SET role = 'driver' WHERE id = ?");
+            $stmt->execute([$userId]);
 
             // Create driver record
             $stmt = $pdo->prepare("
@@ -111,19 +104,19 @@ switch ($method) {
             $stmt->execute([
                 $userId,
                 $input['toda_id'] ?? null,
-                $input['first_name'],
-                $input['last_name'],
+                $firstName,
+                $lastName,
                 $input['middle_name'] ?? null,
-                $input['contact_number'] ?? null,
+                $input['contact_number'] ?? $user['phone'] ?? null,
                 $input['address'] ?? null
             ]);
             $driverId = $pdo->lastInsertId();
 
             $pdo->commit();
-            jsonResponse(['message' => 'Driver registered successfully', 'id' => $driverId], 201);
+            jsonResponse(['message' => 'Driver added successfully', 'id' => $driverId], 201);
         } catch (Exception $e) {
             $pdo->rollBack();
-            jsonResponse(['error' => 'Registration failed: ' . $e->getMessage()], 500);
+            jsonResponse(['error' => 'Failed to add driver: ' . $e->getMessage()], 500);
         }
         break;
 
@@ -159,9 +152,29 @@ switch ($method) {
         requireAdmin();
         if (!$id) jsonResponse(['error' => 'Driver ID required'], 400);
 
-        $stmt = $pdo->prepare("UPDATE drivers SET status = 'inactive' WHERE id = ?");
+        // Get user_id before deleting
+        $stmt = $pdo->prepare("SELECT user_id FROM drivers WHERE id = ?");
         $stmt->execute([$id]);
-        jsonResponse(['message' => 'Driver deactivated successfully']);
+        $driver = $stmt->fetch();
+
+        if (!$driver) jsonResponse(['error' => 'Driver not found'], 404);
+
+        $pdo->beginTransaction();
+        try {
+            // Delete driver record
+            $stmt = $pdo->prepare("DELETE FROM drivers WHERE id = ?");
+            $stmt->execute([$id]);
+
+            // Revert user role back to passenger
+            $stmt = $pdo->prepare("UPDATE users SET role = 'passenger' WHERE id = ?");
+            $stmt->execute([$driver['user_id']]);
+
+            $pdo->commit();
+            jsonResponse(['message' => 'Driver deleted successfully']);
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            jsonResponse(['error' => 'Failed to delete driver: ' . $e->getMessage()], 500);
+        }
         break;
 
     default:

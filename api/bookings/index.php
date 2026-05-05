@@ -161,6 +161,22 @@ switch ($method) {
             jsonResponse(['error' => 'Pickup and drop-off coordinates are required'], 400);
         }
 
+        // Nasugbu bounds validation
+        $nasugbuBounds = ['south' => 13.95, 'north' => 14.12, 'west' => 120.52, 'east' => 120.72];
+        $pLat = floatval($input['pickup_lat']);
+        $pLng = floatval($input['pickup_lng']);
+        $dLat = floatval($input['dropoff_lat']);
+        $dLng = floatval($input['dropoff_lng']);
+
+        if ($pLat < $nasugbuBounds['south'] || $pLat > $nasugbuBounds['north'] ||
+            $pLng < $nasugbuBounds['west'] || $pLng > $nasugbuBounds['east']) {
+            jsonResponse(['error' => 'Pickup location must be within Nasugbu, Batangas'], 400);
+        }
+        if ($dLat < $nasugbuBounds['south'] || $dLat > $nasugbuBounds['north'] ||
+            $dLng < $nasugbuBounds['west'] || $dLng > $nasugbuBounds['east']) {
+            jsonResponse(['error' => 'Drop-off location must be within Nasugbu, Batangas'], 400);
+        }
+
         // Check for existing active booking
         $stmt = $pdo->prepare("SELECT id FROM bookings WHERE passenger_id = ? AND status IN ('pending','accepted','in_progress')");
         $stmt->execute([$session['user_id']]);
@@ -200,10 +216,17 @@ switch ($method) {
 
         jsonResponse([
             'message' => 'Booking created',
-            'booking_id' => $pdo->lastInsertId(),
+            'booking_id' => $bookingId = $pdo->lastInsertId(),
             'estimated_distance' => round($distance, 2),
             'estimated_fare' => round($estimatedFare, 2)
         ], 201);
+
+        // Notify admin of new booking
+        try {
+            $pdo->prepare("INSERT INTO notifications (role_target, type, title, message, link) VALUES ('admin', 'booking', 'New Ride Request', ?, 'trips.html')")
+                ->execute([($input['pickup_address'] ?? '') . ' → ' . ($input['dropoff_address'] ?? '')]);
+        } catch(Exception $e) {}
+
         break;
 
     case 'PUT':

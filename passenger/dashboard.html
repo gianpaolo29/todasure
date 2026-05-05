@@ -10,8 +10,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        :root{--p-bg:#fff;--p-bg-alt:#f8fafc;--p-bg-muted:#f1f5f9;--p-bg-hover:#e2e8f0;--p-text:#0f172a;--p-text-sec:#374151;--p-text-muted:#64748b;--p-text-faint:#9ca3af;--p-border:#f1f5f9;--p-line:#e2e8f0;--p-green:#10b981;--p-green-dark:#059669;--p-shadow:rgba(0,0,0,.1);--p-shadow-lg:rgba(0,0,0,.15)}
+        [data-theme="dark"]{--p-bg:#1a1a2e;--p-bg-alt:#16213e;--p-bg-muted:#0f3460;--p-bg-hover:#1e3a5f;--p-text:#f1f5f9;--p-text-sec:#cbd5e1;--p-text-muted:#94a3b8;--p-text-faint:#64748b;--p-border:#1e293b;--p-line:#334155;--p-green:#10b981;--p-green-dark:#34d399;--p-shadow:rgba(0,0,0,.4);--p-shadow-lg:rgba(0,0,0,.5)}
+
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Inter',sans-serif;background:#000;color:#1e293b;height:100vh;height:100dvh;overflow:hidden;position:relative}
+        body{font-family:'Inter',sans-serif;background:var(--p-bg-muted);color:var(--p-text);height:100vh;height:100dvh;overflow:hidden;position:relative}
 
         /* ── Full-screen Map ── */
         #map{position:absolute;inset:0;z-index:0}
@@ -19,61 +22,61 @@
         /* ── Top Bar (floating over map) ── */
         .top-bar{position:absolute;top:0;left:0;right:0;z-index:35;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
         .top-bar > *{pointer-events:auto}
-        .top-btn{width:40px;height:40px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#1e293b}
+        .top-btn{width:40px;height:40px;border-radius:50%;background:var(--p-bg);border:none;box-shadow:0 2px 8px var(--p-shadow);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#1e293b}
         .top-btn:active{transform:scale(.95)}
         .top-brand{font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4);letter-spacing:.5px}
         .top-right{display:flex;gap:8px}
-        .notif-badge{position:absolute;top:8px;right:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid #fff}
+        .notif-badge{position:absolute;top:8px;right:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--p-bg)}
 
         /* ── Bottom Sheet ── */
-        .sheet{position:absolute;bottom:0;left:0;right:0;z-index:30;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.1);transition:transform .35s cubic-bezier(.4,0,.2,1);max-height:85vh;overflow-y:auto}
-        .sheet-handle{width:36px;height:4px;background:#d1d5db;border-radius:4px;margin:10px auto 0}
+        .sheet{position:absolute;bottom:0;left:0;right:0;z-index:30;background:var(--p-bg);border-radius:20px 20px 0 0;box-shadow:0 -4px 20px var(--p-shadow);transition:transform .35s cubic-bezier(.4,0,.2,1);max-height:85vh;overflow-y:auto}
+        .sheet-handle{width:36px;height:4px;background:var(--p-line);border-radius:4px;margin:10px auto 0}
         .sheet-body{padding:16px 20px 24px}
 
         /* ── Where-to Card ── */
         .where-to{padding:6px 0 0}
-        .where-to h2{font-size:20px;font-weight:800;color:#0f172a;margin-bottom:14px}
-        .search-box{display:flex;align-items:center;gap:10px;padding:14px 16px;background:#f1f5f9;border-radius:12px;cursor:pointer;transition:background .2s}
-        .search-box:hover{background:#e2e8f0}
+        .where-to h2{font-size:20px;font-weight:800;color:var(--p-text);margin-bottom:14px}
+        .search-box{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--p-bg-muted);border-radius:12px;cursor:pointer;transition:background .2s}
+        .search-box:hover{background:var(--p-bg-hover)}
         .search-box i{color:#10b981;font-size:16px}
-        .search-box span{flex:1;font-size:14px;color:#64748b}
-        .search-box .arrow{color:#94a3b8;font-size:12px}
+        .search-box span{flex:1;font-size:14px;color:var(--p-text-muted)}
+        .search-box .arrow{color:var(--p-text-faint);font-size:12px}
 
         /* ── Search Overlay ── */
-        .search-overlay{position:fixed;inset:0;z-index:50;background:#fff;display:none;flex-direction:column}
+        .search-overlay{position:fixed;inset:0;z-index:50;background:var(--p-bg);display:none;flex-direction:column}
         .search-overlay.show{display:flex}
-        .search-header{display:flex;align-items:stretch;gap:12px;padding:16px;border-bottom:1px solid #f1f5f9}
-        .search-back{width:40px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#64748b;cursor:pointer;flex-shrink:0;border:none;background:none}
+        .search-header{display:flex;align-items:stretch;gap:12px;padding:16px;border-bottom:1px solid var(--p-border)}
+        .search-back{width:40px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--p-text-muted);cursor:pointer;flex-shrink:0;border:none;background:none}
         .search-inputs{flex:1;display:flex;flex-direction:column;gap:8px}
         .search-row{display:flex;align-items:center;gap:10px}
         .search-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
         .search-dot.green{background:#10b981}
         .search-dot.red{background:#ef4444}
-        .search-line{width:2px;height:16px;background:#d1d5db;margin-left:4px}
-        .search-input{flex:1;border:none;background:#f8fafc;padding:10px 14px;border-radius:8px;font-size:14px;font-family:inherit;color:#0f172a;outline:none}
-        .search-input:focus{background:#f1f5f9;box-shadow:0 0 0 2px rgba(16,185,129,.2)}
-        .search-input::placeholder{color:#94a3b8}
+        .search-line{width:2px;height:16px;background:var(--p-line);margin-left:4px}
+        .search-input{flex:1;border:none;background:var(--p-bg-alt);padding:10px 14px;border-radius:8px;font-size:14px;font-family:inherit;color:var(--p-text);outline:none}
+        .search-input:focus{background:var(--p-bg-muted);box-shadow:0 0 0 2px rgba(16,185,129,.2)}
+        .search-input::placeholder{color:var(--p-text-faint)}
         .search-results{flex:1;overflow-y:auto;padding:8px 0}
         .search-item{display:flex;align-items:center;gap:14px;padding:14px 20px;cursor:pointer;transition:background .15s}
-        .search-item:hover,.search-item:active{background:#f8fafc}
-        .search-item-icon{width:36px;height:36px;border-radius:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;flex-shrink:0}
+        .search-item:hover,.search-item:active{background:var(--p-bg-alt)}
+        .search-item-icon{width:36px;height:36px;border-radius:10px;background:var(--p-bg-muted);display:flex;align-items:center;justify-content:center;color:var(--p-text-muted);font-size:14px;flex-shrink:0}
         .search-item-text{flex:1;min-width:0}
-        .search-item-name{font-size:14px;font-weight:500;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .search-item-addr{font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .search-item-name{font-size:14px;font-weight:500;color:var(--p-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .search-item-addr{font-size:12px;color:var(--p-text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
         /* ── Route Preview Card ── */
         .route-card{padding:6px 0 0}
         .route-locations{display:flex;gap:12px;align-items:stretch;margin-bottom:16px}
         .route-dots{display:flex;flex-direction:column;align-items:center;padding:4px 0}
         .route-dots .dot{width:10px;height:10px;border-radius:50%}
-        .route-dots .line{width:2px;flex:1;background:#e2e8f0;margin:4px 0}
+        .route-dots .line{width:2px;flex:1;background:var(--p-bg-hover);margin:4px 0}
         .route-addrs{flex:1;display:flex;flex-direction:column;gap:6px}
-        .route-addr{font-size:13px;color:#64748b;line-height:1.3}
-        .route-addr strong{color:#0f172a;font-weight:600}
+        .route-addr{font-size:13px;color:var(--p-text-muted);line-height:1.3}
+        .route-addr strong{color:var(--p-text);font-weight:600}
         .route-stats{display:flex;gap:12px;margin-bottom:18px}
-        .route-stat{flex:1;background:#f8fafc;border-radius:12px;padding:14px;text-align:center}
-        .route-stat .val{font-size:22px;font-weight:800;color:#0f172a}
-        .route-stat .lbl{font-size:11px;color:#94a3b8;margin-top:2px}
+        .route-stat{flex:1;background:var(--p-bg-alt);border-radius:12px;padding:14px;text-align:center}
+        .route-stat .val{font-size:22px;font-weight:800;color:var(--p-text)}
+        .route-stat .lbl{font-size:11px;color:var(--p-text-faint);margin-top:2px}
         .route-stat.green .val{color:#10b981}
         .btn-book-ride{width:100%;padding:16px;background:#10b981;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
         .btn-book-ride:hover{background:#059669;box-shadow:0 4px 16px rgba(16,185,129,.3)}
@@ -86,35 +89,32 @@
         .waiting-anim .pulse-ring{width:60px;height:60px;border-radius:50%;background:rgba(16,185,129,.1);display:inline-flex;align-items:center;justify-content:center;animation:waitPulse 2s ease-in-out infinite}
         .waiting-anim .pulse-ring i{font-size:24px;color:#10b981}
         @keyframes waitPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.3)}50%{box-shadow:0 0 0 20px rgba(16,185,129,0)}}
-        .waiting-text{font-size:16px;font-weight:600;color:#0f172a;margin-top:14px}
-        .waiting-sub{font-size:13px;color:#94a3b8;margin-top:4px}
+        .waiting-text{font-size:16px;font-weight:600;color:var(--p-text);margin-top:14px}
+        .waiting-sub{font-size:13px;color:var(--p-text-faint);margin-top:4px}
 
         /* ── Driver Card ── */
-        .driver-info{display:flex;align-items:center;gap:14px;padding:16px;background:#f8fafc;border-radius:14px;margin-bottom:14px}
+        .driver-info{display:flex;align-items:center;gap:14px;padding:16px;background:var(--p-bg-alt);border-radius:14px;margin-bottom:14px}
         .driver-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;flex-shrink:0}
         .driver-details{flex:1;min-width:0}
-        .driver-details .name{font-size:15px;font-weight:700;color:#0f172a}
-        .driver-details .plate{font-size:13px;color:#64748b;margin-top:2px}
-        .driver-details .plate span{background:#e2e8f0;padding:2px 8px;border-radius:4px;font-weight:600;color:#0f172a;font-size:12px;margin-left:4px}
-        .driver-actions{display:flex;gap:8px}
-        .driver-actions button{width:40px;height:40px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:#64748b}
-        .driver-actions button:hover{background:#f1f5f9;color:#10b981}
+        .driver-details .name{font-size:15px;font-weight:700;color:var(--p-text)}
+        .driver-details .plate{font-size:13px;color:var(--p-text-muted);margin-top:2px}
+        .driver-details .plate span{background:var(--p-bg-hover);padding:2px 8px;border-radius:4px;font-weight:600;color:var(--p-text);font-size:12px;margin-left:4px}
 
         /* ── Live Trip ── */
         .trip-live{display:flex;gap:10px;margin-bottom:16px}
-        .trip-live-stat{flex:1;background:#f8fafc;border-radius:12px;padding:12px;text-align:center}
-        .trip-live-stat .v{font-size:20px;font-weight:800;color:#0f172a}
-        .trip-live-stat .l{font-size:10px;color:#94a3b8;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+        .trip-live-stat{flex:1;background:var(--p-bg-alt);border-radius:12px;padding:12px;text-align:center}
+        .trip-live-stat .v{font-size:20px;font-weight:800;color:var(--p-text)}
+        .trip-live-stat .l{font-size:10px;color:var(--p-text-faint);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
         .trip-live-stat.accent .v{color:#10b981}
 
         /* ── Complete ── */
         .complete-fare{text-align:center;padding:24px 0 16px}
-        .complete-fare .amount{font-size:42px;font-weight:800;color:#0f172a}
-        .complete-fare .label{font-size:13px;color:#94a3b8;margin-top:4px}
+        .complete-fare .amount{font-size:42px;font-weight:800;color:var(--p-text)}
+        .complete-fare .label{font-size:13px;color:var(--p-text-faint);margin-top:4px}
         .complete-stats{display:flex;gap:10px;margin-bottom:18px}
-        .complete-stat{flex:1;text-align:center;padding:12px;background:#f8fafc;border-radius:12px}
-        .complete-stat .v{font-size:16px;font-weight:700;color:#0f172a}
-        .complete-stat .l{font-size:11px;color:#94a3b8;margin-top:2px}
+        .complete-stat{flex:1;text-align:center;padding:12px;background:var(--p-bg-alt);border-radius:12px}
+        .complete-stat .v{font-size:16px;font-weight:700;color:var(--p-text)}
+        .complete-stat .l{font-size:11px;color:var(--p-text-faint);margin-top:2px}
         .btn-outline-green{width:100%;padding:14px;background:none;border:2px solid #10b981;color:#10b981;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px}
         .btn-outline-green:hover{background:rgba(16,185,129,.05)}
         .btn-cancel-ride{width:100%;padding:12px;background:none;border:none;color:#ef4444;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px}
@@ -122,68 +122,86 @@
         /* ── Menu Drawer ── */
         .menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:60;display:none}
         .menu-overlay.show{display:block}
-        .menu-drawer{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:80vw;background:#fff;z-index:70;transform:translateX(-100%);transition:transform .3s ease;display:flex;flex-direction:column}
+        .menu-drawer{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:80vw;background:var(--p-bg);z-index:70;transform:translateX(-100%);transition:transform .3s ease;display:flex;flex-direction:column}
         .menu-drawer.show{transform:translateX(0)}
         .menu-profile{padding:28px 20px 20px;background:linear-gradient(135deg,#10b981,#059669);color:#fff}
         .menu-avatar{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin-bottom:12px}
         .menu-name{font-size:16px;font-weight:700}
         .menu-email{font-size:12px;opacity:.8;margin-top:2px}
         .menu-items{flex:1;padding:8px 0;overflow-y:auto}
-        .menu-item{display:flex;align-items:center;gap:14px;padding:14px 20px;font-size:14px;color:#374151;cursor:pointer;transition:background .15s;border:none;background:none;width:100%;font-family:inherit;text-align:left}
-        .menu-item:hover{background:#f8fafc}
-        .menu-item i{width:20px;text-align:center;color:#9ca3af;font-size:16px}
+        .menu-item{display:flex;align-items:center;gap:14px;padding:14px 20px;font-size:14px;color:var(--p-text-sec);cursor:pointer;transition:background .15s;border:none;background:none;width:100%;font-family:inherit;text-align:left}
+        .menu-item:hover{background:var(--p-bg-alt)}
+        .menu-item i{width:20px;text-align:center;color:var(--p-text-faint);font-size:16px}
         .menu-item.danger{color:#ef4444}
         .menu-item.danger i{color:#ef4444}
-        .menu-sep{height:1px;background:#f1f5f9;margin:4px 0}
+        .menu-sep{height:1px;background:var(--p-bg-muted);margin:4px 0}
 
         /* ── Notification Dropdown ── */
-        .notif-dropdown{position:absolute;top:52px;right:0;width:300px;max-width:85vw;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.15);display:none;z-index:40;overflow:hidden}
+        .notif-dropdown{position:absolute;top:52px;right:0;width:300px;max-width:85vw;background:var(--p-bg);border-radius:14px;box-shadow:0 8px 30px var(--p-shadow-lg);display:none;z-index:40;overflow:hidden}
         .notif-dropdown.show{display:block;animation:fadeSlideDown .2s ease}
         @keyframes fadeSlideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-        .notif-header{padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:700;color:#0f172a;display:flex;justify-content:space-between;align-items:center}
+        .notif-header{padding:14px 16px;border-bottom:1px solid var(--p-border);font-size:14px;font-weight:700;color:var(--p-text);display:flex;justify-content:space-between;align-items:center}
         .notif-list{max-height:280px;overflow-y:auto}
-        .notif-item{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid #f8fafc;cursor:default}
+        .notif-item{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--p-border);cursor:default}
         .notif-item:last-child{border-bottom:none}
         .notif-icon-box{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
         .notif-icon-box.green{background:#d1fae5;color:#059669}
         .notif-icon-box.blue{background:#dbeafe;color:#3b82f6}
         .notif-icon-box.red{background:#fee2e2;color:#ef4444}
         .notif-text{flex:1;min-width:0}
-        .notif-text p{font-size:13px;color:#374151;line-height:1.3}
-        .notif-text small{font-size:11px;color:#9ca3af}
-        .notif-empty{padding:30px 16px;text-align:center;color:#9ca3af;font-size:13px}
+        .notif-text p{font-size:13px;color:var(--p-text-sec);line-height:1.3}
+        .notif-text small{font-size:11px;color:var(--p-text-faint)}
+        .notif-empty{padding:30px 16px;text-align:center;color:var(--p-text-faint);font-size:13px}
 
         /* ── History Overlay ── */
-        .history-overlay{position:fixed;inset:0;z-index:50;background:#fff;display:none;flex-direction:column}
+        .history-overlay{position:fixed;inset:0;z-index:50;background:var(--p-bg);display:none;flex-direction:column}
         .history-overlay.show{display:flex}
-        .history-header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #f1f5f9}
-        .history-header h3{flex:1;font-size:16px;font-weight:700;color:#0f172a}
+        .history-header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--p-border)}
+        .history-header h3{flex:1;font-size:16px;font-weight:700;color:var(--p-text)}
         .history-list{flex:1;overflow-y:auto;padding:8px 0}
-        .history-item{padding:14px 20px;border-bottom:1px solid #f8fafc}
+        .history-item{padding:14px 20px;border-bottom:1px solid var(--p-border)}
         .history-item-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-        .history-item-top .fare{font-size:15px;font-weight:700;color:#0f172a}
-        .history-item-top .date{font-size:11px;color:#9ca3af}
-        .history-item-route{display:flex;gap:8px;align-items:center;font-size:13px;color:#64748b}
+        .history-item-top .fare{font-size:15px;font-weight:700;color:var(--p-text)}
+        .history-item-top .date{font-size:11px;color:var(--p-text-faint)}
+        .history-item-route{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--p-text-muted)}
         .history-item-route .hdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
         .history-item-route .harrow{color:#d1d5db}
         .history-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
         .history-badge.completed{background:#d1fae5;color:#059669}
         .history-badge.cancelled{background:#fee2e2;color:#ef4444}
-        .history-empty{padding:60px 20px;text-align:center;color:#9ca3af}
+        .history-empty{padding:60px 20px;text-align:center;color:var(--p-text-faint)}
 
         /* ── Profile Overlay ── */
-        .profile-overlay{position:fixed;inset:0;z-index:50;background:#fff;display:none;flex-direction:column}
+        .profile-overlay{position:fixed;inset:0;z-index:50;background:var(--p-bg);display:none;flex-direction:column;overflow-y:auto}
         .profile-overlay.show{display:flex}
         .profile-head{text-align:center;padding:40px 20px 20px;background:linear-gradient(135deg,#10b981,#059669);color:#fff}
         .profile-head .p-avatar{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.2);display:inline-flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin-bottom:12px}
         .profile-head .p-name{font-size:18px;font-weight:700}
         .profile-head .p-email{font-size:13px;opacity:.8;margin-top:4px}
         .profile-info-list{padding:20px}
-        .profile-info-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+        .profile-info-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--p-border)}
         .profile-info-row:last-child{border-bottom:none}
-        .profile-info-row i{width:20px;text-align:center;color:#9ca3af;font-size:16px}
-        .profile-info-row .pi-label{font-size:12px;color:#9ca3af}
-        .profile-info-row .pi-value{font-size:14px;color:#0f172a;font-weight:500}
+        .profile-info-row i{width:20px;text-align:center;color:var(--p-text-faint);font-size:16px}
+        .profile-info-row .pi-label{font-size:12px;color:var(--p-text-faint)}
+        .profile-info-row .pi-value{font-size:14px;color:var(--p-text);font-weight:500}
+
+        /* ── SweetAlert Theme ── */
+        .swal2-popup{background:var(--p-bg)!important;color:var(--p-text)!important;border-radius:16px!important;box-shadow:0 12px 40px rgba(0,0,0,.2)!important;max-width:calc(100vw - 32px)!important;width:auto!important;padding:24px 20px!important;font-size:14px!important}
+        .swal2-title{color:var(--p-text)!important;font-size:18px!important}
+        .swal2-html-container{color:var(--p-text-sec)!important;font-size:13px!important}
+        .swal2-container.swal2-backdrop-show{background:rgba(0,0,0,.25)!important}
+        .swal2-input,.swal2-select,.swal2-textarea{background:var(--p-bg-alt)!important;color:var(--p-text)!important;border-color:var(--p-line)!important}
+        .swal2-validation-message{background:var(--p-bg-alt)!important;color:#ef4444!important}
+        .swal2-actions{gap:8px!important}
+        .swal2-actions button{font-size:14px!important;padding:10px 20px!important;border-radius:10px!important}
+        .swal2-icon{width:60px!important;height:60px!important;margin:0 auto 8px!important}
+        @media(max-width:480px){
+            .swal2-popup{padding:20px 16px!important}
+            .swal2-title{font-size:16px!important}
+            .swal2-html-container{font-size:12px!important}
+            .swal2-actions button{font-size:13px!important;padding:10px 16px!important}
+            .swal2-icon{width:48px!important;height:48px!important}
+        }
 
         .hidden{display:none!important}
 
@@ -222,14 +240,14 @@
                 flex-direction:column;
             }
             .search-overlay .search-header{
-                background:#fff;
+                background:var(--p-bg);
                 border-radius:16px 16px 0 0;
                 max-width:480px;
                 width:100%;
                 margin:0 auto;
             }
             .search-overlay .search-results{
-                background:#fff;
+                background:var(--p-bg);
                 border-radius:0 0 16px 16px;
                 max-width:480px;
                 width:100%;
@@ -240,7 +258,7 @@
                 max-width:480px;
                 width:100%;
                 margin:0 auto;
-                background:#fff;
+                background:var(--p-bg);
             }
 
             /* Menu drawer: wider */
@@ -261,19 +279,21 @@
                 width:100%;
             }
             .history-overlay .history-header,.profile-overlay .history-header{
-                background:#fff;
+                background:var(--p-bg);
                 border-radius:16px 16px 0 0;
             }
             .history-overlay .history-list{
-                background:#fff;
+                background:var(--p-bg);
                 border-radius:0 0 16px 16px;
                 max-height:500px;
             }
             .profile-overlay .profile-head{
-                border-radius:16px 16px 0 0;
+                border-radius:0;
             }
             .profile-overlay .profile-info-list{
-                background:#fff;
+                background:var(--p-bg);
+            }
+            .profile-overlay .profile-info-list:last-child{
                 border-radius:0 0 16px 16px;
             }
 
@@ -345,6 +365,7 @@
                     </div>
                 </div>
             </div>
+            <button class="top-btn" onclick="themeToggle()" id="themeBtn"><i class="fas fa-moon"></i></button>
         </div>
     </div>
 
@@ -361,10 +382,12 @@
 
     <!-- Profile Overlay -->
     <div class="profile-overlay" id="profileOverlay">
-        <div class="history-header">
-            <button class="search-back" onclick="closeProfile()"><i class="fa-solid fa-arrow-left"></i></button>
-            <h3>My Profile</h3>
-            <button id="profEditBtn" onclick="toggleProfileEdit()" style="background:none;border:none;color:#10b981;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-left:auto;padding:8px">
+        <div class="history-header" style="justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:12px">
+                <button class="search-back" onclick="closeProfile()"><i class="fa-solid fa-arrow-left"></i></button>
+                <h3 style="flex:none">My Profile</h3>
+            </div>
+            <button id="profEditBtn" onclick="toggleProfileEdit()" style="background:var(--p-green-bg,rgba(16,185,129,.1));border:none;color:#10b981;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:8px 14px;border-radius:8px">
                 <i class="fa-solid fa-pen" style="margin-right:4px"></i> Edit
             </button>
         </div>
@@ -384,25 +407,25 @@
         <!-- Edit Mode -->
         <div class="profile-info-list hidden" id="profEditMode" style="padding:20px">
             <div style="margin-bottom:14px">
-                <label style="font-size:12px;color:#9ca3af;display:block;margin-bottom:4px">First Name</label>
-                <input type="text" id="editFirstName" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;outline:none" placeholder="First Name">
+                <label style="font-size:12px;color:var(--p-text-faint);display:block;margin-bottom:4px">First Name</label>
+                <input type="text" id="editFirstName" style="width:100%;padding:10px 14px;border:1.5px solid var(--p-line);border-radius:10px;font-size:14px;font-family:inherit;color:var(--p-text);background:var(--p-bg-alt);outline:none" placeholder="First Name">
             </div>
             <div style="margin-bottom:14px">
-                <label style="font-size:12px;color:#9ca3af;display:block;margin-bottom:4px">Last Name</label>
-                <input type="text" id="editLastName" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;outline:none" placeholder="Last Name">
+                <label style="font-size:12px;color:var(--p-text-faint);display:block;margin-bottom:4px">Last Name</label>
+                <input type="text" id="editLastName" style="width:100%;padding:10px 14px;border:1.5px solid var(--p-line);border-radius:10px;font-size:14px;font-family:inherit;color:var(--p-text);background:var(--p-bg-alt);outline:none" placeholder="Last Name">
             </div>
             <div style="margin-bottom:14px">
-                <label style="font-size:12px;color:#9ca3af;display:block;margin-bottom:4px">Email</label>
-                <input type="email" id="editEmail" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;outline:none;background:#f8fafc" readonly>
+                <label style="font-size:12px;color:var(--p-text-faint);display:block;margin-bottom:4px">Email</label>
+                <input type="email" id="editEmail" style="width:100%;padding:10px 14px;border:1.5px solid var(--p-line);border-radius:10px;font-size:14px;font-family:inherit;color:var(--p-text-muted);background:var(--p-bg-muted);outline:none" readonly>
             </div>
             <div style="margin-bottom:20px">
-                <label style="font-size:12px;color:#9ca3af;display:block;margin-bottom:4px">Phone</label>
-                <input type="tel" id="editPhone" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;outline:none" placeholder="09xxxxxxxxx">
+                <label style="font-size:12px;color:var(--p-text-faint);display:block;margin-bottom:4px">Phone</label>
+                <input type="tel" id="editPhone" style="width:100%;padding:10px 14px;border:1.5px solid var(--p-line);border-radius:10px;font-size:14px;font-family:inherit;color:var(--p-text);background:var(--p-bg-alt);outline:none" placeholder="09xxxxxxxxx">
             </div>
             <button onclick="saveProfile()" style="width:100%;padding:14px;background:#10b981;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">
                 <i class="fa-solid fa-check" style="margin-right:6px"></i> Save Changes
             </button>
-            <button onclick="cancelProfileEdit()" style="width:100%;padding:12px;background:none;border:1.5px solid #e5e7eb;color:#64748b;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">
+            <button onclick="cancelProfileEdit()" style="width:100%;padding:12px;background:none;border:1.5px solid var(--p-line);color:var(--p-text-muted);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">
                 Cancel
             </button>
         </div>
@@ -468,8 +491,6 @@
                         <div class="name" id="driverName">--</div>
                         <div class="plate"><i class="fa-solid fa-motorcycle"></i><span id="driverPlate">--</span></div>
                     </div>
-                    <div class="driver-actions">
-                        <button title="Call" id="callDriver"><i class="fa-solid fa-phone"></i></button>
                     </div>
                 </div>
                 <button class="btn-cancel-ride" onclick="cancelBooking()">Cancel ride</button>
@@ -545,10 +566,22 @@
         <i class="fa-solid fa-location-crosshairs"></i>
     </button>
 
+    <script src="../assets/js/theme.js"></script>
     <script src="../assets/js/guard.js"></script>
     <script src="../assets/js/api.js"></script>
     <script>
-        const GMAP_KEY = 'AIzaSyAVF_yekJbPdCQIoaWxzT4dHBIkjazhq6A';
+        // Update theme toggle button icon
+        function updateThemeBtn() {
+            const btn = document.getElementById('themeBtn');
+            if (!btn) return;
+            const theme = document.documentElement.getAttribute('data-theme');
+            btn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+        const _origToggle = window.themeToggle;
+        window.themeToggle = function() { _origToggle(); updateThemeBtn(); };
+        updateThemeBtn();
+
+        const GMAP_KEY = 'AIzaSyAn1_cTdPkaV1_ogWAIGd9gMXfdp4PxuJg';
         const NASUGBU = { lat: 14.0637, lng: 120.6283 };
         const BOUNDS = { south: 13.95, north: 14.12, west: 120.52, east: 120.72 };
 
@@ -765,7 +798,7 @@
                     const loc = results[0].geometry.location;
                     const lat = loc.lat(), lng = loc.lng();
                     if (!isInNasugbu(lat, lng)) {
-                        Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2500}).fire({icon:'warning',title:'Location must be within Nasugbu'});
+                        Swal.fire({icon:'warning',title:'Outside Nasugbu',text:'Location must be within Nasugbu, Batangas.',confirmButtonColor:'#10b981'});
                         return;
                     }
                     const name = item.querySelector('.search-item-name').textContent;
@@ -793,7 +826,7 @@
         // Use my current location button
         document.getElementById('useMyLocRow').addEventListener('click', () => {
             if (!pickupPos) {
-                Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'warning',title:'GPS not available yet'});
+                Swal.fire({icon:'warning',title:'GPS Not Available',text:'Please wait for GPS to detect your location.',confirmButtonColor:'#10b981',timer:2500,showConfirmButton:false});
                 return;
             }
             if (activeSearchField === 'pickup') {
@@ -841,7 +874,7 @@
                     document.getElementById('searchPickup').value = pickupAddr;
                     document.getElementById('myLocPreview').textContent = pickupAddr;
                 }, () => {
-                    Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2500}).fire({icon:'warning',title:'Cannot detect location. Please enable GPS.'});
+                    Swal.fire({icon:'warning',title:'Location Error',text:'Cannot detect location. Please enable GPS.',confirmButtonColor:'#10b981'});
                 }, { enableHighAccuracy: true, timeout: 10000 });
             }
         });
@@ -859,6 +892,15 @@
         // ── Booking ──
         document.getElementById('btnBook').addEventListener('click', async function() {
             if (!pickupPos || !dropoffPos) return;
+
+            // Validate both locations are within Nasugbu
+            if (!isInNasugbu(pickupPos.lat, pickupPos.lng)) {
+                return Swal.fire({ icon: 'error', title: 'Outside Nasugbu', text: 'Pickup location must be within Nasugbu, Batangas.', confirmButtonColor: '#10b981' });
+            }
+            if (!isInNasugbu(dropoffPos.lat, dropoffPos.lng)) {
+                return Swal.fire({ icon: 'error', title: 'Outside Nasugbu', text: 'Drop-off location must be within Nasugbu, Batangas.', confirmButtonColor: '#10b981' });
+            }
+
             this.disabled = true;
             this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Booking...';
             try {
@@ -884,7 +926,7 @@
                         try {
                             const old = await bookings.mine();
                             if (old && old.id) { await bookings.update(old.id, {status:'cancelled'}); }
-                            Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:2000}).fire({icon:'success',title:'Old booking cancelled. Try again.'});
+                            Swal.fire({icon:'success',title:'Booking Cancelled',text:'Old booking cancelled. You can book a new ride.',confirmButtonColor:'#10b981',timer:2000,showConfirmButton:false});
                         } catch(e){}
                     } else {
                         checkExistingBooking();
@@ -918,7 +960,6 @@
                     document.getElementById('driverName').textContent = name;
                     document.getElementById('driverInitial').textContent = (b.driver_first||'D')[0];
                     document.getElementById('driverPlate').textContent = b.plate_number||'N/A';
-                    document.getElementById('callDriver').onclick = () => { if(b.driver_phone) window.open('tel:'+b.driver_phone); };
                     showState('stateAccepted');
                     addNotification('check-circle','green',`${name} accepted your ride. Plate: ${b.plate_number||'N/A'}`);
                     Swal.fire({icon:'success',title:'Driver Found!',html:`<b>${name}</b> is on the way`,confirmButtonColor:'#10b981'});
@@ -1057,11 +1098,18 @@
                     const dist = parseFloat(b.estimated_distance || 0);
                     const date = new Date(b.created_at).toLocaleDateString('en-PH', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
                     const badgeCls = b.status === 'completed' ? 'completed' : b.status === 'cancelled' ? 'cancelled' : 'completed';
+                    const driverName = b.driver_first ? (b.driver_first + ' ' + (b.driver_last||'')).trim() : null;
+                    const plate = b.plate_number || null;
                     return `<div class="history-item">
                         <div class="history-item-top">
                             <span class="fare">₱${fare.toFixed(2)}</span>
                             <span class="date">${date}</span>
                         </div>
+                        ${driverName ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                            <i class="fa-solid fa-user" style="font-size:11px;color:var(--p-text-faint)"></i>
+                            <span style="font-size:12px;font-weight:600;color:var(--p-text-sec)">${driverName}</span>
+                            ${plate ? `<span style="font-size:11px;background:var(--p-bg-muted);padding:2px 8px;border-radius:4px;color:var(--p-text-muted);font-weight:600">${plate}</span>` : ''}
+                        </div>` : ''}
                         <div class="history-item-route">
                             <span class="hdot" style="background:#10b981"></span>
                             <span>${b.pickup_address || '--'}</span>
@@ -1071,7 +1119,7 @@
                         </div>
                         <div style="margin-top:6px;display:flex;gap:8px;align-items:center">
                             <span class="history-badge ${badgeCls}">${b.status}</span>
-                            <span style="font-size:11px;color:#9ca3af">${dist.toFixed(1)} km</span>
+                            <span style="font-size:11px;color:var(--p-text-faint)">${dist.toFixed(1)} km</span>
                         </div>
                     </div>`;
                 }).join('');
@@ -1177,72 +1225,84 @@
                 title: 'File a Complaint',
                 html: `
                     <div style="text-align:left;font-size:13px;">
-                        <label style="display:block;margin-bottom:4px;font-weight:600;color:#374151;">Complaint Type</label>
-                        <select id="swal-type" class="swal2-select" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;margin-bottom:12px;font-family:inherit;">
+                        <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--p-text-sec);">Complaint Type</label>
+                        <select id="swal-type" style="width:100%;padding:12px;border:1px solid var(--p-line);border-radius:10px;font-size:13px;margin-bottom:14px;font-family:inherit;background:var(--p-bg-alt);color:var(--p-text);outline:none;">
                             <option value="overcharging">Overcharging</option>
                             <option value="rude_behavior">Rude Behavior</option>
                             <option value="reckless_driving">Reckless Driving</option>
                             <option value="refusal_of_service">Refusal of Service</option>
                             <option value="other">Other</option>
                         </select>
-                        <label style="display:block;margin-bottom:4px;font-weight:600;color:#374151;">Tricycle ID / Plate Number</label>
-                        <input id="swal-tricycle" class="swal2-input" placeholder="e.g. ABC-1234" style="width:100%;margin:0 0 12px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;">
-                        <label style="display:block;margin-bottom:4px;font-weight:600;color:#374151;">Description</label>
-                        <textarea id="swal-desc" class="swal2-textarea" placeholder="Describe the incident..." rows="3" style="width:100%;margin:0;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>
+                        <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--p-text-sec);">Tricycle ID / Plate Number</label>
+                        <input id="swal-tricycle" placeholder="e.g. ABC-1234" style="width:100%;margin:0 0 14px;padding:12px;border:1px solid var(--p-line);border-radius:10px;font-size:13px;background:var(--p-bg-alt);color:var(--p-text);font-family:inherit;outline:none;">
+                        <label style="display:block;margin-bottom:4px;font-weight:600;color:var(--p-text-sec);">Description</label>
+                        <textarea id="swal-desc" placeholder="Describe the incident..." rows="3" style="width:100%;margin:0;padding:12px;border:1px solid var(--p-line);border-radius:10px;font-size:13px;font-family:inherit;resize:vertical;background:var(--p-bg-alt);color:var(--p-text);outline:none;"></textarea>
                     </div>
                 `,
                 showCancelButton: true,
                 confirmButtonText: 'Submit Complaint',
                 confirmButtonColor: '#10b981',
-                cancelButtonColor: '#9ca3af',
+                cancelButtonColor: '#6b7280',
                 focusConfirm: false,
                 preConfirm: () => {
                     const type = document.getElementById('swal-type').value;
-                    const tricycle = document.getElementById('swal-tricycle').value.trim();
+                    const plate = document.getElementById('swal-tricycle').value.trim();
                     const desc = document.getElementById('swal-desc').value.trim();
-                    if (!desc) { Swal.showValidationMessage('Please describe the incident'); return false; }
-                    return { type, tricycle, desc };
+                    if (!plate || !desc) return { type, plate, desc, valid: false };
+                    return { type, plate, desc, valid: true };
                 }
             });
 
-            if (formData) {
-                try {
-                    // Try to find tricycle by plate number
-                    let tricycleId = null;
-                    if (formData.tricycle) {
-                        try {
-                            const tList = await tricycles.list();
-                            const found = tList.find(t => t.plate_number && t.plate_number.toLowerCase().includes(formData.tricycle.toLowerCase()));
-                            if (found) tricycleId = found.id;
-                        } catch(e) {}
-                    }
+            if (!formData) return;
 
-                    if (tricycleId) {
-                        await complaints.create({
-                            tricycle_id: tricycleId,
-                            complaint_type: formData.type,
-                            description: formData.desc,
-                            passenger_name: user ? (user.first_name + ' ' + (user.last_name||'')).trim() : 'Anonymous',
-                            passenger_contact: user ? user.phone || '' : ''
-                        });
-                        addNotification('flag', 'green', 'Complaint submitted successfully.');
-                        Swal.fire({ icon:'success', title:'Complaint Submitted', text:'Thank you. The admin will review your complaint.', confirmButtonColor:'#10b981' });
-                    } else {
-                        Swal.fire({ icon:'warning', title:'Submitted', text:'Complaint noted. Please provide a valid plate number for faster resolution.', confirmButtonColor:'#10b981' });
-                    }
-                } catch(err) {
-                    Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to submit complaint.', confirmButtonColor:'#10b981' });
+            // Validate fields with SweetAlert
+            if (!formData.plate) {
+                await Swal.fire({ icon:'warning', title:'Missing Field', text:'Plate number is required.', confirmButtonColor:'#10b981' });
+                return openComplaint();
+            }
+            if (!formData.desc) {
+                await Swal.fire({ icon:'warning', title:'Missing Field', text:'Please describe the incident.', confirmButtonColor:'#10b981' });
+                return openComplaint();
+            }
+
+            // Validate plate number exists
+            let tricycleId = null;
+            try {
+                const tList = await tricycles.list();
+                const found = tList.find(t => t.plate_number && t.plate_number.toLowerCase() === formData.plate.toLowerCase());
+                if (!found) {
+                    await Swal.fire({ icon:'error', title:'Invalid Plate Number', text:'Plate number not found. Please enter a valid plate number.', confirmButtonColor:'#10b981' });
+                    return openComplaint();
                 }
+                tricycleId = found.id;
+            } catch(e) {
+                await Swal.fire({ icon:'error', title:'Error', text:'Could not verify plate number. Try again.', confirmButtonColor:'#10b981' });
+                return;
+            }
+
+            // Submit complaint
+            try {
+                await complaints.create({
+                    tricycle_id: tricycleId,
+                    complaint_type: formData.type,
+                    description: formData.desc,
+                    passenger_name: user ? (user.first_name + ' ' + (user.last_name||'')).trim() : 'Anonymous',
+                    passenger_contact: user ? user.phone || '' : ''
+                });
+                addNotification('flag', 'green', 'Complaint submitted successfully.');
+                Swal.fire({ icon:'success', title:'Complaint Submitted', text:'Thank you. The admin will review your complaint.', confirmButtonColor:'#10b981' });
+            } catch(err) {
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to submit complaint.', confirmButtonColor:'#10b981' });
             }
         }
 
         // ── Logout ──
         async function handleLogout(){
             closeMenu();
-            const r=await Swal.fire({title:'Logout?',icon:'question',showCancelButton:true,confirmButtonColor:'#ef4444',confirmButtonText:'Yes'});
+            const r=await Swal.fire({title:'Do you want to logout?',text:'You will need to login again to continue.',icon:'question',showCancelButton:true,confirmButtonColor:'#ef4444',confirmButtonText:'Yes, logout',cancelButtonText:'No',cancelButtonColor:'#6b7280'});
             if(r.isConfirmed){try{await fetch('/TodaShare/api/auth/logout.php',{method:'POST'})}catch(e){}localStorage.removeItem('user');window.location.replace('/TodaShare/login.html');}
         }
     </script>
-    <script src="" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAn1_cTdPkaV1_ogWAIGd9gMXfdp4PxuJg&libraries=places&callback=initMap&loading=async" async defer></script>
 </body>
 </html>
