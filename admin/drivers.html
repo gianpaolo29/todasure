@@ -106,6 +106,7 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Name</th>
+                                    <th>Barangay</th>
                                     <th>Contact</th>
                                     <th>Tricycles</th>
                                     <th>Actions</th>
@@ -143,6 +144,12 @@
                         <div><strong style="color:var(--text)">Phone:</strong> <span id="selPhone">--</span></div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>Barangay *</label>
+                    <select id="addBarangay" class="form-control" required>
+                        <option value="">-- Select Barangay --</option>
+                    </select>
+                </div>
                 <div class="form-row">
                     <div class="form-group"><label>Contact Number</label><input type="text" id="addContact" class="form-control" placeholder="09xxxxxxxxx"></div>
                     <div class="form-group"><label>Address</label><input type="text" id="addAddress" class="form-control" placeholder="Home address"></div>
@@ -169,6 +176,12 @@
                         <div><strong style="color:var(--text)">Name:</strong> <span id="editName">--</span></div>
                         <div><strong style="color:var(--text)">Email:</strong> <span id="editEmail">--</span></div>
                     </div>
+                </div>
+                <div class="form-group">
+                    <label>Barangay *</label>
+                    <select id="editBarangay" class="form-control" required>
+                        <option value="">-- Select Barangay --</option>
+                    </select>
                 </div>
                 <div class="form-row">
                     <div class="form-group"><label>Contact Number</label><input type="text" id="editContact" class="form-control" placeholder="09xxxxxxxxx"></div>
@@ -356,6 +369,26 @@
         }
 
         let passengerUsers = [];
+        let barangayList = [];
+
+        async function loadBarangayList() {
+            try {
+                barangayList = await barangays.list();
+                ['addBarangay','editBarangay'].forEach(function(id) {
+                    var sel = document.getElementById(id);
+                    if (!sel) return;
+                    sel.innerHTML = '<option value="">-- Select Barangay --</option>';
+                    barangayList.forEach(function(b) {
+                        if (b.status === 'active') {
+                            var opt = document.createElement('option');
+                            opt.value = b.id;
+                            opt.textContent = b.name;
+                            sel.appendChild(opt);
+                        }
+                    });
+                });
+            } catch(e) {}
+        }
 
         async function loadPassengerUsers() {
             try {
@@ -381,13 +414,14 @@
 
                 const tbody = document.getElementById('driversTable');
                 if (list.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No drivers found</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No drivers found</td></tr>';
                     return;
                 }
                 tbody.innerHTML = list.map(d => `
                     <tr>
                         <td>#${d.id}</td>
                         <td>${d.first_name} ${d.last_name}</td>
+                        <td>${d.barangay_name || '-'}</td>
                         <td>${d.contact_number || '-'}</td>
                         <td>${tricycleCount[d.id] || 0}</td>
                         <td>
@@ -474,6 +508,11 @@
                 return Swal.fire({ icon:'warning', title:'No User Selected', text:'Please search and select a user to promote to driver.', confirmButtonColor:'#00e6a0' });
             }
 
+            const brgyId = document.getElementById('addBarangay').value;
+            if (!brgyId) {
+                return Swal.fire({ icon:'warning', title:'Missing Field', text:'Please select a barangay.', confirmButtonColor:'#00e6a0' });
+            }
+
             const contact = document.getElementById('addContact').value.trim();
             if (!contact) {
                 return Swal.fire({ icon:'warning', title:'Missing Field', text:'Contact number is required.', confirmButtonColor:'#00e6a0' });
@@ -484,6 +523,7 @@
                 user_id: userId,
                 first_name: u.first_name || u.username,
                 last_name: u.last_name || '',
+                barangay_id: brgyId,
                 contact_number: contact,
                 address: document.getElementById('addAddress').value
             };
@@ -504,7 +544,8 @@
                 const d = await drivers.get(id);
                 document.getElementById('editDriverId').value = d.id;
                 document.getElementById('editName').textContent = d.first_name + ' ' + d.last_name;
-                document.getElementById('editEmail').textContent = d.username || '--';
+                document.getElementById('editEmail').textContent = d.email || d.username || '--';
+                document.getElementById('editBarangay').value = d.barangay_id || '';
                 document.getElementById('editContact').value = d.contact_number || '';
                 document.getElementById('editAddress').value = d.address || '';
                 document.getElementById('editDriverModal').classList.add('active');
@@ -520,13 +561,18 @@
         document.getElementById('editDriverForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('editDriverId').value;
+            const brgyId = document.getElementById('editBarangay').value;
             const contact = document.getElementById('editContact').value.trim();
 
+            if (!brgyId) {
+                return Swal.fire({ icon:'warning', title:'Missing Field', text:'Please select a barangay.', confirmButtonColor:'#00e6a0' });
+            }
             if (!contact) {
                 return Swal.fire({ icon:'warning', title:'Missing Field', text:'Contact number is required.', confirmButtonColor:'#00e6a0' });
             }
 
             const data = {
+                barangay_id: brgyId,
                 contact_number: contact,
                 address: document.getElementById('editAddress').value
             };
@@ -555,6 +601,7 @@
         }
 
         document.getElementById('searchInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') loadDrivers(); });
+        loadBarangayList();
         loadDrivers();
     </script>
 </body>

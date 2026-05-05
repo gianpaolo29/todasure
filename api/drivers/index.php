@@ -12,8 +12,8 @@ switch ($method) {
         if ($id) {
             // Get single driver
             $stmt = $pdo->prepare("
-                SELECT d.*, u.username, u.status as account_status,
-                       t.name as toda_name, b.name as barangay_name
+                SELECT d.*, u.username, u.email, u.status as account_status,
+                       t.name as toda_name, b.id as barangay_id, b.name as barangay_name
                 FROM drivers d
                 JOIN users u ON d.user_id = u.id
                 LEFT JOIN todas t ON d.toda_id = t.id
@@ -63,7 +63,11 @@ switch ($method) {
         break;
 
     case 'POST':
-        requireAdmin();
+        $session = requireAuth();
+        // Allow admin and barangay officials to add drivers
+        if ($session['role'] !== 'admin' && $session['role'] !== 'barangay') {
+            jsonResponse(['error' => 'Not authorized'], 403);
+        }
         $input = getInput();
 
         // Promote existing user to driver
@@ -90,6 +94,34 @@ switch ($method) {
         $firstName = $input['first_name'] ?? $user['first_name'];
         $lastName = $input['last_name'] ?? $user['last_name'] ?? '';
 
+        // Auto-assign TODA based on barangay
+        $todaId = $input['toda_id'] ?? null;
+        if (!$todaId) {
+            // Use barangay_id from input (admin) or session (barangay official)
+            $brgyId = $input['barangay_id'] ?? $session['barangay_id'] ?? null;
+            if ($brgyId) {
+                $stmt = $pdo->prepare("SELECT id FROM todas WHERE barangay_id = ? AND status = 'active' LIMIT 1");
+                $stmt->execute([$brgyId]);
+                $toda = $stmt->fetch();
+                if ($toda) {
+                    $todaId = $toda['id'];
+                } else {
+                    // Auto-create a TODA for this barangay
+                    $stmt = $pdo->prepare("SELECT name FROM barangays WHERE id = ?");
+                    $stmt->execute([$brgyId]);
+                    $brgyName = $stmt->fetch()['name'] ?? 'Unknown';
+                    $stmt = $pdo->prepare("INSERT INTO todas (name, barangay_id) VALUES (?, ?)");
+                    $stmt->execute([$brgyName . ' TODA', $brgyId]);
+                    $todaId = $pdo->lastInsertId();
+                }
+            } else {
+                // Admin with no barangay — use first active TODA
+                $stmt = $pdo->query("SELECT id FROM todas WHERE status = 'active' LIMIT 1");
+                $toda = $stmt->fetch();
+                if ($toda) $todaId = $toda['id'];
+            }
+        }
+
         $pdo->beginTransaction();
         try {
             // Update user role to driver
@@ -103,7 +135,7 @@ switch ($method) {
             ");
             $stmt->execute([
                 $userId,
-                $input['toda_id'] ?? null,
+                $todaId,
                 $firstName,
                 $lastName,
                 $input['middle_name'] ?? null,
@@ -124,8 +156,8 @@ switch ($method) {
         $session = requireAuth();
         if (!$id) jsonResponse(['error' => 'Driver ID required'], 400);
 
-        // Allow drivers to update their own record
-        if ($session['role'] !== 'admin') {
+        // Allow drivers to update their own record, admin and barangay can update any
+        if ($session['role'] !== 'admin' && $session['role'] !== 'barangay') {
             $stmt = $pdo->prepare("SELECT id FROM drivers WHERE id = ? AND user_id = ?");
             $stmt->execute([$id, $session['user_id']]);
             if (!$stmt->fetch()) {
@@ -136,6 +168,24 @@ switch ($method) {
         $input = getInput();
         $fields = [];
         $params = [];
+
+        // If barangay_id is provided, resolve it to toda_id
+        if (isset($input['barangay_id']) && $input['barangay_id']) {
+            $brgyId = $input['barangay_id'];
+            $stmt = $pdo->prepare("SELECT id FROM todas WHERE barangay_id = ? AND status = 'active' LIMIT 1");
+            $stmt->execute([$brgyId]);
+            $toda = $stmt->fetch();
+            if ($toda) {
+                $input['toda_id'] = $toda['id'];
+            } else {
+                $stmt = $pdo->prepare("SELECT name FROM barangays WHERE id = ?");
+                $stmt->execute([$brgyId]);
+                $brgyName = $stmt->fetch()['name'] ?? 'Unknown';
+                $stmt = $pdo->prepare("INSERT INTO todas (name, barangay_id) VALUES (?, ?)");
+                $stmt->execute([$brgyName . ' TODA', $brgyId]);
+                $input['toda_id'] = $pdo->lastInsertId();
+            }
+        }
 
         $allowed = ['first_name', 'last_name', 'middle_name', 'contact_number', 'address', 'toda_id', 'status'];
         foreach ($allowed as $field) {
@@ -158,7 +208,10 @@ switch ($method) {
         break;
 
     case 'DELETE':
-        requireAdmin();
+        $session = requireAuth();
+        if ($session['role'] !== 'admin' && $session['role'] !== 'barangay') {
+            jsonResponse(['error' => 'Not authorized'], 403);
+        }
         if (!$id) jsonResponse(['error' => 'Driver ID required'], 400);
 
         // Get user_id before deleting
