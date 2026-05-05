@@ -59,7 +59,7 @@ switch ($method) {
                 jsonResponse(['error' => 'GPS coordinates are required'], 400);
             }
 
-            // Get active fare rate
+            // Get active fare rate (via driver's TODA → barangay)
             $stmt = $pdo->prepare("
                 SELECT fr.* FROM fare_rates fr
                 JOIN todas t ON fr.barangay_id = t.barangay_id
@@ -69,6 +69,12 @@ switch ($method) {
             ");
             $stmt->execute([$driverId]);
             $rate = $stmt->fetch();
+
+            // Fallback: use any active fare rate if driver has no TODA
+            if (!$rate) {
+                $stmt = $pdo->query("SELECT * FROM fare_rates WHERE status = 'active' ORDER BY effective_date DESC LIMIT 1");
+                $rate = $stmt->fetch();
+            }
             $fareRateId = $rate ? $rate['id'] : null;
 
             // Create active trip
@@ -247,13 +253,23 @@ switch ($method) {
 
             // Recalculate final fare
             $computedFare = 0;
-            if ($trip['base_fare']) {
-                $computedFare = calculateFare(
-                    $finalDistance,
-                    $trip['base_fare'],
-                    $trip['base_distance'],
-                    $trip['per_km_rate']
-                );
+            $baseFare = $trip['base_fare'];
+            $baseDist = $trip['base_distance'];
+            $perKm = $trip['per_km_rate'];
+
+            // Fallback if no fare rate linked to trip
+            if (!$baseFare) {
+                $stmt = $pdo->query("SELECT * FROM fare_rates WHERE status = 'active' ORDER BY effective_date DESC LIMIT 1");
+                $fallbackRate = $stmt->fetch();
+                if ($fallbackRate) {
+                    $baseFare = $fallbackRate['base_fare'];
+                    $baseDist = $fallbackRate['base_distance'];
+                    $perKm = $fallbackRate['per_km_rate'];
+                }
+            }
+
+            if ($baseFare) {
+                $computedFare = calculateFare($finalDistance, $baseFare, $baseDist, $perKm);
             }
 
             if ($actualFare == 0) $actualFare = $computedFare;

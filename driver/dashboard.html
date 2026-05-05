@@ -763,6 +763,19 @@
                     const result = await apiRequest('../api/trips/gps.php?action=end', 'POST', payload);
                     fare = result.actual_fare || result.computed_fare || 0;
                     dist = result.distance_km || 0;
+
+                    // Alert if overcharge violation was created
+                    if (result.overcharge) {
+                        setTimeout(() => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Fare Overcharge Detected!',
+                                html: '<p>You charged <strong style="color:#ef4444">₱' + parseFloat(result.actual_fare).toFixed(2) + '</strong> but the computed fare was <strong style="color:#10b981">₱' + parseFloat(result.computed_fare).toFixed(2) + '</strong>.</p><p style="font-size:12px;color:#94a3b8;margin-top:8px">A violation has been recorded. This may affect your account.</p>',
+                                confirmButtonColor: '#10b981',
+                                confirmButtonText: 'I Understand'
+                            });
+                        }, 2500);
+                    }
                 } catch(e) { /* GPS trip may not exist */ }
             }
 
@@ -930,6 +943,15 @@
                 if (stats.violations > 0) {
                     document.getElementById('violationAlert').classList.remove('hidden');
                     document.getElementById('violationText').textContent = 'You have ' + stats.violations + ' pending violation(s)';
+
+                    // Show SweetAlert popup for violations
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Violation Notice',
+                        html: '<p style="font-size:14px">You have <strong style="color:#ef4444">' + stats.violations + ' pending violation(s)</strong>.</p><p style="font-size:12px;color:#94a3b8;margin-top:8px">Please review your trip records. Repeated violations may result in suspension.</p>',
+                        confirmButtonColor: '#10b981',
+                        confirmButtonText: 'I Understand'
+                    });
                 }
 
                 const trips = stats.recent_trips || [];
