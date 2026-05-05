@@ -161,11 +161,12 @@
                         <input type="text" id="phone" class="form-control">
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <input type="hidden" id="role" value="passenger">
-                        <input type="hidden" id="barangayId" value="">
-                    </div>
+                <input type="hidden" id="role" value="passenger">
+                <div class="form-group" id="barangayGroup" style="display:none">
+                    <label>Barangay</label>
+                    <select id="barangayId" class="form-control">
+                        <option value="">-- Select Barangay --</option>
+                    </select>
                 </div>
                 <div id="passwordFields">
                     <div class="form-group">

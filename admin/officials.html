@@ -128,25 +128,26 @@
                 <button class="modal-close" onclick="closeAddModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="addForm">
+                <div class="form-row">
+                    <div class="form-group"><label>First Name *</label><input type="text" id="addFirstName" class="form-control" placeholder="First name" required></div>
+                    <div class="form-group"><label>Last Name</label><input type="text" id="addLastName" class="form-control" placeholder="Last name"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Email *</label><input type="email" id="addEmail" class="form-control" placeholder="email@example.com" required></div>
+                    <div class="form-group"><label>Phone</label><input type="text" id="addPhone" class="form-control" placeholder="09xxxxxxxxx"></div>
+                </div>
+                <div class="form-group"><label>Password *</label><input type="password" id="addPassword" class="form-control" placeholder="Min 8 characters" required></div>
                 <div class="form-group" style="position:relative">
-                    <label>Search User *</label>
-                    <input type="text" id="searchUser" class="form-control" placeholder="Type name or email to search..." autocomplete="off">
-                    <input type="hidden" id="selectedUserId">
-                    <div id="userResults" style="position:absolute;left:0;right:0;top:100%;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto;z-index:10;display:none;box-shadow:var(--shadow-md)"></div>
-                    <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block">Search for a registered passenger to promote</small>
-                </div>
-                <div id="selectedUserInfo" style="display:none;padding:12px;background:var(--bg-hover);border-radius:10px;margin-bottom:14px">
-                    <div style="font-size:13px;color:var(--text-secondary)">
-                        <div><strong style="color:var(--text)">Name:</strong> <span id="selName">--</span></div>
-                        <div><strong style="color:var(--text)">Email:</strong> <span id="selEmail">--</span></div>
-                        <div><strong style="color:var(--text)">Phone:</strong> <span id="selPhone">--</span></div>
-                    </div>
-                </div>
-                <div class="form-group">
                     <label>Assign Barangay *</label>
-                    <select id="addBarangay" class="form-control" required>
-                        <option value="">-- Select Barangay --</option>
-                    </select>
+                    <input type="text" id="searchBarangay" class="form-control" placeholder="Type barangay name to search..." autocomplete="off">
+                    <input type="hidden" id="selectedBarangayId">
+                    <div id="brgyResults" style="position:absolute;left:0;right:0;top:100%;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto;z-index:10;display:none;box-shadow:var(--shadow-md)"></div>
+                </div>
+                <div id="selectedBrgyInfo" style="display:none;padding:10px 14px;background:var(--bg-hover);border-radius:10px;margin-bottom:14px">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <span style="font-size:13px;font-weight:600;color:var(--text)" id="selBrgyName">--</span>
+                        <button type="button" onclick="clearBrgy()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:12px;font-weight:600"><i class="fa-solid fa-xmark"></i> Remove</button>
+                    </div>
                 </div>
                 <div style="display:flex;gap:10px;margin-top:8px">
                     <button type="button" class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeAddModal()">Cancel</button>
@@ -327,15 +328,52 @@
 
         async function loadBarangays() {
             barangayList = await barangays.list();
-            const sel = document.getElementById('addBarangay');
-            sel.innerHTML = '<option value="">-- Select Barangay --</option>';
-            barangayList.forEach(b => {
-                const opt = document.createElement('option');
-                opt.value = b.id;
-                opt.textContent = b.name;
-                sel.appendChild(opt);
-            });
         }
+
+        // Barangay search
+        let brgySearchTimeout = null;
+        document.getElementById('searchBarangay').addEventListener('input', function() {
+            clearTimeout(brgySearchTimeout);
+            const q = this.value.trim().toLowerCase();
+            const resultsDiv = document.getElementById('brgyResults');
+            if (q.length < 1) { resultsDiv.style.display = 'none'; return; }
+            brgySearchTimeout = setTimeout(() => {
+                const matches = barangayList.filter(b => b.name.toLowerCase().includes(q) && (b.status || 'active') === 'active').slice(0, 8);
+                if (matches.length === 0) {
+                    resultsDiv.innerHTML = '<div style="padding:12px 16px;color:var(--text-muted);font-size:13px">No barangay found</div>';
+                } else {
+                    resultsDiv.innerHTML = matches.map(b =>
+                        `<div onclick="pickBrgy(${b.id})" style="padding:10px 16px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .15s">
+                            <div style="font-weight:600;color:var(--text)">${b.name}</div>
+                            <div style="color:var(--text-muted);font-size:11px">Nasugbu, Batangas</div>
+                        </div>`
+                    ).join('');
+                }
+                resultsDiv.style.display = 'block';
+            }, 150);
+        });
+
+        function pickBrgy(id) {
+            const b = barangayList.find(x => x.id == id);
+            if (!b) return;
+            document.getElementById('searchBarangay').value = b.name;
+            document.getElementById('selectedBarangayId').value = b.id;
+            document.getElementById('selBrgyName').textContent = b.name;
+            document.getElementById('selectedBrgyInfo').style.display = 'block';
+            document.getElementById('brgyResults').style.display = 'none';
+        }
+
+        function clearBrgy() {
+            document.getElementById('searchBarangay').value = '';
+            document.getElementById('selectedBarangayId').value = '';
+            document.getElementById('selectedBrgyInfo').style.display = 'none';
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#searchBarangay') && !e.target.closest('#brgyResults')) {
+                document.getElementById('brgyResults').style.display = 'none';
+            }
+        });
 
         async function loadOfficials() {
             try {
@@ -373,79 +411,46 @@
         // ── Add Official Modal ──
         let searchTimeout = null;
 
-        async function openAddModal() {
-            try { passengerUsers = await users.list({ role: 'passenger' }); } catch(e) { passengerUsers = []; }
+        function openAddModal() {
             document.getElementById('addForm').reset();
-            document.getElementById('selectedUserId').value = '';
-            document.getElementById('selectedUserInfo').style.display = 'none';
-            document.getElementById('userResults').style.display = 'none';
+            document.getElementById('selectedBarangayId').value = '';
+            document.getElementById('selectedBrgyInfo').style.display = 'none';
+            document.getElementById('brgyResults').style.display = 'none';
             document.getElementById('addModal').classList.add('active');
         }
-
-        document.getElementById('searchUser').addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            const q = this.value.trim().toLowerCase();
-            const resultsDiv = document.getElementById('userResults');
-            if (q.length < 2) { resultsDiv.style.display = 'none'; return; }
-
-            searchTimeout = setTimeout(() => {
-                const matches = passengerUsers.filter(u => {
-                    const name = ((u.first_name||'') + ' ' + (u.last_name||'')).toLowerCase();
-                    return name.includes(q) || (u.email||'').toLowerCase().includes(q);
-                }).slice(0, 8);
-
-                if (matches.length === 0) {
-                    resultsDiv.innerHTML = '<div style="padding:12px 16px;color:var(--text-muted);font-size:13px">No users found</div>';
-                } else {
-                    resultsDiv.innerHTML = matches.map(u => {
-                        const name = ((u.first_name||'') + ' ' + (u.last_name||'')).trim() || u.username;
-                        return `<div onclick="selectUser(${u.id})" style="padding:10px 16px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='none'">
-                            <div style="font-weight:600;color:var(--text)">${name}</div>
-                            <div style="color:var(--text-muted);font-size:11px">${u.email}</div>
-                        </div>`;
-                    }).join('');
-                }
-                resultsDiv.style.display = 'block';
-            }, 200);
-        });
-
-        function selectUser(id) {
-            const u = passengerUsers.find(p => p.id == id);
-            if (!u) return;
-            const name = ((u.first_name||'') + ' ' + (u.last_name||'')).trim() || u.username;
-            document.getElementById('searchUser').value = name;
-            document.getElementById('selectedUserId').value = u.id;
-            document.getElementById('selName').textContent = name;
-            document.getElementById('selEmail').textContent = u.email;
-            document.getElementById('selPhone').textContent = u.phone || '--';
-            document.getElementById('selectedUserInfo').style.display = 'block';
-            document.getElementById('userResults').style.display = 'none';
-        }
-
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('#searchUser') && !e.target.closest('#userResults')) {
-                document.getElementById('userResults').style.display = 'none';
-            }
-        });
 
         function closeAddModal() { document.getElementById('addModal').classList.remove('active'); }
 
         document.getElementById('addForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const userId = document.getElementById('selectedUserId').value;
-            const brgyId = document.getElementById('addBarangay').value;
+            const firstName = document.getElementById('addFirstName').value.trim();
+            const lastName = document.getElementById('addLastName').value.trim();
+            const email = document.getElementById('addEmail').value.trim();
+            const phone = document.getElementById('addPhone').value.trim();
+            const password = document.getElementById('addPassword').value;
+            const brgyId = document.getElementById('selectedBarangayId').value;
 
-            if (!userId) return Swal.fire({ icon:'warning', title:'No User Selected', text:'Please search and select a user.', confirmButtonColor:'#00e6a0' });
-            if (!brgyId) return Swal.fire({ icon:'warning', title:'Missing Field', text:'Please select a barangay.', confirmButtonColor:'#00e6a0' });
+            if (!firstName) return Swal.fire({ icon:'warning', title:'Required', text:'First name is required.', confirmButtonColor:'#00e6a0' });
+            if (!email) return Swal.fire({ icon:'warning', title:'Required', text:'Email is required.', confirmButtonColor:'#00e6a0' });
+            if (!password || password.length < 8) return Swal.fire({ icon:'warning', title:'Weak Password', text:'Password must be at least 8 characters.', confirmButtonColor:'#00e6a0' });
+            if (!brgyId) return Swal.fire({ icon:'warning', title:'Missing Field', text:'Please search and select a barangay.', confirmButtonColor:'#00e6a0' });
+            if (phone && !/^09\d{9}$/.test(phone)) return Swal.fire({ icon:'error', title:'Invalid Phone', text:'Phone must be 09XXXXXXXXX format (11 digits).', confirmButtonColor:'#00e6a0' });
 
             try {
-                await users.update(userId, { role: 'barangay', barangay_id: brgyId });
-                const u = passengerUsers.find(p => p.id == userId);
-                Swal.fire({ icon:'success', title:'Official Added', text:`${u ? u.first_name : 'User'} has been promoted to barangay official.`, confirmButtonColor:'#00e6a0' });
+                await apiRequest('users/index.php', 'POST', {
+                    first_name: firstName,
+                    last_name: lastName,
+                    email: email,
+                    phone: phone,
+                    password: password,
+                    role: 'barangay',
+                    barangay_id: brgyId
+                });
+                Swal.fire({ icon:'success', title:'Official Created', text:`${firstName} has been registered as a barangay official.`, confirmButtonColor:'#00e6a0' });
                 closeAddModal();
                 loadOfficials();
             } catch (err) {
-                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to add official.', confirmButtonColor:'#00e6a0' });
+                Swal.fire({ icon:'error', title:'Error', text: err.message || 'Failed to create official.', confirmButtonColor:'#00e6a0' });
             }
         });
 
