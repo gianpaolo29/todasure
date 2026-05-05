@@ -39,7 +39,10 @@ switch ($method) {
         break;
 
     case 'POST':
-        requireAdmin();
+        $session = requireAuth();
+        if ($session['role'] !== 'admin' && $session['role'] !== 'barangay') {
+            jsonResponse(['error' => 'Not authorized'], 403);
+        }
         $input = getInput();
         $required = ['plate_number', 'body_number'];
         foreach ($required as $field) {
@@ -64,7 +67,10 @@ switch ($method) {
         break;
 
     case 'PUT':
-        requireAdmin();
+        $session = requireAuth();
+        if ($session['role'] !== 'admin' && $session['role'] !== 'barangay') {
+            jsonResponse(['error' => 'Not authorized'], 403);
+        }
         if (!$id) jsonResponse(['error' => 'Tricycle ID required'], 400);
 
         $input = getInput();
@@ -86,7 +92,10 @@ switch ($method) {
         break;
 
     case 'DELETE':
-        requireAdmin();
+        $session = requireAuth();
+        if ($session['role'] !== 'admin' && $session['role'] !== 'barangay') {
+            jsonResponse(['error' => 'Not authorized'], 403);
+        }
         if (!$id) jsonResponse(['error' => 'Tricycle ID required'], 400);
 
         // Check if tricycle has active trips

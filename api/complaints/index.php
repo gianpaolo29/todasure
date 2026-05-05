@@ -89,7 +89,10 @@ switch ($method) {
         break;
 
     case 'PUT':
-        requireAdmin();
+        $session = requireAuth();
+        if ($session['role'] !== 'admin' && $session['role'] !== 'barangay') {
+            jsonResponse(['error' => 'Not authorized'], 403);
+        }
         if (!$id) jsonResponse(['error' => 'Complaint ID required'], 400);
 
         $input = getInput();

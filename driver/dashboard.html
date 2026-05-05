@@ -238,6 +238,40 @@
                         <h2 id="idleStatusTitle">You're Online</h2>
                         <p id="idleStatusSub">Waiting for ride requests...</p>
                     </div>
+                    <!-- Solar Panel Status -->
+                    <div style="margin-top:16px;background:var(--d-bg-alt);border:1px solid var(--d-line);border-radius:14px;padding:16px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <i class="fa-solid fa-solar-panel" style="font-size:16px;color:#f59e0b"></i>
+                                <span style="font-size:14px;font-weight:700;color:var(--d-text)">Solar Panel</span>
+                            </div>
+                            <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(16,185,129,.12);color:#10b981"><span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block"></span> Active</span>
+                        </div>
+                        <div style="display:flex;gap:10px">
+                            <div style="flex:1;background:var(--d-bg);border:1px solid var(--d-line);border-radius:10px;padding:12px;text-align:center">
+                                <i class="fa-solid fa-sun" style="font-size:18px;color:#f59e0b;margin-bottom:4px;display:block"></i>
+                                <div style="font-size:11px;color:var(--d-text-faint);margin-bottom:2px">Panel Status</div>
+                                <div style="font-size:14px;font-weight:700;color:#f59e0b">Charging</div>
+                            </div>
+                            <div style="flex:1;background:var(--d-bg);border:1px solid var(--d-line);border-radius:10px;padding:12px;text-align:center">
+                                <i class="fa-solid fa-battery-three-quarters" style="font-size:18px;color:#10b981;margin-bottom:4px;display:block"></i>
+                                <div style="font-size:11px;color:var(--d-text-faint);margin-bottom:2px">Battery</div>
+                                <div style="font-size:14px;font-weight:700;color:#10b981">78%</div>
+                            </div>
+                            <div style="flex:1;background:var(--d-bg);border:1px solid var(--d-line);border-radius:10px;padding:12px;text-align:center">
+                                <i class="fa-solid fa-bolt" style="font-size:18px;color:#0ea5e9;margin-bottom:4px;display:block"></i>
+                                <div style="font-size:11px;color:var(--d-text-faint);margin-bottom:2px">Power</div>
+                                <div style="font-size:14px;font-weight:700;color:#0ea5e9">12.4V</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:10px;background:var(--d-bg);border-radius:8px;height:6px;overflow:hidden">
+                            <div style="width:78%;height:100%;background:linear-gradient(90deg,#10b981,#34d399);border-radius:8px"></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--d-text-faint)">
+                            <span>0%</span><span>Battery Level</span><span>100%</span>
+                        </div>
+                    </div>
+
                     <div id="violationAlert" class="violation-alert hidden">
                         <i class="fa-solid fa-triangle-exclamation"></i> <span id="violationText"></span>
                     </div>

@@ -51,7 +51,10 @@ switch ($method) {
         break;
 
     case 'POST':
-        requireAdmin();
+        $session = requireAuth();
+        if ($session['role'] !== 'admin' && $session['role'] !== 'barangay') {
+            jsonResponse(['error' => 'Not authorized'], 403);
+        }
         $input = getInput();
         $required = ['driver_id', 'violation_type', 'severity'];
         foreach ($required as $field) {
@@ -78,7 +81,10 @@ switch ($method) {
         break;
 
     case 'PUT':
-        requireAdmin();
+        $session = requireAuth();
+        if ($session['role'] !== 'admin' && $session['role'] !== 'barangay') {
+            jsonResponse(['error' => 'Not authorized'], 403);
+        }
         if (!$id) jsonResponse(['error' => 'Violation ID required'], 400);
 
         $input = getInput();
